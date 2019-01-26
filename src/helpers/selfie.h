@@ -33,6 +33,9 @@
  http://elinux.org/Runtime_Memory_Measurement
  */
  
+#ifndef __SELFIE_H__
+#define __SELFIE_H__
+
 typedef struct statm {
 	long total_program_size;
     long resident_set_size;
@@ -110,3 +113,5 @@ void pipemetrics(metrics set) { //pipe output to stderr
     fprintf(stderr,"shared pages                         \t%ld\n",set.memory.shared_pages);
     fprintf(stderr,"dirty pages                          \t%ld\n",set.memory.dirty_pages);
 }
+
+#endif
