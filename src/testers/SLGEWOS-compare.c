@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 		getmetrics(&program);
 		start3=program.wall_clock;
 
-		SLGEWOS_calc(A2, b, s, n, K, H, F);
+		SLGEWOS_calc_unwind(A2, b, s, n, K, H, F);
 
 		//end3 = clock();
 		getmetrics(&program);
