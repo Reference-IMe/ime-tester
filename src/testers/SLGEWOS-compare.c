@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     double*  c;
     double*  x;
 
-    double** X;
+    //double** X;
     double** K;
     double*  H;
     double*  F;
@@ -30,16 +30,16 @@ int main(int argc, char **argv)
     int*     ipiv;
 
     /*
-    double GErunt[100];
+    double GJErunt[100];
     double LUt[100];
     double BSt[100];
     */
-    double GEt[100];
-    double IMt[100];
-    double LSt[100];
-    double GEtotrunt=0.0;
-    double IMtotrunt=0.0;
-    double LStotrunt=0.0;
+    double GJEt[100];
+    double IMet[100];
+    double LPKt[100];
+    double GJEtotrunt=0.0;
+    double IMetotrunt=0.0;
+    double LPKtotrunt=0.0;
 
     int n=atoi(argv[1]);
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
 		if (verbose>1)
 		{
-			printf("\nThe GE solution is:\n");
+			printf("\nThe GJE solution is:\n");
 			PrintVector(x, rows);
 		}
 
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 		FillMatrix2D(A2, rows, cols);
 		FillVector(b,rows,1);
 
-	    X=AllocateMatrix2D(n,n,CONTIGUOUS);
+	    //X=AllocateMatrix2D(n,n,CONTIGUOUS);
 	    K=AllocateMatrix2D(n,n,CONTIGUOUS);
 	    H=AllocateVector(n);
 	    F=AllocateVector(n);
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 		getmetrics(&program);
 		start3=program.wall_clock;
 
-		SLGEWOS_calc(A2, b, s, n, X, K, H, F);
+		SLGEWOS_calc(A2, b, s, n, K, H, F);
 
 		//end3 = clock();
 		getmetrics(&program);
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
 		}
 
 	    DeallocateMatrix2D(A2,n,CONTIGUOUS);
-	    DeallocateMatrix2D(X,n,CONTIGUOUS);
+	    //DeallocateMatrix2D(X,n,CONTIGUOUS);
 	    DeallocateMatrix2D(K,n,CONTIGUOUS);
 	    DeallocateVector(H);
 	    DeallocateVector(F);
@@ -196,43 +196,43 @@ int main(int argc, char **argv)
 		/*
 		LUt[rep]=(double)(end1 - begin1) / CLOCKS_PER_SEC;
 		BSt[rep]=(double)(end2 - begin2) / CLOCKS_PER_SEC;
-		IMt[rep]=(double)(end3 - begin3) / CLOCKS_PER_SEC;
+		IMet[rep]=(double)(end3 - begin3) / CLOCKS_PER_SEC;
 		*/
 		/*
 		LUt[rep]=(double)(stop1 - start1);
 		BSt[rep]=(double)(stop2 - start2);
 		*/
-		GEt[rep]=(double)(stop2 - start1);
-		IMt[rep]=(double)(stop3 - start3);
-		LSt[rep]=(double)(stop4 - start4);
+		GJEt[rep]=(double)(stop2 - start1);
+		IMet[rep]=(double)(stop3 - start3);
+		LPKt[rep]=(double)(stop4 - start4);
 
 		/*
-		GErunt[rep]=LUt[rep]+BSt[rep];
-		GEtotrunt += GErunt[rep];
+		GJErunt[rep]=LUt[rep]+BSt[rep];
+		GJEtotrunt += GJErunt[rep];
 		*/
-		GEtotrunt += GEt[rep];
-		IMtotrunt += IMt[rep];
-		LStotrunt += LSt[rep];
+		GJEtotrunt += GJEt[rep];
+		IMetotrunt += IMet[rep];
+		LPKtotrunt += LPKt[rep];
 
 		/*
 		printf("\n\nLU  decomposition time: %f", LUt[rep]);
 		printf("\nBack substitution time: %f", BSt[rep]);
-		printf("\nGaussian elimin.  time: %f\n", GErunt[rep]);
+		printf("\nGaussian elimin.  time: %f\n", GJErunt[rep]);
 		*/
 		if (verbose>0)
 		{
-			printf("\nGE call    run time: %f", GEt[rep]);
-			printf("\nIM call    run time: %f", IMt[rep]);
-			printf("\nLS call    run time: %f\n", LSt[rep]);
+			printf("\nGJE call    run time: %f", GJEt[rep]);
+			printf("\nIMe call    run time: %f", IMet[rep]);
+			printf("\nLPK call    run time: %f\n", LPKt[rep]);
 		}
     }
 	printf("\n Summary:");
-	printf("\nGE Total   run time: %f", GEtotrunt);
-	printf("\nIM Total   run time: %f", IMtotrunt);
-	printf("\nLS Total   run time: %f\n", LStotrunt);
-	printf("\nGE Average run time: %f", GEtotrunt/repetitions);
-	printf("\nIM Average run time: %f", IMtotrunt/repetitions);
-	printf("\nLS Average run time: %f\n\n", LStotrunt/repetitions);
+	printf("\nGJE Total   run time: %f", GJEtotrunt);
+	printf("\nIMe Total   run time: %f", IMetotrunt);
+	printf("\nLPK Total   run time: %f\n", LPKtotrunt);
+	printf("\nGJE Average run time: %f", GJEtotrunt/repetitions);
+	printf("\nIMe Average run time: %f", IMetotrunt/repetitions);
+	printf("\nLPK Average run time: %f\n\n", LPKtotrunt/repetitions);
 
     return(0);
 }
