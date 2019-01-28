@@ -11,7 +11,7 @@
 
 int main(int argc, char **argv)
 {
-	metrics program;
+	//metrics program;
 
     int i,j,k,l,rep;
 
@@ -51,8 +51,8 @@ int main(int argc, char **argv)
     int repetitions=atoi(argv[3]);
     int verbose=atoi(argv[4]);
 
-    //clock_t begin1, end1, begin2, end2, begin3, end3;
-    time_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5;
+    //time_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5;
+    clock_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5;
 
 	if (verbose>0)
 	{
@@ -89,13 +89,15 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		getmetrics(&program);
-		start4=program.wall_clock;
+		start4=clock();
+		//getmetrics(&program);
+		//start4=program.wall_clock;
 
 		LapackDGESV_calc(A1, b, n, ipiv);
 
-		getmetrics(&program);
-		stop4=program.wall_clock;
+		//getmetrics(&program);
+		//stop4=program.wall_clock;
+		stop4=clock();
 
 		if (verbose>1)
 		{
@@ -125,16 +127,16 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		//begin1 =clock();
-		getmetrics(&program);
-		start1=program.wall_clock;
+		start1 =clock();
+		//getmetrics(&program);
+		//start1=program.wall_clock;
 
 		GaussianElimination(A2, b, n);
 		BackSubstitution(A2, b, x, n);
 
-		//end2 = clock();
-		getmetrics(&program);
-		stop2=program.wall_clock;
+		//getmetrics(&program);
+		//stop2=program.wall_clock;
+		stop2 = clock();
 
 	    DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 	    DeallocateVector(b);
@@ -169,15 +171,15 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		//begin3 = clock();
-		getmetrics(&program);
-		start3=program.wall_clock;
+		start3 = clock();
+		//getmetrics(&program);
+		//start3=program.wall_clock;
 
 		SLGEWOS_calc(A2, b, s, n, K, H, F);
 
-		//end3 = clock();
-		getmetrics(&program);
-		stop3=program.wall_clock;
+		//getmetrics(&program);
+		//stop3=program.wall_clock;
+		stop3 = clock();
 
 		if (verbose>1)
 		{
@@ -216,15 +218,15 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		//begin3 = clock();
-		getmetrics(&program);
-		start5=program.wall_clock;
+		start5 = clock();
+		//getmetrics(&program);
+		//start5=program.wall_clock;
 
 		SLGEWOS_calc_unwind(A2, b, s, n, K, H, F);
 
-		//end3 = clock();
-		getmetrics(&program);
-		stop5=program.wall_clock;
+		//getmetrics(&program);
+		//stop5=program.wall_clock;
+		stop5 = clock();
 
 		if (verbose>1)
 		{
@@ -272,21 +274,21 @@ int main(int argc, char **argv)
 		*/
 		if (verbose>0)
 		{
-			printf("\nLPK    call    run time: %f", LPKt[rep]);
-			printf("\nGJE    call    run time: %f", GJEt[rep]);
-			printf("\nIMe    call    run time: %f", IMet[rep]);
-			printf("\nIMe-lu call    run time: %f\n", IMelut[rep]);
+			printf("\nLPK    call    run time: %f clk", LPKt[rep]);
+			printf("\nGJE    call    run time: %f clk", GJEt[rep]);
+			printf("\nIMe    call    run time: %f clk", IMet[rep]);
+			printf("\nIMe-lu call    run time: %f clk\n", IMelut[rep]);
 		}
     }
 	printf("\n Summary:");
-	printf("\nLPK    Total   run time: %f", LPKtotrunt);
-	printf("\nGJE    Total   run time: %f", GJEtotrunt);
-	printf("\nIMe    Total   run time: %f", IMetotrunt);
-	printf("\nIMe-lu Total   run time: %f\n", IMetotrunt);
-	printf("\nLPK    Average run time: %f", LPKtotrunt/repetitions);
-	printf("\nGJE    Average run time: %f", GJEtotrunt/repetitions);
-	printf("\nIMe    Average run time: %f", IMetotrunt/repetitions);
-	printf("\nIMe-lu Average run time: %f\n\n", IMelutotrunt/repetitions);
+	printf("\nLPK    Total   run time: %f clk\t\t%f s", LPKtotrunt, LPKtotrunt / CLOCKS_PER_SEC);
+	printf("\nGJE    Total   run time: %f clk\t\t%f s", GJEtotrunt, GJEtotrunt / CLOCKS_PER_SEC);
+	printf("\nIMe    Total   run time: %f clk\t\t%f s", IMetotrunt, IMetotrunt / CLOCKS_PER_SEC);
+	printf("\nIMe-lu Total   run time: %f clk\t\t%f s\n", IMelutotrunt, IMelutotrunt / CLOCKS_PER_SEC);
+	printf("\nLPK    Average run time: %f clk\t\t%f s", LPKtotrunt/repetitions, LPKtotrunt/repetitions / CLOCKS_PER_SEC);
+	printf("\nGJE    Average run time: %f clk\t\t%f s", GJEtotrunt/repetitions, GJEtotrunt/repetitions / CLOCKS_PER_SEC);
+	printf("\nIMe    Average run time: %f clk\t\t%f s", IMetotrunt/repetitions, IMetotrunt/repetitions / CLOCKS_PER_SEC);
+	printf("\nIMe-lu Average run time: %f clk\t\t%f s\n\n", IMelutotrunt/repetitions, IMelutotrunt/repetitions / CLOCKS_PER_SEC);
 
     return(0);
 }
