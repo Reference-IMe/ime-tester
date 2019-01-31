@@ -5,12 +5,19 @@
 #include "../helpers/selfie.h"
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-#include "../SLGEWOS.h"
-#include "GaussJordanElimination/GJE-seq.h"
-#include "Lapack/LapackDGESV.h"
+#include "../SLGEWOPV.h"
+#include "GaussJordanElimination/GJE-par.h"
+//#include "Lapack/LapackDGESV.h"
+#include <mpi.h>
+
 
 int main(int argc, char **argv)
 {
+    MPI_Init(&argc, &argv);
+    int rank, nprocs;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);   /* get current process id */
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs); /* get number of processes */
+
 	//metrics program;
 
     int i,j,k,l,rep;
@@ -54,7 +61,7 @@ int main(int argc, char **argv)
     //time_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5;
     clock_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5;
 
-	if (verbose>0)
+	if (rank==0 && verbose>0)
 	{
 		printf("\nMatrix size: %dx%d",n,n);
 		printf("\nCheckpoint : ");
@@ -70,10 +77,10 @@ int main(int argc, char **argv)
 
     for (rep=0; rep<repetitions; rep++)
     {
-    	if (verbose>0) {printf("\n Run #%d",rep+1);}
+    	if (rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
 
-    	// Lapack
-
+    	// ScaLapack
+/*
 		A1=AllocateMatrix1D(rows, cols);
 		b=AllocateVector(rows);
 		ipiv = malloc(n * sizeof(int));
@@ -108,7 +115,7 @@ int main(int argc, char **argv)
 		DeallocateMatrix1D(A1);
 		DeallocateVector(b);
 		free(ipiv);
-
+*/
 		//////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination
 
@@ -116,32 +123,39 @@ int main(int argc, char **argv)
 	    b=AllocateVector(rows);
 	    x=AllocateVector(rows);
 
-		FillMatrix2D(A2, rows, cols);
-		FillVector(b,rows,1);
+	    if (rank==0)
+	    {
+			FillMatrix2D(A2, rows, cols);
+			FillVector(b,rows,1);
 
-		if (verbose>2)
+			if (verbose>2)
+			{
+				printf("\n\n Matrix A:\n");
+				PrintMatrix2D(A2, rows, cols);
+				printf("\n Vector b:\n");
+				PrintVector(b, rows);
+			}
+
+			start1 =clock();
+			//getmetrics(&program);
+			//start1=program.wall_clock;
+	    }
+
+		pGaussianElimination(A2, b, n,rank,nprocs);
+
+	    if (rank==0)
 		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix2D(A2, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
+			BackSubstitution(A2, b, x, n);
 
-		start1 =clock();
-		//getmetrics(&program);
-		//start1=program.wall_clock;
+			//getmetrics(&program);
+			//stop2=program.wall_clock;
+			stop2 = clock();
 
-		GaussianElimination(A2, b, n);
-		BackSubstitution(A2, b, x, n);
-
-		//getmetrics(&program);
-		//stop2=program.wall_clock;
-		stop2 = clock();
-
-		if (verbose>1)
-		{
-			printf("\nThe GJE solution is:\n");
-			PrintVector(x, rows);
+			if (verbose>1)
+			{
+				printf("\nThe GJE solution is:\n");
+				PrintVector(x, rows);
+			}
 		}
 
 	    DeallocateMatrix2D(A2,rows,CONTIGUOUS);
@@ -163,7 +177,7 @@ int main(int argc, char **argv)
 	    F=AllocateVector(n);
 	    s=AllocateVector(n);
 
-		if (verbose>2)
+		if (rank==0 && verbose>2)
 		{
 			printf("\n\n Matrix A:\n");
 			PrintMatrix2D(A2, rows, cols);
@@ -175,13 +189,13 @@ int main(int argc, char **argv)
 		//getmetrics(&program);
 		//start3=program.wall_clock;
 
-		SLGEWOS_calc(A2, b, s, n, K, H, F);
+		SLGEWOPV_calc(A2, b, s, n, K, H, F, rank, nprocs);
 
 		//getmetrics(&program);
 		//stop3=program.wall_clock;
 		stop3 = clock();
 
-		if (verbose>1)
+		if (rank==0 && verbose>1)
 		{
 			printf("\nThe IMe solution is:\n");
 			PrintVector(s, rows);
@@ -197,7 +211,7 @@ int main(int argc, char **argv)
 
 	    //////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (loops unwound)
-
+/*
 		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		b=AllocateVector(rows);
 
@@ -241,54 +255,57 @@ int main(int argc, char **argv)
 		DeallocateVector(F);
 		DeallocateVector(s);
 		DeallocateVector(b);
-
+*/
 		//////////////////////////////////////////////////////////////////////////////////
 
-		/*
-		LUt[rep]=(double)(end1 - begin1) / CLOCKS_PER_SEC;
-		BSt[rep]=(double)(end2 - begin2) / CLOCKS_PER_SEC;
-		IMet[rep]=(double)(end3 - begin3) / CLOCKS_PER_SEC;
-		*/
-		/*
-		LUt[rep]=(double)(stop1 - start1);
-		BSt[rep]=(double)(stop2 - start2);
-		*/
-		GJEt[rep]=(double)(stop2 - start1);
-		IMet[rep]=(double)(stop3 - start3);
-		LPKt[rep]=(double)(stop4 - start4);
-		IMelut[rep]=(double)(stop5 - start5);
-
-		/*
-		GJErunt[rep]=LUt[rep]+BSt[rep];
-		GJEtotrunt += GJErunt[rep];
-		*/
-		GJEtotrunt += GJEt[rep];
-		IMetotrunt += IMet[rep];
-		LPKtotrunt += LPKt[rep];
-		IMelutotrunt += IMelut[rep];
-
-		/*
-		printf("\n\nLU  decomposition time: %f", LUt[rep]);
-		printf("\nBack substitution time: %f", BSt[rep]);
-		printf("\nGaussian elimin.  time: %f\n", GJErunt[rep]);
-		*/
-		if (verbose>0)
+		if (rank==0)
 		{
-			printf("\nLPK    call    run time: %f clk", LPKt[rep]);
-			printf("\nGJE    call    run time: %f clk", GJEt[rep]);
-			printf("\nIMe    call    run time: %f clk", IMet[rep]);
-			printf("\nIMe-lu call    run time: %f clk\n", IMelut[rep]);
+			/*
+			LUt[rep]=(double)(end1 - begin1) / CLOCKS_PER_SEC;
+			BSt[rep]=(double)(end2 - begin2) / CLOCKS_PER_SEC;
+			IMet[rep]=(double)(end3 - begin3) / CLOCKS_PER_SEC;
+			*/
+			/*
+			LUt[rep]=(double)(stop1 - start1);
+			BSt[rep]=(double)(stop2 - start2);
+			*/
+			GJEt[rep]=(double)(stop2 - start1);
+			IMet[rep]=(double)(stop3 - start3);
+	//		LPKt[rep]=(double)(stop4 - start4);
+	//		IMelut[rep]=(double)(stop5 - start5);
+
+			/*
+			GJErunt[rep]=LUt[rep]+BSt[rep];
+			GJEtotrunt += GJErunt[rep];
+			*/
+			GJEtotrunt += GJEt[rep];
+			IMetotrunt += IMet[rep];
+	//		LPKtotrunt += LPKt[rep];
+	//		IMelutotrunt += IMelut[rep];
+
+			/*
+			printf("\n\nLU  decomposition time: %f", LUt[rep]);
+			printf("\nBack substitution time: %f", BSt[rep]);
+			printf("\nGaussian elimin.  time: %f\n", GJErunt[rep]);
+			*/
+			if(verbose>0)
+			{
+				//printf("\nLPK    call    run time: %f clk", LPKt[rep]);
+				printf("\nGJE    call    run time: %f clk", GJEt[rep]);
+				printf("\nIMe    call    run time: %f clk", IMet[rep]);
+				//printf("\nIMe-lu call    run time: %f clk\n", IMelut[rep]);
+			}
+			printf("\n Summary:");
+			//printf("\nLPK    Total   run time: %f clk\t\t%f s", LPKtotrunt, LPKtotrunt / CLOCKS_PER_SEC);
+			printf("\nGJE    Total   run time: %f clk\t\t%f s", GJEtotrunt, GJEtotrunt / CLOCKS_PER_SEC);
+			printf("\nIMe    Total   run time: %f clk\t\t%f s", IMetotrunt, IMetotrunt / CLOCKS_PER_SEC);
+			//printf("\nIMe-lu Total   run time: %f clk\t\t%f s\n", IMelutotrunt, IMelutotrunt / CLOCKS_PER_SEC);
+			//printf("\nLPK    Average run time: %f clk\t\t%f s", LPKtotrunt/repetitions, LPKtotrunt/repetitions / CLOCKS_PER_SEC);
+			printf("\nGJE    Average run time: %f clk\t\t%f s", GJEtotrunt/repetitions, GJEtotrunt/repetitions / CLOCKS_PER_SEC);
+			printf("\nIMe    Average run time: %f clk\t\t%f s", IMetotrunt/repetitions, IMetotrunt/repetitions / CLOCKS_PER_SEC);
+			//printf("\nIMe-lu Average run time: %f clk\t\t%f s\n\n", IMelutotrunt/repetitions, IMelutotrunt/repetitions / CLOCKS_PER_SEC);
 		}
     }
-	printf("\n Summary:");
-	printf("\nLPK    Total   run time: %f clk\t\t%f s", LPKtotrunt, LPKtotrunt / CLOCKS_PER_SEC);
-	printf("\nGJE    Total   run time: %f clk\t\t%f s", GJEtotrunt, GJEtotrunt / CLOCKS_PER_SEC);
-	printf("\nIMe    Total   run time: %f clk\t\t%f s", IMetotrunt, IMetotrunt / CLOCKS_PER_SEC);
-	printf("\nIMe-lu Total   run time: %f clk\t\t%f s\n", IMelutotrunt, IMelutotrunt / CLOCKS_PER_SEC);
-	printf("\nLPK    Average run time: %f clk\t\t%f s", LPKtotrunt/repetitions, LPKtotrunt/repetitions / CLOCKS_PER_SEC);
-	printf("\nGJE    Average run time: %f clk\t\t%f s", GJEtotrunt/repetitions, GJEtotrunt/repetitions / CLOCKS_PER_SEC);
-	printf("\nIMe    Average run time: %f clk\t\t%f s", IMetotrunt/repetitions, IMetotrunt/repetitions / CLOCKS_PER_SEC);
-	printf("\nIMe-lu Average run time: %f clk\t\t%f s\n\n", IMelutotrunt/repetitions, IMelutotrunt/repetitions / CLOCKS_PER_SEC);
-
+	MPI_Finalize();
     return(0);
 }
