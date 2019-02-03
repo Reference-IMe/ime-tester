@@ -42,6 +42,10 @@ void ScalapackPDGESV_calc(double* A_global, double* B_global, int n, int myrank,
 	// MATRIX (global)
 	//double *A_global, *B_global;		//defined on every node, but allocated only on root
 
+	// only to equal test conditions
+    MPI_Bcast (A_global,n*n,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Bcast (B_global,n,MPI_DOUBLE,0,MPI_COMM_WORLD);
+
 	// Initialize a default BLACS context and the processes grid
 	MPI_Dims_create(nprocs, ndims, dims);
 	nprow = dims[0];
