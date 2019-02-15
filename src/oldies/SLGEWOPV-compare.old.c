@@ -18,6 +18,8 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);   /* get current process id */
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs); /* get number of processes */
 
+	//metrics program;
+
     int i,j,k,l,rep;
 
     double** A2;
@@ -25,6 +27,7 @@ int main(int argc, char **argv)
     double*  c;
     double*  x;
 
+    //double** X;
     double** K;
     double*  H;
     double*  F;
@@ -33,9 +36,21 @@ int main(int argc, char **argv)
     double*  A1;
     int*     ipiv;
 
-    double versionrun[10][100];
-    const char* versionname[10];
-    double versiontot[10];
+    /*
+    double GJErunt[100];
+    double LUt[100];
+    double BSt[100];
+    */
+    double GJEt[100];
+    double IMet[100];
+    double IMelut[100];
+    double IMesot[100];
+    double LPKt[100];
+    double GJEtotrunt=0.0;
+    double IMetotrunt=0.0;
+    double IMelutotrunt=0.0;
+    double IMesototrunt=0.0;
+    double LPKtotrunt=0.0;
 
     int n=atoi(argv[1]);
 
@@ -45,20 +60,8 @@ int main(int argc, char **argv)
     int repetitions=atoi(argv[3]);
     int verbose=atoi(argv[4]);
 
-    clock_t start, stop;
-
-	versionname[0]="SPK     ";
-	versionname[1]="GJE     ";
-	versionname[2]="IMe-base";
-	versionname[3]="IMe-luns";
-	versionname[4]="IMe-sndo";
-	//versionname[5]="IMe-last";
-	int versions = 5;
-
-	for (i=0; i<versions; i++)
-	{
-		versiontot[i] = 0;
-	}
+    //time_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5;
+    clock_t start1, stop1, start2, stop2, start3, stop3, start4, stop4, start5, stop5, start6, stop6;
 
 	if (rank==0 && verbose>0)
 	{
@@ -82,6 +85,7 @@ int main(int argc, char **argv)
 
 		A1=AllocateMatrix1D(rows, cols);
 		b=AllocateVector(rows);
+		//ipiv = malloc(n * sizeof(int));
 
 		if (rank==0)
 		{
@@ -97,12 +101,15 @@ int main(int argc, char **argv)
 			}
 		}
 
-		start=clock();
+		start4=clock();
+		//getmetrics(&program);
+		//start4=program.wall_clock;
 
 		ScalapackPDGESV_calc(A1, b, n, rank, nprocs);
 
-		stop=clock();
-		versionrun[0][rep]=(double)(stop - start);
+		//getmetrics(&program);
+		//stop4=program.wall_clock;
+		stop4=clock();
 
 		if (rank==0)
 		{
@@ -110,12 +117,13 @@ int main(int argc, char **argv)
 
 			if (verbose>1)
 			{
-				printf("\nThe %s solution is:\n",versionname[0]);
+				printf("\nThe SPK solution is:\n");
 				PrintVector(b, rows);
 			}
 		}
 		DeallocateMatrix1D(A1);
 		DeallocateVector(b);
+		//free(ipiv);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination
@@ -138,19 +146,23 @@ int main(int argc, char **argv)
 			}
 	    }
 
-		start=clock();
+		start1 =clock();
+		//getmetrics(&program);
+		//start1=program.wall_clock;
 
 		pGaussianElimination(A2, b, n,rank,nprocs);
 
 	    if (rank==0)
 		{
 			BackSubstitution(A2, b, x, n);
-			stop=clock();
-			versionrun[1][rep]=(double)(stop - start);
+
+			//getmetrics(&program);
+			//stop2=program.wall_clock;
+			stop2 = clock();
 
 			if (verbose>1)
 			{
-				printf("\nThe %s solution is:\n",versionname[1]);
+				printf("\nThe GJE solution is:\n");
 				PrintVector(x, rows);
 			}
 		}
@@ -168,8 +180,10 @@ int main(int argc, char **argv)
 		FillMatrix2D(A2, rows, cols);
 		FillVector(b,rows,1);
 
+	    //X=AllocateMatrix2D(n,n,CONTIGUOUS);
 	    K=AllocateMatrix2D(n,n,CONTIGUOUS);
 	    H=AllocateVector(n);
+	    //F=AllocateVector(n);
 	    s=AllocateVector(n);
 
 		if (rank==0 && verbose>2)
@@ -180,22 +194,27 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		start = clock();
+		start3 = clock();
+		//getmetrics(&program);
+		//start3=program.wall_clock;
 
 		SLGEWOPV_calc(A2, b, s, n, K, H, rank, nprocs);
 
-		stop = clock();
-		versionrun[2][rep]=(double)(stop - start);
+		//getmetrics(&program);
+		//stop3=program.wall_clock;
+		stop3 = clock();
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[2]);
+			printf("\nThe IMe solution is:\n");
 			PrintVector(s, rows);
 		}
 
 	    DeallocateMatrix2D(A2,n,CONTIGUOUS);
+	    //DeallocateMatrix2D(X,n,CONTIGUOUS);
 	    DeallocateMatrix2D(K,n,CONTIGUOUS);
 	    DeallocateVector(H);
+	    //DeallocateVector(F);
 	    DeallocateVector(s);
 	    DeallocateVector(b);
 
@@ -208,8 +227,10 @@ int main(int argc, char **argv)
 		FillMatrix2D(A2, rows, cols);
 		FillVector(b,rows,1);
 
+		//X=AllocateMatrix2D(n,n,CONTIGUOUS);
 		K=AllocateMatrix2D(n,n,CONTIGUOUS);
 		H=AllocateVector(n);
+		//F=AllocateVector(n);
 		s=AllocateVector(n);
 
 		if (rank==0 && verbose>2)
@@ -220,22 +241,27 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		start = clock();
+		start5 = clock();
+		//getmetrics(&program);
+		//start5=program.wall_clock;
 
 		SLGEWOPV_calc_unswitch(A2, b, s, n, K, H, rank, nprocs);
 
-		stop = clock();
-		versionrun[3][rep]=(double)(stop - start);
+		//getmetrics(&program);
+		//stop5=program.wall_clock;
+		stop5 = clock();
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[3]);
+			printf("\nThe IMe-lu solution is:\n");
 			PrintVector(s, rows);
 		}
 
 		DeallocateMatrix2D(A2,n,CONTIGUOUS);
+		//DeallocateMatrix2D(X,n,CONTIGUOUS);
 		DeallocateMatrix2D(K,n,CONTIGUOUS);
 		DeallocateVector(H);
+		//DeallocateVector(F);
 		DeallocateVector(s);
 		DeallocateVector(b);
 
@@ -248,8 +274,10 @@ int main(int argc, char **argv)
 		FillMatrix2D(A2, rows, cols);
 		FillVector(b,rows,1);
 
+		//X=AllocateMatrix2D(n,n,CONTIGUOUS);
 		K=AllocateMatrix2D(n,n,CONTIGUOUS);
 		H=AllocateVector(n);
+		//F=AllocateVector(n);
 		s=AllocateVector(n);
 
 		if (rank==0 && verbose>2)
@@ -260,22 +288,28 @@ int main(int argc, char **argv)
 			PrintVector(b, rows);
 		}
 
-		start = clock();
+		start6 = clock();
+		//getmetrics(&program);
+		//start5=program.wall_clock;
 
+		//SLGEWOPV_calc_unswitch(A2, b, s, n, K, H, rank, nprocs);
 		SLGEWOPV_calc_sendopt(A2, b, s, n, K, H, rank, nprocs);
 
-		stop = clock();
-		versionrun[4][rep]=(double)(stop - start);
+		//getmetrics(&program);
+		//stop5=program.wall_clock;
+		stop6 = clock();
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[4]);
+			printf("\nThe IMe-lu solution is:\n");
 			PrintVector(s, rows);
 		}
 
 		DeallocateMatrix2D(A2,n,CONTIGUOUS);
+		//DeallocateMatrix2D(X,n,CONTIGUOUS);
 		DeallocateMatrix2D(K,n,CONTIGUOUS);
 		DeallocateVector(H);
+		//DeallocateVector(F);
 		DeallocateVector(s);
 		DeallocateVector(b);
 
@@ -283,30 +317,60 @@ int main(int argc, char **argv)
 
 		if (rank==0)
 		{
-			for (i=0; i<versions; i++)
+			/*
+			LUt[rep]=(double)(end1 - begin1) / CLOCKS_PER_SEC;
+			BSt[rep]=(double)(end2 - begin2) / CLOCKS_PER_SEC;
+			IMet[rep]=(double)(end3 - begin3) / CLOCKS_PER_SEC;
+			*/
+			/*
+			LUt[rep]=(double)(stop1 - start1);
+			BSt[rep]=(double)(stop2 - start2);
+			*/
+			GJEt[rep]=(double)(stop2 - start1);
+			IMet[rep]=(double)(stop3 - start3);
+			LPKt[rep]=(double)(stop4 - start4);
+			IMelut[rep]=(double)(stop5 - start5);
+			IMesot[rep]=(double)(stop6 - start6);
+
+			/*
+			GJErunt[rep]=LUt[rep]+BSt[rep];
+			GJEtotrunt += GJErunt[rep];
+			*/
+			GJEtotrunt += GJEt[rep];
+			IMetotrunt += IMet[rep];
+			LPKtotrunt += LPKt[rep];
+			IMelutotrunt += IMelut[rep];
+			IMesototrunt += IMesot[rep];
+
+			/*
+			printf("\n\nLU  decomposition time: %f", LUt[rep]);
+			printf("\nBack substitution time: %f", BSt[rep]);
+			printf("\nGaussian elimin.  time: %f\n", GJErunt[rep]);
+			*/
+			if(verbose>0)
 			{
-				versiontot[i] += versionrun[i][rep];
-				if (verbose>0)
-				{
-					printf("\n%s    call    run time: %f clk", versionname[i], versionrun[i][rep]);
-				}
+				printf("\nSPK    call    run time: %f clk", LPKt[rep]);
+				printf("\nGJE    call    run time: %f clk", GJEt[rep]);
+				printf("\nIMe    call    run time: %f clk", IMet[rep]);
+				printf("\nIMe-lu call    run time: %f clk", IMelut[rep]);
+				printf("\nIMe-so call    run time: %f clk\n", IMesot[rep]);
 			}
 		}
     }
-
 	if (rank==0)
 	{
-		printf("\n\n Summary:");
-		for (i=0; i<versions; i++)
-		{
-			printf("\n%s    Total   run time: %f clk\t\t%f s", versionname[i], versiontot[i], versiontot[i] / CLOCKS_PER_SEC);
-		}
-		printf("\n");
-		for (i=0; i<versions; i++)
-			{
-				printf("\n%s    Average run time: %f clk\t\t%f s", versionname[i], versiontot[i]/repetitions, versiontot[i]/repetitions / CLOCKS_PER_SEC);
-			}
-		printf("\n");
+		printf("\n Summary:");
+		printf("\nSPK    Total   run time: %f clk\t\t%f s", LPKtotrunt, LPKtotrunt / CLOCKS_PER_SEC);
+		printf("\nGJE    Total   run time: %f clk\t\t%f s", GJEtotrunt, GJEtotrunt / CLOCKS_PER_SEC);
+		printf("\nIMe    Total   run time: %f clk\t\t%f s", IMetotrunt, IMetotrunt / CLOCKS_PER_SEC);
+		printf("\nIMe-lu Total   run time: %f clk\t\t%f s", IMelutotrunt, IMelutotrunt / CLOCKS_PER_SEC);
+		printf("\nIMe-so Total   run time: %f clk\t\t%f s\n", IMesototrunt, IMesototrunt / CLOCKS_PER_SEC);
+
+		printf("\nSPK    Average run time: %f clk\t\t%f s", LPKtotrunt/repetitions, LPKtotrunt/repetitions / CLOCKS_PER_SEC);
+		printf("\nGJE    Average run time: %f clk\t\t%f s", GJEtotrunt/repetitions, GJEtotrunt/repetitions / CLOCKS_PER_SEC);
+		printf("\nIMe    Average run time: %f clk\t\t%f s", IMetotrunt/repetitions, IMetotrunt/repetitions / CLOCKS_PER_SEC);
+		printf("\nIMe-lu Average run time: %f clk\t\t%f s", IMelutotrunt/repetitions, IMelutotrunt/repetitions / CLOCKS_PER_SEC);
+		printf("\nIMe-so Average run time: %f clk\t\t%f s\n\n", IMesototrunt/repetitions, IMesototrunt/repetitions / CLOCKS_PER_SEC);
 	}
 
 	MPI_Finalize();
