@@ -1,17 +1,22 @@
-PROJECT_DIR = $(CURDIR)
-BIN_DIR = $(PROJECT_DIR)/bin
-SRC_DIR = $(PROJECT_DIR)/src
-NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-result -Wno-unused-variable
+CC = gcc
+MPICC = mpicc
+DEBUG = -g -O3
+CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG)
 
-export
+all : testers
 
-all: folders testers
+testers : SLGEWOS-compare SLGEWOPV-compare
+  
+SLGEWOS-compare : SLGEWOS-compare.c
+	$(CC) $(CFLAGS) SLGEWOS-compare.c -o $(BIN_DIR)/SLGEWOS-compare -llapack -lblas
 
-folders:
-	mkdir -p ./bin
-	
-testers: 
-	cd $(SRC_DIR)/testers && $(MAKE) testers
+SLGEWOPV-compare : SLGEWOPV-compare.c
+#	$(MPICC) $(CFLAGS) SLGEWOPV-compare.c -o $(BIN_DIR)/SLGEWOPV-compare /usr/lib/x86_64-linux-gnu/libmpi.so /usr/lib/x86_64-linux-gnu/libscalapack-openmpi.so.2.0 /usr/lib/x86_64-linux-gnu/libblacsCinit-openmpi.a /usr/lib/x86_64-linux-gnu/libblacs-openmpi.a
+	$(MPICC) $(CFLAGS) SLGEWOPV-compare.c -o $(BIN_DIR)/SLGEWOPV-compare  -lmkl_scalapack_lp64  -lmkl_blacs_openmpi_lp64 -mkl
+
+all : testers
+
+
 
 clean:
-	rm -rf ./bin/*
+	\rm *.o *.a *~ *.so
