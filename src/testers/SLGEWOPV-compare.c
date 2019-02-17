@@ -21,6 +21,7 @@ int main(int argc, char **argv)
     int i,j,k,l,rep;
 
     double** A2;
+    double** T;
     double*  b;
     double*  c;
     double*  x;
@@ -52,7 +53,7 @@ int main(int argc, char **argv)
 	versionname[2]="IMe-base";
 	versionname[3]="IMe-luns";
 	versionname[4]="IMe-sndo";
-	//versionname[5]="IMe-last";
+	versionname[5]="IMe-last";
 	int versions = 5;
 
 	for (i=0; i<versions; i++)
@@ -280,7 +281,47 @@ int main(int argc, char **argv)
 		DeallocateVector(b);
 
 		//////////////////////////////////////////////////////////////////////////////////
+		// Inhibition Method (last)
 
+		double* h;
+		double* hh;
+
+		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+		b=AllocateVector(rows);
+
+		FillMatrix2D(A2, rows, cols);
+		FillVector(b,rows,1);
+
+		T=AllocateMatrix2D(n,n*2,CONTIGUOUS);
+		x=AllocateVector(n);
+
+		if (rank==0 && verbose>2)
+		{
+			printf("\n\n Matrix A:\n");
+			PrintMatrix2D(A2, rows, cols);
+			printf("\n Vector b:\n");
+			PrintVector(b, rows);
+		}
+
+		start = clock();
+
+		SLGEWOPV_calc_last(A2, b, T, x, n, h, hh, rank, nprocs);
+
+		stop = clock();
+		versionrun[5][rep]=(double)(stop - start);
+
+		if (rank==0 && verbose>1)
+		{
+			printf("\nThe %s solution is:\n",versionname[5]);
+			PrintVector(s, rows);
+		}
+
+		DeallocateMatrix2D(A2,n,CONTIGUOUS);
+		DeallocateMatrix2D(T,n,CONTIGUOUS);
+		DeallocateVector(x);
+		DeallocateVector(b);
+
+		//////////////////////////////////////////////////////////////////////////////////
 		if (rank==0)
 		{
 			for (i=0; i<versions; i++)
