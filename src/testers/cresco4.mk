@@ -1,4 +1,4 @@
-CC = gcc
+CC = icc
 MPICC = mpicc
 DEBUG = -g -O3
 CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG)
@@ -8,11 +8,10 @@ all : testers
 testers : SLGEWOS-compare SLGEWOPV-compare
   
 SLGEWOS-compare : SLGEWOS-compare.c
-	$(CC) $(CFLAGS) SLGEWOS-compare.c -o $(BIN_DIR)/SLGEWOS-compare -llapack -lblas
+	$(CC) $(CFLAGS) SLGEWOS-compare.c -o $(BIN_DIR)/SLGEWOS-compare -mkl -lmkl_sequential -ldl
 
 SLGEWOPV-compare : SLGEWOPV-compare.c
-#	$(MPICC) $(CFLAGS) SLGEWOPV-compare.c -o $(BIN_DIR)/SLGEWOPV-compare /usr/lib/x86_64-linux-gnu/libmpi.so /usr/lib/x86_64-linux-gnu/libscalapack-openmpi.so.2.0 /usr/lib/x86_64-linux-gnu/libblacsCinit-openmpi.a /usr/lib/x86_64-linux-gnu/libblacs-openmpi.a
-	$(MPICC) $(CFLAGS) SLGEWOPV-compare.c -o $(BIN_DIR)/SLGEWOPV-compare  -lmkl_scalapack_lp64  -lmkl_blacs_openmpi_lp64 -mkl
+	$(MPICC) $(CFLAGS) SLGEWOPV-compare.c -o $(BIN_DIR)/SLGEWOPV-compare -mkl -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -ldl
 
 all : testers
 
