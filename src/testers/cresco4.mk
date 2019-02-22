@@ -13,9 +13,5 @@ SLGEWOS-compare : SLGEWOS-compare.c
 SLGEWOPV-compare : SLGEWOPV-compare.c
 	$(MPICC) $(CFLAGS) SLGEWOPV-compare.c -o $(BIN_DIR)/SLGEWOPV-compare -mkl -lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64 -ldl
 
-all : testers
-
-
-
 clean:
 	\rm *.o *.a *~ *.so
