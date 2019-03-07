@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc(A2, b, x, n, K, H, rank, nprocs);
+		SLGEWOPV_calc_base(A2, b, x, n, K, H, rank, nprocs);
 
 		stop = clock();
 		versionrun[2][rep]=(double)(stop - start);
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_last(A2, b, T, x, n, &h, &hh, rank, nprocs);
+		SLGEWOPV_calc_last_unopt(A2, b, T, x, n, &h, &hh, rank, nprocs);
 
 		stop = clock();
 		versionrun[5][rep]=(double)(stop - start);
