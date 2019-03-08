@@ -12,25 +12,12 @@ void pGaussianElimination(double** A, double* b, cui n, int rank, int nprocs)
     c=AllocateVector(n);
     map=malloc(n*sizeof(int));
 
-    //MPI_Bcast (&A[0][0],n*n,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	//MPI_Bcast (b,n,MPI_DOUBLE,0,MPI_COMM_WORLD);
+    MPI_Bcast (&A[0][0],n*n,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Bcast (b,n,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	for(i=0; i<n; i++)
 	{
 		map[i]= i % nprocs;
-		if (rank==0)
-		{
-			MPI_Send (&A[i][0],n,MPI_DOUBLE, map[i],i, MPI_COMM_WORLD);
-			MPI_Send (&b[i],1,MPI_DOUBLE, map[i],i+n, MPI_COMM_WORLD);
-		}
-		else
-		{
-			if (rank==map[i])
-			{
-				MPI_Recv (&A[i][0],n,MPI_DOUBLE, 0,i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-				MPI_Recv (&b[i],1,MPI_DOUBLE, 0,i+n, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			}
-		}
 	}
 
 	for(k=0;k<n;k++)
