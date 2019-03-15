@@ -9,10 +9,10 @@ export
 all: folders testers
 
 folders:
-        mkdir -p ./bin
+	mkdir -p ./bin
 
 testers: 
-        cd $(SRC_DIR)/testers && $(MAKE) -f marconi-knl.mk testers
+	cd $(SRC_DIR)/testers && $(MAKE) -f marconi-knl.mk testers
 
 clean:
-        rm -rf ./bin/*
+	rm -rf ./bin/*
