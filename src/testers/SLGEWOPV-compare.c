@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 
 		if (rank==0)
 		{
-			FillMatrix1D(A1, rows, cols);
+			FillMatrixT1D(A1, rows, cols);
 			FillVector(b,rows,1);
 
 			if (verbose>2)
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_last2(A2, b, T, x, n, &h, &hh, rank, nprocs);
+		SLGEWOPV_calc_last(A2, b, T, x, n, &h, &hh, rank, nprocs);
 
 		stop = clock();
 		versionrun[5][rep]=(double)(stop - start);

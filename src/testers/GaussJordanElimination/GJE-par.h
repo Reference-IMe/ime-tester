@@ -74,6 +74,29 @@ void pGaussianElimination(double** A, double* b, cui n, int rank, int nprocs)
 		*/
 
 	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	for(i=0; i<n; i++)
+	{
+		if (rank==0)
+		{
+			if(map[i]!=0)
+			{
+				MPI_Recv (&A[i][0], n, MPI_DOUBLE, map[i], i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Recv (&b[i], 1, MPI_DOUBLE, map[i], i+n, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			}
+		}
+		else
+		{
+			if (rank==map[i])
+			{
+				MPI_Send (&A[i][0], n, MPI_DOUBLE, 0,i, MPI_COMM_WORLD);
+				MPI_Send (&b[i], 1, MPI_DOUBLE, 0, i+n, MPI_COMM_WORLD);
+			}
+		}
+	}
+
 	free(map);
 	DeallocateVector(c);
 }
