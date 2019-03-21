@@ -6,9 +6,9 @@
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
 #include "../SLGEWOPV.h"
-#include "GaussJordanElimination/GJE-par.h"
 #include "Scalapack/ScalapackPDGESV.h"
 #include <mpi.h>
+#include "GaussJordanElimination/GJE-par.h"
 
 
 int main(int argc, char **argv)
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 
 		start=clock();
 
-		pGaussianElimination(A2, b, n,rank,nprocs);
+		pGaussianElimination_fullmatrix(A2, b, n,rank,nprocs);
 
 	    if (rank==0)
 		{

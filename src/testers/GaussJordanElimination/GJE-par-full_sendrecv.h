@@ -3,8 +3,6 @@
 #include "../../helpers/types.h"
 #include <mpi.h>
 
-#include "../../helpers/matrix.h"
-
 void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, cui n, int rank, int nprocs)
 {
     ui i,j,k;
@@ -115,32 +113,19 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
     ui i,j,k;
     double* c;
     int* map;
-    int numrows;
 
     c=AllocateVector(n);
     map=malloc(n*sizeof(int));
 
-    numrows=n/nprocs;
-
-    MPI_Datatype multiple_row, multiple_row_type;
-	MPI_Datatype multiple_term, multiple_term_type;
-
-	MPI_Type_vector (numrows, n, n * nprocs, MPI_DOUBLE , & multiple_row );
-	MPI_Type_commit (& multiple_row);
-	MPI_Type_create_resized(multiple_row, 0, n*sizeof(double), &multiple_row_type);
-	MPI_Type_commit (& multiple_row_type);
-
-	MPI_Type_vector (numrows, 1, nprocs, MPI_DOUBLE , & multiple_term );
-	MPI_Type_commit (& multiple_term);
-	MPI_Type_create_resized(multiple_term, 0, 1*sizeof(double), &multiple_term_type);
-	MPI_Type_commit (& multiple_term_type);
+	MPI_Datatype single_column;
+	MPI_Type_vector (n , 1, n , MPI_DOUBLE , & single_column );
+	MPI_Type_commit (& single_column);
 
     for(i=0; i<n; i++)
 	{
 		map[i]= i % nprocs;
 	}
 
-    /*
 	if (rank==0)
 	{
 		for(i=0; i<n; i++)
@@ -163,12 +148,6 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 			}
 		}
 	}
-	*/
-
-    MPI_Scatter(&A[0][0], 1, multiple_row_type, &A[rank][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-
-    MPI_Scatter(&b[0], 1, multiple_term_type, &b[rank], 1, multiple_term_type, 0, MPI_COMM_WORLD);
-
 
 	for(k=0;k<n;k++)
 	{
@@ -185,6 +164,7 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 		{
 			if(map[i] == rank)
 			{
+				//printf("I'm %d\n",rank);
 				for(j=0;j<n;j++)
 				{
 					A[i][j]=A[i][j]-( c[i]*A[k][j] );
@@ -208,10 +188,10 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 			fclose(fp);
 		}
 		*/
+
 	}
 
 
-	/*
 	for(i=0; i<n; i++)
 	{
 		if (rank==0)
@@ -231,11 +211,6 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 			}
 		}
 	}
-	*/
-
-    MPI_Gather(&A[rank][0], 1, multiple_row_type, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-
-    MPI_Gather(&b[rank], 1, multiple_term_type, &b[0], 1, multiple_term_type, 0, MPI_COMM_WORLD);
 
 	free(map);
 	DeallocateVector(c);
