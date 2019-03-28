@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 
 		start=clock();
 
-		pGaussianElimination_fullmatrix(A2, b, n,rank,nprocs);
+		pGaussianElimination_partialmatrix(A2, b, n,rank,nprocs);
 
 	    if (rank==0)
 		{

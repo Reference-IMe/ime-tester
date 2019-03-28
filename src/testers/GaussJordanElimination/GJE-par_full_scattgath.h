@@ -1,145 +1,112 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "../../helpers/types.h"
 #include <mpi.h>
 
 #include "../../helpers/matrix.h"
 
-#include <unistd.h>
-
-void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, int nprocs)
+void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, cui n, int rank, int nprocs)
 {
     ui i,j,k;
-
-    int myrows;
-    myrows=n/nprocs;
-    int mystart=0;
-
     double* c;
-    c=AllocateVector(n);
-
-	// row for pivoting
-    double* Abase;
-    Abase=malloc(n*sizeof(double));
-
-    // local storage for a part of the input matrix (continuous rows, not interleaved)
-    double** Alocal;
-    Alocal=AllocateMatrix2D(myrows, n, CONTIGUOUS);
-
     int* map;
-    map=malloc(n*sizeof(int));
+    int* mymap;
+    int mycols;
 
-    int* local;
-    local=malloc(n*sizeof(int));
+    c=AllocateVector(n);
+    map=malloc(n*sizeof(int));
+    mycols=n/nprocs;
+    mymap=malloc(mycols*sizeof(int));
 
     for(i=0; i<n; i++)
 	{
-		map[i]= i % nprocs;			// who has the row i
-		local[i]=floor(i/nprocs);	// position of the row i(global) in the local matrix
+		map[i]= i % nprocs;
 	}
-
-    int* global;
-    global=malloc(n*sizeof(int));
-
-    for(i=0; i<myrows; i++)
+    for(i=0; i<mycols; i++)
 	{
-    	global[i]= i * nprocs + rank; // position of the row i(local) in the global matrix
+    	mymap[i]= i * nprocs + rank;
 	}
 
-    // derived data types
-	MPI_Datatype multiple_row;
-	MPI_Type_vector (myrows, n, n * nprocs , MPI_DOUBLE, & multiple_row );
-	MPI_Type_commit (& multiple_row);
+    /*
+     * TODO
+     */
 
-	MPI_Datatype multiple_row_contiguous;
-	MPI_Type_vector (myrows, n, n , MPI_DOUBLE, & multiple_row_contiguous );
-	MPI_Type_commit (& multiple_row_contiguous);
-
-	MPI_Datatype multiple_row_type;
-	MPI_Type_create_resized (multiple_row, 0, n*sizeof(double), & multiple_row_type);
-	MPI_Type_commit (& multiple_row_type);
-
-	MPI_Datatype interleaved_row;
-	MPI_Type_vector (myrows, 1, nprocs, MPI_DOUBLE, & interleaved_row );
-	MPI_Type_commit (& interleaved_row);
-
-	MPI_Datatype interleaved_row_type;
-	MPI_Type_create_resized (interleaved_row, 0, 1*sizeof(double), & interleaved_row_type);
-	MPI_Type_commit (& interleaved_row_type);
-
-	// spread input matrix and vector
-	MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, MPI_COMM_WORLD);
-    MPI_Scatter (&b[0], 1, interleaved_row_type, &b[rank], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+    /*
+    if (rank==0)
+	{
+		for(i=0; i<n; i++)
+		{
+			if (map[i]!=0)
+			{
+				MPI_Send (&A[i][0],n,MPI_DOUBLE, map[i],i, MPI_COMM_WORLD);
+				MPI_Send (&b[i],1,MPI_DOUBLE, map[i],i+n, MPI_COMM_WORLD);
+			}
+		}
+	}
+	else
+	{
+		for(i=0; i<n; i++)
+		{
+			if (rank==map[i])
+			{
+				MPI_Recv (&A[i][0],n,MPI_DOUBLE, 0,i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Recv (&b[i],1,MPI_DOUBLE, 0,i+n, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			}
+		}
+	}
 
 	for(k=0;k<n;k++)
 	{
-
-		// prepare (copy) row for broadcast
-		// TODO: avoid copy by aliasing buffers
-		// TODO: check aliasing buffers with MPI version (MPICH no aliased buffers!)
-		if(map[k] == rank)
-		{
-			for (i=k; i<n; i++)
-			{
-				Abase[i]=Alocal[local[k]][i];
-			}
-		}
-
-		MPI_Bcast (&Abase[k],n-k,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
+		MPI_Bcast (&A[k][k],n-k,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
 		MPI_Bcast (&b[k],1,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
-
-		/*
 		for(i= k+1; i<n; i++)
 		{
 			if(map[i] == rank)
 			{
-				c[i]=Alocal[local[i]][k]/Abase[k];
+				c[i]=A[i][k]/A[k][k];
 			}
 		}
-		*/
-
-		/*
 		for(i= k+1; i<n; i++)
 		{
 			if(map[i] == rank)
 			{
+				//printf("I'm %d\n",rank);
 				for(j=0;j<n;j++)
 				{
-					Alocal[local[i]][j]=Alocal[local[i]][j]-( c[i]*Abase[j] );
+					A[i][j]=A[i][j]-( c[i]*A[k][j] );
 				}
 				b[i]=b[i]-( c[i]*b[k] );
 			}
 		}
-		*/
 
-		// at each global index iteration a process drops a row (the first in the set)
-		if (map[k] == rank)
-		{
-			mystart++;
-		}
+	}
 
-		// to avoid IFs: each process loops on its own set of rows, with indirect addressing
-		for (i=mystart; i<myrows; i++)
+
+	for(i=0; i<n; i++)
+	{
+		if (rank==0)
 		{
-			c[global[i]]=Alocal[i][k]/Abase[k];
-			for(j=0;j<n;j++)
+			if(map[i]!=0)
 			{
-				Alocal[i][j]=Alocal[i][j]-( c[global[i]]*Abase[j] );
-				//printf("k=%d: %d=%d,%d -> %d\n", k, map[global[i]], rank, i, global[i]);
+				MPI_Recv (&A[i][0], n, MPI_DOUBLE, map[i], i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Recv (&b[i], 1, MPI_DOUBLE, map[i], i+n, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			}
-			b[global[i]]=b[global[i]]-( c[global[i]]*b[k] );
+		}
+		else
+		{
+			if (rank==map[i])
+			{
+				MPI_Send (&A[i][0], n, MPI_DOUBLE, 0,i, MPI_COMM_WORLD);
+				MPI_Send (&b[i], 1, MPI_DOUBLE, 0, i+n, MPI_COMM_WORLD);
+			}
 		}
 	}
 
-    MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-    MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+     */
 
 	free(map);
-	free(local);
-	free(global);
+	free(mymap);
 	DeallocateVector(c);
-    DeallocateMatrix2D(Alocal,myrows,CONTIGUOUS);
 }
 
 
@@ -267,6 +234,7 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 	*/
 
     MPI_Gather(&A[rank][0], 1, multiple_row_type, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
+
     MPI_Gather(&b[rank], 1, multiple_term_type, &b[0], 1, multiple_term_type, 0, MPI_COMM_WORLD);
 
 	free(map);
