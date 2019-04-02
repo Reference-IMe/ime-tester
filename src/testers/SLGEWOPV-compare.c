@@ -291,22 +291,14 @@ int main(int argc, char **argv)
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (last)
 
-		double* h;
-		double* hh;
-
-		//double h,hh;
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-		h=AllocateVector(rows);
-		hh=AllocateVector(rows);
-
-		T=AllocateMatrix2D(n,n*2,CONTIGUOUS);
 		x=AllocateVector(n);
+		b=AllocateVector(rows);
 
 		if (rank==0)
 		{
+			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 			FillMatrix2D(A2, rows, cols);
+
 			FillVector(b,rows,1);
 
 			if (verbose>2)
@@ -320,8 +312,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_last(A2, b, T, x, n, h, hh, rank, nprocs);
-		//SLGEWOPV_calc_transition(A2, b, T, x, n, &h, &hh, rank, nprocs);
+		SLGEWOPV_calc_last(A2, b, x, n, rank, nprocs);
 
 		stop = clock();
 		versionrun[5][rep]=(double)(stop - start);
@@ -332,12 +323,12 @@ int main(int argc, char **argv)
 			PrintVector(x, rows);
 		}
 
-		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		DeallocateMatrix2D(T,n,CONTIGUOUS);
 		DeallocateVector(x);
 		DeallocateVector(b);
-		DeallocateVector(h);
-		DeallocateVector(hh);
+		if (rank==0)
+		{
+			DeallocateMatrix2D(A2,n,CONTIGUOUS);
+		}
 
 		//////////////////////////////////////////////////////////////////////////////////
 		if (rank==0)
