@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 
     double** K;
     double*  H;
-    double*  F;
+    //double*  F;
 
     double*  A1;
     int*     ipiv;
