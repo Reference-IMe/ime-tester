@@ -14,9 +14,9 @@
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
-    int rank, nprocs;
+    int rank, totprocs;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);   /* get current process id */
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs); /* get number of processes */
+    MPI_Comm_size(MPI_COMM_WORLD, &totprocs); /* get number of processes */
 
     int i,j,k,l,rep;
 
@@ -41,7 +41,8 @@ int main(int argc, char **argv)
 
     int rows=n;
     int cols=n;
-    int ft=atoi(argv[2]);
+    int sprocs=atoi(argv[2]);		// number of processes to allocate for summing (0 = no fault tolerance)
+    int cprocs=totprocs-sprocs;		// number of processes for real IMe calc
     int repetitions=atoi(argv[3]);
     int verbose=atoi(argv[4]);
 
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
 	{
 		printf("\nMatrix size: %dx%d",n,n);
 		printf("\nCheckpoint : ");
-		if(ft==0)
+		if(sprocs==0)
 		{
 			printf("no\n");
 		}
@@ -99,15 +100,13 @@ int main(int argc, char **argv)
 
 		start=clock();
 
-		ScalapackPDGESV_calc(A1, b, n, rank, nprocs);
+		ScalapackPDGESV_calc(A1, b, n, rank, cprocs);
 
 		stop=clock();
 		versionrun[0][rep]=(double)(stop - start);
 
 		if (rank==0)
 		{
-
-
 			if (verbose>1)
 			{
 				printf("\nThe %s solution is:\n",versionname[0]);
@@ -140,7 +139,7 @@ int main(int argc, char **argv)
 
 		start=clock();
 
-		pGaussianElimination_partialmatrix(A2, b, n,rank,nprocs);
+		pGaussianElimination_partialmatrix(A2, b, n, rank, cprocs);
 
 	    if (rank==0)
 		{
@@ -161,6 +160,7 @@ int main(int argc, char **argv)
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (base = broadcast interleaved)
+
 
 	    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 	    b=AllocateVector(rows);
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_base(A2, b, x, n, K, H, rank, nprocs);
+		SLGEWOPV_calc_base(A2, b, x, n, K, H, rank, cprocs);
 
 		stop = clock();
 		versionrun[2][rep]=(double)(stop - start);
@@ -201,6 +201,7 @@ int main(int argc, char **argv)
 	    DeallocateVector(H);
 	    DeallocateVector(x);
 	    DeallocateVector(b);
+
 
 	    //////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (loops unswitched)
@@ -228,7 +229,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_unswitch(A2, b, x, n, K, H, rank, nprocs);
+		SLGEWOPV_calc_unswitch(A2, b, x, n, K, H, rank, cprocs);
 
 		stop = clock();
 		versionrun[3][rep]=(double)(stop - start);
@@ -271,7 +272,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_sendopt(A2, b, x, n, K, H, rank, nprocs);
+		SLGEWOPV_calc_sendopt(A2, b, x, n, K, H, rank, cprocs);
 
 		stop = clock();
 		versionrun[4][rep]=(double)(stop - start);
@@ -312,7 +313,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_last(A2, b, x, n, rank, nprocs);
+		SLGEWOPV_calc_last(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
 		versionrun[5][rep]=(double)(stop - start);
