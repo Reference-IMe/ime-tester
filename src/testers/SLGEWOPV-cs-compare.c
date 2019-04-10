@@ -49,8 +49,9 @@ int main(int argc, char **argv)
     clock_t start, stop;
 
     versionname[0]="IMe-lacs";
+    versionname[1]="GJE-cs";
 
-	int versions = 1;
+	int versions = 2;
 
 	for (i=0; i<versions; i++)
 	{
@@ -169,6 +170,48 @@ int main(int argc, char **argv)
 	    {
 	    	DeallocateMatrix2D(T,n,CONTIGUOUS);
 	    }
+
+	    //////////////////////////////////////////////////////////////////////////////////
+		// Gaussian Elimination
+
+		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+		b=AllocateVector(rows);
+		x=AllocateVector(rows);
+
+		if (rank==0)
+		{
+			FillMatrix2D(A2, rows, cols);
+			FillVector(b,rows,1);
+
+			if (verbose>2)
+			{
+				printf("\n\n Matrix A:\n");
+				PrintMatrix2D(A2, rows, cols);
+				printf("\n Vector b:\n");
+				PrintVector(b, rows);
+			}
+		}
+
+		start=clock();
+
+		pGaussianElimination_partialmatrix_cs(A2, b, n, rank, cprocs, sprocs);
+
+		if (rank==0)
+		{
+			BackSubstitution(A2, b, x, n);
+			stop=clock();
+			versionrun[1][rep]=(double)(stop - start);
+
+			if (verbose>1)
+			{
+				printf("\nThe %s solution is:\n",versionname[1]);
+				PrintVector(x, rows);
+			}
+		}
+
+		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
+		DeallocateVector(b);
+		DeallocateVector(x);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		if (rank==0)
