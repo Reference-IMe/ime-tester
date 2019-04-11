@@ -5,9 +5,10 @@
 #include "../helpers/selfie.h"
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-#include "../SLGEWOPV.h"
 #include "Scalapack/ScalapackPDGESV.h"
 #include <mpi.h>
+
+#include "../SLGEWOPV.h"
 #include "GaussJordanElimination/GJE-par.h"
 
 
@@ -165,8 +166,8 @@ int main(int argc, char **argv)
 	    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 	    b=AllocateVector(rows);
 
-	    K=AllocateMatrix2D(n,n,CONTIGUOUS);
-	    H=AllocateVector(n);
+	    //K=AllocateMatrix2D(n,n,CONTIGUOUS);
+	    //H=AllocateVector(n);
 	    x=AllocateVector(n);
 
 	    if (rank==0)
@@ -185,7 +186,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_base(A2, b, x, n, K, H, rank, cprocs);
+		SLGEWOPV_calc_base(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
 		versionrun[2][rep]=(double)(stop - start);
@@ -197,8 +198,8 @@ int main(int argc, char **argv)
 		}
 
 	    DeallocateMatrix2D(A2,n,CONTIGUOUS);
-	    DeallocateMatrix2D(K,n,CONTIGUOUS);
-	    DeallocateVector(H);
+	    //DeallocateMatrix2D(K,n,CONTIGUOUS);
+	    //DeallocateVector(H);
 	    DeallocateVector(x);
 	    DeallocateVector(b);
 
@@ -209,8 +210,8 @@ int main(int argc, char **argv)
 		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		b=AllocateVector(rows);
 
-		K=AllocateMatrix2D(n,n,CONTIGUOUS);
-		H=AllocateVector(n);
+		//K=AllocateMatrix2D(n,n,CONTIGUOUS);
+		//H=AllocateVector(n);
 		x=AllocateVector(n);
 
 		if (rank==0)
@@ -229,7 +230,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_unswitch(A2, b, x, n, K, H, rank, cprocs);
+		SLGEWOPV_calc_unswitch(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
 		versionrun[3][rep]=(double)(stop - start);
@@ -241,8 +242,8 @@ int main(int argc, char **argv)
 		}
 
 		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		DeallocateMatrix2D(K,n,CONTIGUOUS);
-		DeallocateVector(H);
+		//DeallocateMatrix2D(K,n,CONTIGUOUS);
+		//DeallocateVector(H);
 		DeallocateVector(x);
 		DeallocateVector(b);
 
@@ -252,8 +253,8 @@ int main(int argc, char **argv)
 		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		b=AllocateVector(rows);
 
-		K=AllocateMatrix2D(n,n,CONTIGUOUS);
-		H=AllocateVector(n);
+		//K=AllocateMatrix2D(n,n,CONTIGUOUS);
+		//H=AllocateVector(n);
 		x=AllocateVector(n);
 
 		if (rank==0)
@@ -272,7 +273,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_sendopt(A2, b, x, n, K, H, rank, cprocs);
+		SLGEWOPV_calc_sendopt(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
 		versionrun[4][rep]=(double)(stop - start);
@@ -284,8 +285,8 @@ int main(int argc, char **argv)
 		}
 
 		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		DeallocateMatrix2D(K,n,CONTIGUOUS);
-		DeallocateVector(H);
+		//DeallocateMatrix2D(K,n,CONTIGUOUS);
+		//DeallocateVector(H);
 		DeallocateVector(x);
 		DeallocateVector(b);
 

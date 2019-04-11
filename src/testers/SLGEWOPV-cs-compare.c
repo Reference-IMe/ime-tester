@@ -5,9 +5,10 @@
 #include "../helpers/selfie.h"
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-#include "../SLGEWOPV.h"
 #include "Scalapack/ScalapackPDGESV.h"
 #include <mpi.h>
+
+#include "../SLGEWOPV-FT.h"
 #include "GaussJordanElimination/GJE-par.h"
 
 
