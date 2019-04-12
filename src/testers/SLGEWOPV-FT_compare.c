@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../helpers/selfie.h"
+
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-#include "Scalapack/ScalapackPDGESV.h"
+
 #include <mpi.h>
 
-#include "../SLGEWOPV-FT.h"
+#include "Scalapack/ScalapackPDGESV.h"
 #include "GaussJordanElimination/GJE-par.h"
+
+#include "../SLGEWOPV-FT.h"
 
 
 int main(int argc, char **argv)
@@ -49,8 +51,8 @@ int main(int argc, char **argv)
 
     clock_t start, stop;
 
-    versionname[0]="IMe-lacs";
-    versionname[1]="GJE-cs";
+    versionname[0]="IMe-cs  ";
+    versionname[1]="GJE-cs  ";
 
 	int versions = 2;
 
@@ -143,8 +145,6 @@ int main(int argc, char **argv)
 
 		SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs, T, Tlocal, TlastKc, TlastKr, h, hh);
 
-		sleep(3);
-
 		stop = clock();
 		versionrun[0][rep]=(double)(stop - start);
 
@@ -153,8 +153,6 @@ int main(int argc, char **argv)
 			printf("\nThe %s solution is:\n",versionname[0]);
 			PrintVector(x, rows);
 		}
-
-
 
 		DeallocateVector(x);
 		DeallocateVector(b);

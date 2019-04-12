@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../helpers/selfie.h"
+
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-#include "Scalapack/ScalapackPDGESV.h"
+
 #include <mpi.h>
 
-#include "../SLGEWOPV.h"
+#include "Scalapack/ScalapackPDGESV.h"
 #include "GaussJordanElimination/GJE-par.h"
+
+#include "../SLGEWOPV.h"
 
 
 int main(int argc, char **argv)
@@ -51,11 +53,9 @@ int main(int argc, char **argv)
 
 	versionname[0]="SPK     ";
 	versionname[1]="GJE     ";
-	versionname[2]="IMe-base";
-	versionname[3]="IMe-luns";
-	versionname[4]="IMe-sndo";
-	versionname[5]="IMe-last";
-	int versions = 6;
+	versionname[2]="IMe-sndo";
+	versionname[3]="IMe-last";
+	int versions = 4;
 
 	for (i=0; i<versions; i++)
 	{
@@ -159,93 +159,6 @@ int main(int argc, char **argv)
 	    DeallocateVector(b);
 	    DeallocateVector(x);
 
-		//////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (base = broadcast interleaved)
-
-
-	    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-	    b=AllocateVector(rows);
-
-	    //K=AllocateMatrix2D(n,n,CONTIGUOUS);
-	    //H=AllocateVector(n);
-	    x=AllocateVector(n);
-
-	    if (rank==0)
-	    {
-			FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
-
-			if (verbose>2)
-			{
-				printf("\n\n Matrix A:\n");
-				PrintMatrix2D(A2, rows, cols);
-				printf("\n Vector b:\n");
-				PrintVector(b, rows);
-			}
-	    }
-
-		start = clock();
-
-		SLGEWOPV_calc_base(A2, b, x, n, rank, cprocs);
-
-		stop = clock();
-		versionrun[2][rep]=(double)(stop - start);
-
-		if (rank==0 && verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[2]);
-			PrintVector(x, rows);
-		}
-
-	    DeallocateMatrix2D(A2,n,CONTIGUOUS);
-	    //DeallocateMatrix2D(K,n,CONTIGUOUS);
-	    //DeallocateVector(H);
-	    DeallocateVector(x);
-	    DeallocateVector(b);
-
-
-	    //////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (loops unswitched)
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-
-		//K=AllocateMatrix2D(n,n,CONTIGUOUS);
-		//H=AllocateVector(n);
-		x=AllocateVector(n);
-
-		if (rank==0)
-		{
-			FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
-
-			if (verbose>2)
-			{
-				printf("\n\n Matrix A:\n");
-				PrintMatrix2D(A2, rows, cols);
-				printf("\n Vector b:\n");
-				PrintVector(b, rows);
-			}
-		}
-
-		start = clock();
-
-		SLGEWOPV_calc_unswitch(A2, b, x, n, rank, cprocs);
-
-		stop = clock();
-		versionrun[3][rep]=(double)(stop - start);
-
-		if (rank==0 && verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[3]);
-			PrintVector(x, rows);
-		}
-
-		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		//DeallocateMatrix2D(K,n,CONTIGUOUS);
-		//DeallocateVector(H);
-		DeallocateVector(x);
-		DeallocateVector(b);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (send optimized)
@@ -276,11 +189,11 @@ int main(int argc, char **argv)
 		SLGEWOPV_calc_sendopt(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
-		versionrun[4][rep]=(double)(stop - start);
+		versionrun[2][rep]=(double)(stop - start);
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[4]);
+			printf("\nThe %s solution is:\n",versionname[2]);
 			PrintVector(x, rows);
 		}
 
@@ -317,11 +230,11 @@ int main(int argc, char **argv)
 		SLGEWOPV_calc_last(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
-		versionrun[5][rep]=(double)(stop - start);
+		versionrun[3][rep]=(double)(stop - start);
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[5]);
+			printf("\nThe %s solution is:\n",versionname[3]);
 			PrintVector(x, rows);
 		}
 
