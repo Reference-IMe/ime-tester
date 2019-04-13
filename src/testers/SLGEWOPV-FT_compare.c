@@ -8,10 +8,10 @@
 
 #include <mpi.h>
 
+#include "../SLGEWOPV-FT.h"
 #include "Scalapack/ScalapackPDGESV.h"
 #include "GaussJordanElimination/GJE-par.h"
 
-#include "../SLGEWOPV-FT.h"
 
 
 int main(int argc, char **argv)
@@ -129,9 +129,10 @@ int main(int argc, char **argv)
 
 	     */
 
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+
 		if (rank==0)
 		{
+			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 
 			FillMatrix2D(A2, rows, cols);
 

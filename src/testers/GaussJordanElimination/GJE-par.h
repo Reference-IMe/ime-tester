@@ -47,7 +47,7 @@ void pGaussianElimination_partialmatrix_cs(double** A, double* b, cui n, int ran
 	}
     for(i=n; i<Trows; i++)
     {
-    	map[i]=nprocs;
+    	map[i]=nprocs-1;
     	local[i]=i-n;
     }
 
@@ -55,7 +55,7 @@ void pGaussianElimination_partialmatrix_cs(double** A, double* b, cui n, int ran
     int* global;
     global=malloc(myrows*sizeof(int));
 
-    if (rank==nprocs)
+    if (rank>=cprocs)
     {
     	for(i=0; i<myrows; i++)
     		{
@@ -103,10 +103,17 @@ void pGaussianElimination_partialmatrix_cs(double** A, double* b, cui n, int ran
 		}
 
 	MPI_Comm comm_calc;
-	MPI_Comm_split(MPI_COMM_WORLD, i_am_calc, rank, &comm_calc);
-
 	int rank_calc;
-	MPI_Comm_rank(comm_calc, &rank_calc);
+	if (sprocs>0)
+	{
+		MPI_Comm_split(MPI_COMM_WORLD, i_am_calc, rank, &comm_calc);
+		MPI_Comm_rank(comm_calc, &rank_calc);
+	}
+	else
+	{
+		comm_calc=MPI_COMM_WORLD;
+		rank_calc=rank;
+	}
 
 	// spread input matrix and vector
 	if (i_am_calc)
@@ -174,8 +181,11 @@ void pGaussianElimination_partialmatrix_cs(double** A, double* b, cui n, int ran
 				b[global[i]]=b[global[i]]-( c[global[i]]*b[k] );
 			}
 
-			// checkpointing
-			MPI_Send (&Alocal[0][0], 1, multiple_row_contiguous, nprocs-1, rank, MPI_COMM_WORLD);
+			if (sprocs>0)
+			{
+				// checkpointing
+				MPI_Send (&Alocal[0][0], 1, multiple_row_contiguous, nprocs-1, rank, MPI_COMM_WORLD);
+			}
 		}
 		else
 		{
@@ -333,6 +343,7 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 	free(local);
 	free(global);
 	DeallocateVector(c);
+	DeallocateVector(Abase);
     DeallocateMatrix2D(Alocal,myrows,CONTIGUOUS);
 }
 
