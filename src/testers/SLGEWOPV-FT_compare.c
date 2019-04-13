@@ -86,6 +86,7 @@ int main(int argc, char **argv)
 		x=AllocateVector(n);
 		b=AllocateVector(rows);
 
+		/*
 		int XKcols=2*n;					// num of cols X + K
 	    int myTcols;					// num of cols per process
 	    	myTcols=XKcols/cprocs;
@@ -96,24 +97,26 @@ int main(int argc, char **argv)
 	    int mystart;
 
 	    int nprocs=cprocs+sprocs;
+	    */
+
 	    /*
 	     * local storage for a part of the input matrix (continuous columns, not interleaved)
 	     */
+
+	    /*
 	    double** Tlocal;
 	    Tlocal=AllocateMatrix2D(n, myTcols, CONTIGUOUS);
 
-	    //double** T;
+	    double** T;
 				//if (rank==0)
 				{
 					T=AllocateMatrix2D(n,Tcols,CONTIGUOUS);
 				}
-				/*
 				else
 				{
 					//T=AllocateMatrix2D(n,Tcols,CONTIGUOUS);
 					T=Tlocal;				// dummy assignment to avoid segfault (i.e. in  next scatter)
 				}
-				*/
 
 	    double* TlastKc;					// last col of T (K)
 	    		TlastKc=AllocateVector(n);
@@ -124,7 +127,9 @@ int main(int argc, char **argv)
 	    double* hh;
 				hh=AllocateVector(n);
 
-				A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+	     */
+
+		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		if (rank==0)
 		{
 
@@ -143,7 +148,8 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs, T, Tlocal, TlastKc, TlastKr, h, hh);
+		//SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs, T, Tlocal, TlastKc, TlastKr, h, hh);
+		SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs);
 
 		stop = clock();
 		versionrun[0][rep]=(double)(stop - start);
@@ -156,10 +162,11 @@ int main(int argc, char **argv)
 
 		DeallocateVector(x);
 		DeallocateVector(b);
-		//if (rank==0)
+		if (rank==0)
 		{
 			DeallocateMatrix2D(A2,n,CONTIGUOUS);
 		}
+		/*
 		DeallocateVector(TlastKc);
 		DeallocateVector(TlastKr);
 		DeallocateVector(h);
@@ -169,6 +176,7 @@ int main(int argc, char **argv)
 	    {
 	    	DeallocateMatrix2D(T,n,CONTIGUOUS);
 	    }
+	    */
 
 	    //////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination
