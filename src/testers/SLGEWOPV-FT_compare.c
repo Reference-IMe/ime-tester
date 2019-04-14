@@ -51,8 +51,8 @@ int main(int argc, char **argv)
 
     clock_t start, stop;
 
-    versionname[0]="IMe-cs  ";
-    versionname[1]="GJE-cs  ";
+    versionname[0]="GJE-cp  ";
+    versionname[1]="IMe-cs  ";
 
 	int versions = 2;
 
@@ -79,56 +79,53 @@ int main(int argc, char **argv)
     {
     	if (rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
 
+	    //////////////////////////////////////////////////////////////////////////////////
+		// Gaussian Elimination (with checkpointing)
+
+		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+		b=AllocateVector(rows);
+		x=AllocateVector(rows);
+
+		if (rank==0)
+		{
+			FillMatrix2D(A2, rows, cols);
+			FillVector(b,rows,1);
+
+			if (verbose>2)
+			{
+				printf("\n\n Matrix A:\n");
+				PrintMatrix2D(A2, rows, cols);
+				printf("\n Vector b:\n");
+				PrintVector(b, rows);
+			}
+		}
+
+		start=clock();
+
+		pGaussianElimination_partialmatrix_cp(A2, b, n, rank, cprocs, sprocs);
+
+		if (rank==0)
+		{
+			BackSubstitution(A2, b, x, n);
+			stop=clock();
+			versionrun[0][rep]=(double)(stop - start);
+
+			if (verbose>1)
+			{
+				printf("\nThe %s solution is:\n",versionname[0]);
+				PrintVector(x, rows);
+			}
+		}
+
+		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
+		DeallocateVector(b);
+		DeallocateVector(x);
 
 		//////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (lacs = last with checksum)
+		// Inhibition Method (last with checksumming)
 
 		x=AllocateVector(n);
 		b=AllocateVector(rows);
-
-		/*
-		int XKcols=2*n;					// num of cols X + K
-	    int myTcols;					// num of cols per process
-	    	myTcols=XKcols/cprocs;
-	    int Scols;
-	    	Scols=myTcols*sprocs;
-	    int Tcols=XKcols+Scols;			// num of cols X + K + S
-	    int myend;						// loop boundaries on local cols
-	    int mystart;
-
-	    int nprocs=cprocs+sprocs;
-	    */
-
-	    /*
-	     * local storage for a part of the input matrix (continuous columns, not interleaved)
-	     */
-
-	    /*
-	    double** Tlocal;
-	    Tlocal=AllocateMatrix2D(n, myTcols, CONTIGUOUS);
-
-	    double** T;
-				//if (rank==0)
-				{
-					T=AllocateMatrix2D(n,Tcols,CONTIGUOUS);
-				}
-				else
-				{
-					//T=AllocateMatrix2D(n,Tcols,CONTIGUOUS);
-					T=Tlocal;				// dummy assignment to avoid segfault (i.e. in  next scatter)
-				}
-
-	    double* TlastKc;					// last col of T (K)
-	    		TlastKc=AllocateVector(n);
-	    double* TlastKr;					// last row of T (K part)
-	    		TlastKr=AllocateVector(n);
-	    double* h;							// helper vectors
-	    		h=AllocateVector(n);
-	    double* hh;
-				hh=AllocateVector(n);
-
-	     */
-
 
 		if (rank==0)
 		{
@@ -153,11 +150,11 @@ int main(int argc, char **argv)
 		SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs);
 
 		stop = clock();
-		versionrun[0][rep]=(double)(stop - start);
+		versionrun[1][rep]=(double)(stop - start);
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[0]);
+			printf("\nThe %s solution is:\n",versionname[1]);
 			PrintVector(x, rows);
 		}
 
@@ -167,59 +164,6 @@ int main(int argc, char **argv)
 		{
 			DeallocateMatrix2D(A2,n,CONTIGUOUS);
 		}
-		/*
-		DeallocateVector(TlastKc);
-		DeallocateVector(TlastKr);
-		DeallocateVector(h);
-		DeallocateVector(hh);
-		DeallocateMatrix2D(Tlocal,n,CONTIGUOUS);
-	    //if (rank==0)
-	    {
-	    	DeallocateMatrix2D(T,n,CONTIGUOUS);
-	    }
-	    */
-
-	    //////////////////////////////////////////////////////////////////////////////////
-		// Gaussian Elimination
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-		x=AllocateVector(rows);
-
-		if (rank==0)
-		{
-			FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
-
-			if (verbose>2)
-			{
-				printf("\n\n Matrix A:\n");
-				PrintMatrix2D(A2, rows, cols);
-				printf("\n Vector b:\n");
-				PrintVector(b, rows);
-			}
-		}
-
-		start=clock();
-
-		pGaussianElimination_partialmatrix_cs(A2, b, n, rank, cprocs, sprocs);
-
-		if (rank==0)
-		{
-			BackSubstitution(A2, b, x, n);
-			stop=clock();
-			versionrun[1][rep]=(double)(stop - start);
-
-			if (verbose>1)
-			{
-				printf("\nThe %s solution is:\n",versionname[1]);
-				PrintVector(x, rows);
-			}
-		}
-
-		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
-		DeallocateVector(b);
-		DeallocateVector(x);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		if (rank==0)

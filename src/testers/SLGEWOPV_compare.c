@@ -53,11 +53,10 @@ int main(int argc, char **argv)
 
 	versionname[0]="SPK     ";
 	versionname[1]="GJE     ";
-	versionname[2]="GJE-ck-0";
-	versionname[3]="IMe-sndo";
-	versionname[4]="IMe     ";
-	versionname[5]="IMe-cs-0";
-	int versions = 6;
+	versionname[2]="GJE-cp-0";
+	versionname[3]="IMe     ";
+	versionname[4]="IMe-cs-0";
+	int versions = 5;
 
 	for (i=0; i<versions; i++)
 	{
@@ -162,7 +161,7 @@ int main(int argc, char **argv)
 	    DeallocateVector(x);
 
 	    //////////////////////////////////////////////////////////////////////////////////
-		// Gaussian Elimination ck-0
+		// Gaussian Elimination cp-0
 
 		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		b=AllocateVector(rows);
@@ -184,7 +183,7 @@ int main(int argc, char **argv)
 
 		start=clock();
 
-		pGaussianElimination_partialmatrix_cs(A2, b, n, rank, cprocs, sprocs);
+		pGaussianElimination_partialmatrix_cp(A2, b, n, rank, cprocs, sprocs);
 
 		if (rank==0)
 		{
@@ -202,49 +201,6 @@ int main(int argc, char **argv)
 		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 		DeallocateVector(b);
 		DeallocateVector(x);
-
-		//////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (send optimized)
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-
-		//K=AllocateMatrix2D(n,n,CONTIGUOUS);
-		//H=AllocateVector(n);
-		x=AllocateVector(n);
-
-		if (rank==0)
-		{
-			FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
-
-			if (verbose>2)
-			{
-				printf("\n\n Matrix A:\n");
-				PrintMatrix2D(A2, rows, cols);
-				printf("\n Vector b:\n");
-				PrintVector(b, rows);
-			}
-		}
-
-		start = clock();
-
-		SLGEWOPV_calc_sendopt(A2, b, x, n, rank, cprocs);
-
-		stop = clock();
-		versionrun[3][rep]=(double)(stop - start);
-
-		if (rank==0 && verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[3]);
-			PrintVector(x, rows);
-		}
-
-		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		//DeallocateMatrix2D(K,n,CONTIGUOUS);
-		//DeallocateVector(H);
-		DeallocateVector(x);
-		DeallocateVector(b);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (last)
@@ -273,11 +229,11 @@ int main(int argc, char **argv)
 		SLGEWOPV_calc_last(A2, b, x, n, rank, cprocs);
 
 		stop = clock();
-		versionrun[4][rep]=(double)(stop - start);
+		versionrun[3][rep]=(double)(stop - start);
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[4]);
+			printf("\nThe %s solution is:\n",versionname[3]);
 			PrintVector(x, rows);
 		}
 
@@ -289,7 +245,7 @@ int main(int argc, char **argv)
 		}
 
 		//////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (last + cs 0)
+		// Inhibition Method (last + cs-0)
 
 		x=AllocateVector(n);
 		b=AllocateVector(rows);
@@ -317,11 +273,11 @@ int main(int argc, char **argv)
 		SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs);
 
 		stop = clock();
-		versionrun[5][rep]=(double)(stop - start);
+		versionrun[4][rep]=(double)(stop - start);
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[5]);
+			printf("\nThe %s solution is:\n",versionname[4]);
 			PrintVector(x, rows);
 		}
 

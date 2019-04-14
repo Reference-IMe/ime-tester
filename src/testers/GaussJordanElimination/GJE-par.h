@@ -8,7 +8,12 @@
 
 #include <unistd.h>
 
-void pGaussianElimination_partialmatrix_cs(double** A, double* b, cui n, int rank, int cprocs, int sprocs)
+/*
+ * checkpointing version (cp)
+ *
+ * if sprocs=0, then no checkpoints
+ */
+void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int rank, int cprocs, int sprocs)
 {
     ui i,j,k;
 
