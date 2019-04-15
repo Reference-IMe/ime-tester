@@ -10,4 +10,4 @@ source: [netlib](http://netlib.org/scalapack/slug/node106.html#SECTION0451100000
 - Square processor grid.
 - Use efficient machine-specific BLAS (not the Fortran 77 reference implementation BLAS) and BLACS (nondebug, BLACSDBGLVL=0 in Bmake.inc).
 
-at Cineca: [example code](http://www.hpc.cineca.it/content/scalapack-solution-0)
+at Cineca: [example code](http://www.hpc.cineca.it/content/scalapack-solution-0) and [how to compile](https://hpc-forge.cineca.it/files/ScuolaCalcoloParallelo_WebDAV/public/anno-2016/12_Advanced_School/scalapack_short.pdf)
