@@ -8,10 +8,7 @@
 
 #include <mpi.h>
 
-#include "../SLGEWOPV-FT.h"
 #include "../SLGEWOPV-mFT.h"
-#include "Scalapack/ScalapackPDGESV.h"
-#include "GaussJordanElimination/GJE-par.h"
 
 
 
@@ -52,10 +49,9 @@ int main(int argc, char **argv)
 
     clock_t start, stop;
 
-    versionname[0]="GJE-cp  ";
-    versionname[1]="IMe-cs  ";
+    versionname[0]="IMe-mcs";
 
-	int versions = 2;
+	int versions = 1;
 
 	for (i=0; i<versions; i++)
 	{
@@ -80,50 +76,9 @@ int main(int argc, char **argv)
     {
     	if (rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
 
-	    //////////////////////////////////////////////////////////////////////////////////
-		// Gaussian Elimination (with checkpointing)
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-		x=AllocateVector(rows);
-
-		if (rank==0)
-		{
-			FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
-
-			if (verbose>2)
-			{
-				printf("\n\n Matrix A:\n");
-				PrintMatrix2D(A2, rows, cols);
-				printf("\n Vector b:\n");
-				PrintVector(b, rows);
-			}
-		}
-
-		start=clock();
-
-		pGaussianElimination_partialmatrix_cp(A2, b, n, rank, cprocs, sprocs);
-
-		if (rank==0)
-		{
-			BackSubstitution(A2, b, x, n);
-			stop=clock();
-			versionrun[0][rep]=(double)(stop - start);
-
-			if (verbose>1)
-			{
-				printf("\nThe %s solution is:\n",versionname[0]);
-				PrintVector(x, rows);
-			}
-		}
-
-		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
-		DeallocateVector(b);
-		DeallocateVector(x);
 
 		//////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (last with checksumming)
+		// Inhibition Method (last with multiple checksumming)
 
 		x=AllocateVector(n);
 		b=AllocateVector(rows);
@@ -148,14 +103,14 @@ int main(int argc, char **argv)
 		start = clock();
 
 		//SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs, T, Tlocal, TlastKc, TlastKr, h, hh);
-		SLGEWOPV_calc_last_cs(A2, b, x, n, rank, cprocs, sprocs);
+		SLGEWOPV_calc_last_mcs(A2, b, x, n, rank, cprocs, sprocs);
 
 		stop = clock();
-		versionrun[1][rep]=(double)(stop - start);
+		versionrun[0][rep]=(double)(stop - start);
 
 		if (rank==0 && verbose>1)
 		{
-			printf("\nThe %s solution is:\n",versionname[1]);
+			printf("\nThe %s solution is:\n",versionname[0]);
 			PrintVector(x, rows);
 		}
 
