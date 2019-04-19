@@ -123,21 +123,16 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 	// spread input matrix and vector
 	if (i_am_calc)
 	{
-		MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, comm_calc);	//openmpi ok
-		MPI_Scatter (&b[0], 1, interleaved_row_type, &b[rank], 1, interleaved_row_type, 0, comm_calc);			//openmpi ok
+		MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, comm_calc);	// openmpi ok
+		if (rank!=0)
+		{
+			MPI_Scatter (&b[0], 1, interleaved_row_type, &b[rank], 1, interleaved_row_type, 0, comm_calc);			// openmpi ok
+		}
+		else
+		{
+			MPI_Scatter (&b[0], 1, interleaved_row_type, MPI_IN_PLACE, 1, interleaved_row_type, 0, comm_calc);			// mpich ok
+		}
 
-		/*
-		//if (rank==0)
-		{
-			//MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, comm_calc);
-			//MPI_Scatter (&b[0], 1, interleaved_row_type, MPI_IN_PLACE, 1, interleaved_row_type, 0, comm_calc);
-		}
-		//else
-		{
-			MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, comm_calc);
-			//MPI_Scatter (&b[0], 1, interleaved_row_type, &b[rank], 1, interleaved_row_type, 0, comm_calc);
-		}
-		*/
 	}
 	for(k=0;k<n;k++)
 	{
@@ -214,23 +209,18 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 		}
 	}
 
+	//collect final solution
 	if (i_am_calc)
 	{
-	    MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, comm_calc);	//openmpi ok
-	    MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, comm_calc);				//openmpi ok
-
-	    /*
-		if (rank==0)
+	    MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, comm_calc);	// openmpi + mpich ok
+		if (rank!=0)
 		{
-			//MPI_Gather (MPI_IN_PLACE, 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, comm_calc);
-			//MPI_Gather (MPI_IN_PLACE, 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, comm_calc);
+	    		MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, comm_calc);				// openmpi ok
 		}
 		else
 		{
-		    //MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, comm_calc);
-		    //MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, comm_calc);
+	    		MPI_Gather (MPI_IN_PLACE, 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, comm_calc);				// mpich ok
 		}
-		*/
 	}
 
 
@@ -304,8 +294,15 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 	MPI_Type_commit (& interleaved_row_type);
 
 	// spread input matrix and vector
-	MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, MPI_COMM_WORLD);	//openmpi ok
-    MPI_Scatter (&b[0], 1, interleaved_row_type, &b[rank], 1, interleaved_row_type, 0, MPI_COMM_WORLD);			//openmpi ok
+	MPI_Scatter (&A[0][0], 1, multiple_row_type, &Alocal[0][0], 1, multiple_row_contiguous, 0, MPI_COMM_WORLD);	// openmpi + mpich ok
+	if (rank!=0)
+	{
+    		MPI_Scatter (&b[0], 1, interleaved_row_type, &b[rank], 1, interleaved_row_type, 0, MPI_COMM_WORLD);			// openmpi ok
+	}
+	else
+	{
+		MPI_Scatter (&b[0], 1, interleaved_row_type, MPI_IN_PLACE, 1, interleaved_row_type, 0, MPI_COMM_WORLD);	// mpich ok
+	}
 
 	for(k=0;k<n;k++)
 	{
@@ -366,22 +363,17 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 			b[global[i]]=b[global[i]]-( c[global[i]]*b[k] );
 		}
 	}
-
-	MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD); 	//openmpi ok
-	MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);			//openmpi ok
-
-	/*
-	if (rank==0)
+	
+	//collect final solution
+	MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD); 	// openmpi + mpich ok
+	if (rank!=0)
 	{
-		MPI_Gather (MPI_IN_PLACE, 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-		MPI_Gather (MPI_IN_PLACE, 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+		MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);			// openmpi ok
 	}
 	else
 	{
-		MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-		MPI_Gather (&b[rank], 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+		MPI_Gather (MPI_IN_PLACE, 1, interleaved_row_type, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);			// mpich ok
 	}
-	 */
 
 	free(map);
 	free(local);
@@ -515,17 +507,8 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 	}
 	*/
 
-	if (rank==0)
-	{
-	    MPI_Gather(MPI_IN_PLACE, 1, multiple_row_type, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-	    MPI_Gather(MPI_IN_PLACE, 1, multiple_term_type, &b[0], 1, multiple_term_type, 0, MPI_COMM_WORLD);
-	}
-	else
-	{
-	    MPI_Gather(&A[rank][0], 1, multiple_row_type, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-	    MPI_Gather(&b[rank], 1, multiple_term_type, &b[0], 1, multiple_term_type, 0, MPI_COMM_WORLD);
-	}
-
+	MPI_Gather(&A[rank][0], 1, multiple_row_type, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
+	MPI_Gather(&b[rank], 1, multiple_term_type, &b[0], 1, multiple_term_type, 0, MPI_COMM_WORLD);
 
 	free(map);
 	DeallocateVector(c);
