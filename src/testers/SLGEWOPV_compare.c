@@ -81,13 +81,13 @@ int main(int argc, char **argv)
     {
     	if (rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
 
+    	//////////////////////////////////////////////////////////////////////////////////
     	// ScaLapack
-
-		A1=AllocateMatrix1D(rows, cols);
-		b=AllocateVector(rows);
 
 		if (rank==0)
 		{
+			A1=AllocateMatrix1D(rows, cols);
+			b=AllocateVector(rows);
 			FillMatrixT1D(A1, rows, cols);
 			FillVector(b,rows,1);
 
@@ -114,20 +114,21 @@ int main(int argc, char **argv)
 				printf("\nThe %s solution is:\n",versionname[0]);
 				PrintVector(b, rows);
 			}
+			DeallocateMatrix1D(A1);
+			DeallocateVector(b);
 		}
-		DeallocateMatrix1D(A1);
-		DeallocateVector(b);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination
 
-	    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-	    b=AllocateVector(rows);
-	    x=AllocateVector(rows);
+		b=AllocateVector(rows);
 
 	    if (rank==0)
 	    {
-			FillMatrix2D(A2, rows, cols);
+		    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+		    x=AllocateVector(rows);
+
+	    	FillMatrix2D(A2, rows, cols);
 			FillVector(b,rows,1);
 
 			if (verbose>2)
@@ -154,21 +155,21 @@ int main(int argc, char **argv)
 				printf("\nThe %s solution is:\n",versionname[1]);
 				PrintVector(x, rows);
 			}
+		    DeallocateMatrix2D(A2,rows,CONTIGUOUS);
+		    DeallocateVector(x);
 		}
-
-	    DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 	    DeallocateVector(b);
-	    DeallocateVector(x);
 
 	    //////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination cp-0
 
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		b=AllocateVector(rows);
-		x=AllocateVector(rows);
 
 		if (rank==0)
 		{
+			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+
+			x=AllocateVector(rows);
 			FillMatrix2D(A2, rows, cols);
 			FillVector(b,rows,1);
 
@@ -196,11 +197,10 @@ int main(int argc, char **argv)
 				printf("\nThe %s solution is:\n",versionname[2]);
 				PrintVector(x, rows);
 			}
+			DeallocateMatrix2D(A2,rows,CONTIGUOUS);
+			DeallocateVector(x);
 		}
-
-		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 		DeallocateVector(b);
-		DeallocateVector(x);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (last)
