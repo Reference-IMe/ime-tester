@@ -121,13 +121,12 @@ int main(int argc, char **argv)
 		//////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination
 
-		b=AllocateVector(rows);
-
 	    if (rank==0)
 	    {
-		    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		    x=AllocateVector(rows);
-
+			b=AllocateVector(rows); 
+			
 	    	FillMatrix2D(A2, rows, cols);
 			FillVector(b,rows,1);
 
@@ -139,6 +138,12 @@ int main(int argc, char **argv)
 				PrintVector(b, rows);
 			}
 	    }
+	    else // avoid problem (bug?) in mpich and intelmpi when calling collectives with undefined pointers in buffers even if unused!
+	    {
+			A2=AllocateMatrix2D(0,0,CONTIGUOUS);
+			b=NULL;
+			x=NULL;
+		}
 
 		start=clock();
 
@@ -155,20 +160,20 @@ int main(int argc, char **argv)
 				printf("\nThe %s solution is:\n",versionname[1]);
 				PrintVector(x, rows);
 			}
-		    DeallocateMatrix2D(A2,rows,CONTIGUOUS);
-		    DeallocateVector(x);
+			DeallocateVector(x); 
+			DeallocateVector(b);
 		}
-	    DeallocateVector(b);
+		DeallocateMatrix2D(A2,rows,CONTIGUOUS); // due to mpich and intelmpi problem
 
-	    //////////////////////////////////////////////////////////////////////////////////
+ 
+		//////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination cp-0
 
-		b=AllocateVector(rows);
 
 		if (rank==0)
 		{
 			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-
+			b=AllocateVector(rows);
 			x=AllocateVector(rows);
 			FillMatrix2D(A2, rows, cols);
 			FillVector(b,rows,1);
@@ -180,6 +185,12 @@ int main(int argc, char **argv)
 				printf("\n Vector b:\n");
 				PrintVector(b, rows);
 			}
+		}
+		else // avoid problem (bug?) in mpich and intelmpi when calling collectives with undefined pointers in buffers even if unused!
+	    {
+			A2=AllocateMatrix2D(0,0,CONTIGUOUS);
+			b=NULL;
+			x=NULL;
 		}
 
 		start=clock();
@@ -197,10 +208,11 @@ int main(int argc, char **argv)
 				printf("\nThe %s solution is:\n",versionname[2]);
 				PrintVector(x, rows);
 			}
-			DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 			DeallocateVector(x);
+			DeallocateVector(b);
 		}
-		DeallocateVector(b);
+		DeallocateMatrix2D(A2,rows,CONTIGUOUS); // due to mpich and intelmpi problem
+
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (last)
