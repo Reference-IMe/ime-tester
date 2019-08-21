@@ -18,7 +18,11 @@ int main(int argc, char **argv)
     double*  c;
     double*  x;
 
+	double h,hh;
+
     double** T;
+    double* T1;
+
     double** K;
     double*  H;
     double*  F;
@@ -45,8 +49,8 @@ int main(int argc, char **argv)
 	versionname[1]="GJE     ";
 	versionname[2]="IMe-naif";
 	versionname[3]="IMe-uwnd";
-	versionname[4]="IMe-papr";
-	versionname[5]="IMe-last";
+	versionname[4]="IMe-iopt";
+	versionname[5]="IMe-1D  ";
 	int versions = 6;
 
 	for (i=0; i<versions; i++)
@@ -232,7 +236,7 @@ int main(int argc, char **argv)
 		DeallocateVector(b);
 
 	    //////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (daniela)
+		// Inhibition Method (last, optimized init)
 
 		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 		b=AllocateVector(rows);
@@ -241,7 +245,6 @@ int main(int argc, char **argv)
 		FillMatrix2D(A2, rows, cols);
 		FillVector(b,rows,1);
 
-		H=AllocateVector(n);
 		x=AllocateVector(n);
 
 		if (verbose>2)
@@ -254,7 +257,7 @@ int main(int argc, char **argv)
 
 		start = clock();
 
-		SLGEWOS_calc_paper(A2, b, T, x, n, H);
+		SLGEWOS_calc_initopt(A2, b, T, x, n, &h, &hh);;
 
 		stop = clock();
 
@@ -268,36 +271,32 @@ int main(int argc, char **argv)
 
 		DeallocateMatrix2D(A2,n,CONTIGUOUS);
 		DeallocateMatrix2D(T,n,CONTIGUOUS);
-		DeallocateVector(H);
 		DeallocateVector(x);
 		DeallocateVector(b);
 
 		 //////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (last)
+		// Inhibition Method (last, 1D)
 
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+		A1=AllocateMatrix1D(rows,cols);
 		b=AllocateVector(rows);
-		T=AllocateMatrix2D(rows,cols*2,CONTIGUOUS);
+		T1=AllocateMatrix1D(rows,cols*2);
 
-		FillMatrix2D(A2, rows, cols);
+		FillMatrix1D(A1, rows, cols);
 		FillVector(b,rows,1);
 
-		H=AllocateVector(n);
 		x=AllocateVector(n);
 
 		if (verbose>2)
 		{
 			printf("\n\n Matrix A:\n");
-			PrintMatrix2D(A2, rows, cols);
+			PrintMatrix1D(A1, rows, cols);
 			printf("\n Vector b:\n");
 			PrintVector(b, rows);
 		}
 
 		start = clock();
 
-		double h,hh;
-
-		SLGEWOS_calc_last(A2, b, T, x, n, &h, &hh);
+		SLGEWOS_calc_last(A1, b, T1, x, n, &h, &hh);
 
 		stop = clock();
 
@@ -309,9 +308,8 @@ int main(int argc, char **argv)
 			PrintVector(x, rows);
 		}
 
-		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		DeallocateMatrix2D(T,n,CONTIGUOUS);
-		DeallocateVector(H);
+		DeallocateMatrix1D(A1);
+		DeallocateMatrix1D(T1);
 		DeallocateVector(x);
 		DeallocateVector(b);
 
