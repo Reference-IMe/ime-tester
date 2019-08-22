@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "../../helpers/matrix.h"
 
-/* DGESV prototype */
-//extern void dgesv_( int* n, int* nrhs, double* a, int* lda, int* ipiv, double* b, int* ldb, int* info );
+/* DGESV prototype
+ * extern void dgesv_( int* n, int* nrhs, double* a, int* lda, int* ipiv, double* b, int* ldb, int* info );
+ */
 extern void dgesv_( int* n, int* nrhs, double* a, int* lda, int* ipiv, double* b, int* ldb, int* info );
 
-void LapackDGESV_calc(double* A, double* b, cui n, int* ipiv)
+void LapackDGESV_calc(double* A, double* b, int n, int* ipiv)
 {
 	int rows;
 	int one=1;
@@ -16,11 +16,15 @@ void LapackDGESV_calc(double* A, double* b, cui n, int* ipiv)
 	dgesv_( &rows, &one, A, &rows, ipiv, b, &rows, &info );
 }
 
-void LapackDGESV(double* A, double* b, cui n)
+void LapackDGESV(cui n, double* A, cui m, double* bb)
 {
 	int* ipiv = malloc(n * sizeof(int));
+	int rows;
+	int nrhs=m;
+	int info;
 
-	LapackDGESV_calc(A, b, n, ipiv);
+	rows=n;
+	dgesv_( &rows, &nrhs, A, &rows, ipiv, bb, &rows, &info );
 
 	free(ipiv);
 }

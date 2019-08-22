@@ -2,56 +2,206 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "../helpers/types.h"
 #include "../helpers/selfie.h"
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-#include "../SLGEWOS.h"
+#include "../DGESV_WO_1D.h"
+#include "../DGESV_WO.h"
 #include "GaussJordanElimination/GJE-seq.h"
 #include "Lapack/LapackDGESV.h"
 
+double testLapackDGESV(const char* label, cui verbosity, cui rows, cui cols, cui nrhs)
+{
+	clock_t start, stop;
+	double* A;
+	double* bb;
+	A=AllocateMatrix1D(rows, cols);
+	bb=AllocateMatrix1D(rows, nrhs);
+
+	FillMatrixT1D(A, rows, cols);	// input has to be transposed
+	//TODO: fill normally and transpose inside the timed section
+
+	OneMatrix1D(bb, rows, nrhs);
+
+	if (verbosity>2)
+	{
+		printf("\n\n Matrix A:\n");
+		PrintMatrix1D(A, rows, cols);
+		printf("\n Vector b:\n");
+		PrintMatrix1D(bb, rows, nrhs);
+	}
+
+	start=clock();
+
+	LapackDGESV(rows, A, nrhs, bb);
+
+	stop=clock();
+
+	if (verbosity>1)
+	{
+		printf("\nThe %s solution is:\n",label);
+		PrintMatrix1D(bb, nrhs, rows);	// result is transposed
+		//TODO: transpose the result inside the timed section
+	}
+
+	DeallocateMatrix1D(A);
+	DeallocateMatrix1D(bb);
+
+	return (double)(stop - start);
+}
+
+double testGaussianElimination(const char* label, cui verbosity, cui rows, cui cols, cui nrhs)
+{
+	clock_t start, stop;
+	double** A;
+	double** bb;
+	double** xx;
+	ui i,j;
+	A=AllocateMatrix2D(rows,cols,CONTIGUOUS);
+	bb=AllocateMatrix2D(rows,nrhs,CONTIGUOUS);
+	xx=AllocateMatrix2D(rows,nrhs,CONTIGUOUS);
+
+	FillMatrix2D(A, rows, cols);
+	OneMatrix2D(bb, rows, nrhs);
+
+	if (verbosity>2)
+	{
+		printf("\n\n Matrix A:\n");
+		PrintMatrix2D(A, rows, cols);
+		printf("\n Vector b:\n");
+		PrintMatrix2D(bb, rows, nrhs);
+	}
+
+	start =clock();
+
+	GaussianElimination(rows, A, nrhs, bb);
+	BackSubstitution(rows, A, nrhs, bb, xx);
+
+	stop = clock();
+
+	if (verbosity>1)
+	{
+		printf("\nThe %s solution is:\n",label);
+		PrintMatrix2D(xx, rows, nrhs);
+	}
+
+	DeallocateMatrix2D(A,rows,CONTIGUOUS);
+	DeallocateMatrix2D(bb,rows,CONTIGUOUS);
+	DeallocateMatrix2D(xx,rows,CONTIGUOUS);
+
+	return (double)(stop - start);
+}
+
+double testIMe1D(const char* label, cui verbosity, cui rows, cui cols, cui nrhs)
+{
+	clock_t start, stop;
+	double* A;
+	double* bb;
+	double* xx;
+	A=AllocateMatrix1D(rows, cols);
+	bb=AllocateMatrix1D(rows, nrhs);
+	xx=AllocateMatrix1D(rows, nrhs);
+
+	FillMatrix1D(A, rows, cols);
+	OneMatrix1D(bb, rows, nrhs);
+
+	if (verbosity>2)
+	{
+		printf("\n\n Matrix A:\n");
+		PrintMatrix1D(A, rows, cols);
+		printf("\n Vector b:\n");
+		PrintMatrix1D(bb, rows, nrhs);
+	}
+
+	start = clock();
+
+	DGESV_WO_1D(rows, A, nrhs, bb, xx);
+
+	stop = clock();
+
+	if (verbosity>1)
+	{
+		printf("\nThe %s solution is:\n",label);
+		PrintMatrix1D(xx, rows, nrhs);
+	}
+
+	DeallocateMatrix1D(A);
+	DeallocateMatrix1D(bb);
+	DeallocateVector(xx);
+
+	return (double)(stop - start);
+}
+
+double testIMe(const char* label, cui verbosity, cui rows, cui cols, cui nrhs)
+{
+	clock_t start, stop;
+	double** A;
+	double** bb;
+	double** xx;
+	ui i,j;
+	A=AllocateMatrix2D(rows, cols, CONTIGUOUS);
+	bb=AllocateMatrix2D(rows, nrhs, CONTIGUOUS);
+	xx=AllocateMatrix2D(rows, nrhs, CONTIGUOUS);
+
+	FillMatrix2D(A, rows, cols);
+	OneMatrix2D(bb, rows, nrhs);
+
+	if (verbosity>2)
+	{
+		printf("\n\n Matrix A:\n");
+		PrintMatrix2D(A, rows, cols);
+		printf("\n Vector b:\n");
+		PrintMatrix2D(bb, rows, nrhs);
+	}
+
+	start = clock();
+
+	DGESV_WO(rows, A, nrhs, bb, xx);
+
+	stop = clock();
+
+	if (verbosity>1)
+	{
+		printf("\nThe %s solution is:\n",label);
+		PrintMatrix2D(xx, rows, nrhs);
+	}
+
+	DeallocateMatrix2D(A,rows,CONTIGUOUS);
+	DeallocateMatrix2D(bb,rows,CONTIGUOUS);
+	DeallocateMatrix2D(xx,rows,CONTIGUOUS);
+
+	return (double)(stop - start);
+}
+
 int main(int argc, char **argv)
 {
-    int i,j,k,l,rep;
+    ui i,rep;
 
-    double** A2;
-    double*  b;
-    double*  c;
-    double*  x;
+    ui n=atoi(argv[1]);
+    ui rows=n;
+    ui cols=n;
 
-	double h,hh;
+    ui ft=atoi(argv[2]);
 
-    double** T;
-    double* T1;
+    ui repetitions=atoi(argv[3]);
 
-    double** K;
-    double*  H;
-    double*  F;
-    double*  s;
+    ui verbose=atoi(argv[4]);
 
-    double*  A1;
-    int*     ipiv;
+    ui nRHS=10;
 
     double versionrun[10][100];
-    const char* versionname[10];
     double versiontot[10];
-
-    int n=atoi(argv[1]);
-
-    int rows=n;
-    int cols=n;
-    int ft=atoi(argv[2]);
-    int repetitions=atoi(argv[3]);
-    int verbose=atoi(argv[4]);
-
-    clock_t start, stop;
-
-	versionname[0]="LPK     ";
-	versionname[1]="GJE     ";
-	versionname[2]="IMe-naif";
-	versionname[3]="IMe-uwnd";
-	versionname[4]="IMe-iopt";
-	versionname[5]="IMe-1D  ";
-	int versions = 6;
+    const char* versionname[10];
+	versionname[0]="LPK   1 ";
+	versionname[1]="LPK   10";
+	versionname[2]="GJE   1 ";
+	versionname[3]="GJE   10";
+	versionname[4]="IMe1D 1 ";
+	versionname[5]="IMe1D 10";
+	versionname[6]="IMe   1 ";
+	versionname[7]="IMe   10";
+	cui versions = 8;
 
 	for (i=0; i<versions; i++)
 	{
@@ -77,241 +227,15 @@ int main(int argc, char **argv)
     	if (verbose>0) {printf("\n\n Run #%d",rep+1);}
 
     	//////////////////////////////////////////////////////////////////////////////////
-    	// Lapack
 
-		A1=AllocateMatrix1D(rows, cols);
-		b=AllocateVector(rows);
-		ipiv = malloc(n * sizeof(int));
-
-		FillMatrix1D(A1, rows, cols);
-		FillVector(b,rows,1);
-
-		if (verbose>2)
-		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix1D(A1, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
-
-		start=clock();
-
-		LapackDGESV_calc(A1, b, n, ipiv);
-
-		stop=clock();
-
-		versionrun[0][rep]=(double)(stop - start);
-
-		if (verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[0]);
-			PrintVector(b, rows);
-		}
-
-		DeallocateMatrix1D(A1);
-		DeallocateVector(b);
-		free(ipiv);
-
-		//////////////////////////////////////////////////////////////////////////////////
-		// Gaussian Elimination
-
-	    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-	    b=AllocateVector(rows);
-	    x=AllocateVector(rows);
-
-		FillMatrix2D(A2, rows, cols);
-		FillVector(b,rows,1);
-
-		if (verbose>2)
-		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix2D(A2, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
-
-		start =clock();
-
-		GaussianElimination(A2, b, n);
-		BackSubstitution(A2, b, x, n);
-
-		stop = clock();
-
-		versionrun[1][rep]=(double)(stop - start);
-
-		if (verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[1]);
-			PrintVector(x, rows);
-		}
-
-	    DeallocateMatrix2D(A2,rows,CONTIGUOUS);
-	    DeallocateVector(b);
-	    DeallocateVector(x);
-
-		//////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method
-
-	    A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-	    b=AllocateVector(rows);
-
-		FillMatrix2D(A2, rows, cols);
-		FillVector(b,rows,1);
-
-	    K=AllocateMatrix2D(n,n,CONTIGUOUS);
-	    H=AllocateVector(n);
-	    F=AllocateVector(n);
-	    s=AllocateVector(n);
-
-		if (verbose>2)
-		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix2D(A2, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
-
-		start = clock();
-
-		SLGEWOS_calc(A2, b, s, n, K, H, F);
-
-		stop = clock();
-
-		versionrun[2][rep]=(double)(stop - start);
-
-		if (verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[2]);
-			PrintVector(s, rows);
-		}
-
-	    DeallocateMatrix2D(A2,n,CONTIGUOUS);
-	    DeallocateMatrix2D(K,n,CONTIGUOUS);
-	    DeallocateVector(H);
-	    DeallocateVector(F);
-	    DeallocateVector(s);
-	    DeallocateVector(b);
-
-	    //////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (loops unwound)
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-
-		FillMatrix2D(A2, rows, cols);
-		FillVector(b,rows,1);
-
-		K=AllocateMatrix2D(n,n,CONTIGUOUS);
-		H=AllocateVector(n);
-		F=AllocateVector(n);
-		s=AllocateVector(n);
-
-		if (verbose>2)
-		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix2D(A2, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
-
-		start = clock();
-
-		SLGEWOS_calc_unwind(A2, b, s, n, K, H, F);
-
-		stop = clock();
-
-		versionrun[3][rep]=(double)(stop - start);
-
-		if (verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[3]);
-			PrintVector(s, rows);
-		}
-
-		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		DeallocateMatrix2D(K,n,CONTIGUOUS);
-		DeallocateVector(H);
-		DeallocateVector(F);
-		DeallocateVector(s);
-		DeallocateVector(b);
-
-	    //////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (last, optimized init)
-
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		b=AllocateVector(rows);
-		T=AllocateMatrix2D(rows,cols*2,CONTIGUOUS);
-
-		FillMatrix2D(A2, rows, cols);
-		FillVector(b,rows,1);
-
-		x=AllocateVector(n);
-
-		if (verbose>2)
-		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix2D(A2, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
-
-		start = clock();
-
-		SLGEWOS_calc_initopt(A2, b, T, x, n, &h, &hh);;
-
-		stop = clock();
-
-		versionrun[4][rep]=(double)(stop - start);
-
-		if (verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[4]);
-			PrintVector(x, rows);
-		}
-
-		DeallocateMatrix2D(A2,n,CONTIGUOUS);
-		DeallocateMatrix2D(T,n,CONTIGUOUS);
-		DeallocateVector(x);
-		DeallocateVector(b);
-
-		 //////////////////////////////////////////////////////////////////////////////////
-		// Inhibition Method (last, 1D)
-
-		A1=AllocateMatrix1D(rows,cols);
-		b=AllocateVector(rows);
-		T1=AllocateMatrix1D(rows,cols*2);
-
-		FillMatrix1D(A1, rows, cols);
-		FillVector(b,rows,1);
-
-		x=AllocateVector(n);
-
-		if (verbose>2)
-		{
-			printf("\n\n Matrix A:\n");
-			PrintMatrix1D(A1, rows, cols);
-			printf("\n Vector b:\n");
-			PrintVector(b, rows);
-		}
-
-		start = clock();
-
-		SLGEWOS_calc_last(A1, b, T1, x, n, &h, &hh);
-
-		stop = clock();
-
-		versionrun[5][rep]=(double)(stop - start);
-
-		if (verbose>1)
-		{
-			printf("\nThe %s solution is:\n",versionname[5]);
-			PrintVector(x, rows);
-		}
-
-		DeallocateMatrix1D(A1);
-		DeallocateMatrix1D(T1);
-		DeallocateVector(x);
-		DeallocateVector(b);
+    	versionrun[0][rep]=testLapackDGESV(versionname[0], verbose, rows, cols, 1);    			// Lapack with 1 rhs
+    	versionrun[1][rep]=testLapackDGESV(versionname[1], verbose, rows, cols, nRHS);			// Lapack with 10 rhs
+    	versionrun[2][rep]=testGaussianElimination(versionname[2], verbose, rows, cols, 1);		// Gaussian Elimination with 1 rhs
+    	versionrun[3][rep]=testGaussianElimination(versionname[3], verbose, rows, cols, nRHS);	// Gaussian Elimination with 10 rhs
+    	versionrun[4][rep]=testIMe1D(versionname[4], verbose, rows, cols, 1);					// IMe-1D with 1 rhs
+    	versionrun[5][rep]=testIMe1D(versionname[5], verbose, rows, cols, nRHS);				// IMe-1D with 10 rhs
+    	versionrun[6][rep]=testIMe(versionname[6], verbose, rows, cols, 1);						// IMe with 1 rhs
+    	versionrun[7][rep]=testIMe(versionname[7], verbose, rows, cols, nRHS);					// IMe with 10 rhs
 
 		//////////////////////////////////////////////////////////////////////////////////
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../../helpers/types.h"
 
-void GaussianElimination(double** A, double* b, cui n)
+void GaussianElimination(cui n, double** A, cui m, double** b)
 {
     ui i,j,k;
     double* c;
@@ -21,26 +21,37 @@ void GaussianElimination(double** A, double* b, cui n)
 				{
 					A[i][j]=A[i][j]-( c[i]*A[k][j] );
 				}
-				b[i]=b[i]-( c[i]*b[k] );
+				for(j=0; j<m; j++)
+				{
+					b[i][j]=b[i][j]-( c[i]*b[k][j] );
+				}
 			}
 		}
 		DeallocateVector(c);
 }
 
-void BackSubstitution(double** A, double* b, double* x, cui n)
+void BackSubstitution(cui n, double** A, cui m, double** b, double** x)
 {
-		double sum;
-		int i,j;
+		int i,j,k;
+		double* sum;
 
-		x[n-1]=b[n-1]/A[n-1][n-1];
+		sum=AllocateVector(m);
+
+		for(j=0;j<m;j++)
+		{
+			x[n-1][j]=b[n-1][j]/A[n-1][n-1];
+		}
 		for(i=n-2;i>=0;i--)
 		{
-			sum=0.0;
-
-			for(j=i+1;j<n;j++)
+			for(j=0;j<m;j++)
 			{
-				sum=sum+A[i][j]*x[j];
+				sum[j]=0.0;
+
+				for(k=i+1;k<n;k++)
+				{
+					sum[j]=sum[j]+A[i][k]*x[k][j];
+				}
+				x[i][j]=(b[i][j]-sum[j])/A[i][i];
 			}
-			x[i]=(b[i]-sum)/A[i][i];
 		}
 }
