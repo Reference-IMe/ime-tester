@@ -11,7 +11,7 @@
 #include "Scalapack/ScalapackPDGESV.h"
 #include "GaussJordanElimination/GJE-par.h"
 
-#include "../SLGEWOPV.h"
+#include "../pDGESV_WO.h"
 #include "../SLGEWOPV-FT.h"
 
 int main(int argc, char **argv)
@@ -26,8 +26,10 @@ int main(int argc, char **argv)
     double** A2;
     double** T;
     double*  b;
+    double**  bb;
     double*  c;
     double*  x;
+    double**  xx;
 
     double** K;
     double*  H;
@@ -48,6 +50,8 @@ int main(int argc, char **argv)
     int cprocs=totprocs-sprocs;		// number of processes for real IMe calc
     int repetitions=atoi(argv[3]);
     int verbose=atoi(argv[4]);
+
+    int nRHS=10;
 
     clock_t start, stop;
 
@@ -87,22 +91,22 @@ int main(int argc, char **argv)
 		if (rank==0)
 		{
 			A1=AllocateMatrix1D(rows, cols);
-			b=AllocateVector(rows);
+			b=AllocateMatrix1D(rows,nRHS);
 			FillMatrixT1D(A1, rows, cols);
-			FillVector(b,rows,1);
+			OneMatrix1D(b, rows, nRHS);
 
 			if (verbose>2)
 			{
 				printf("\n\n Matrix A:\n");
 				PrintMatrix1D(A1, rows, cols);
 				printf("\n Vector b:\n");
-				PrintVector(b, rows);
+				PrintMatrix1D(b, rows, nRHS);
 			}
 		}
 
 		start=clock();
 
-		ScalapackPDGESV_calc(A1, b, n, rank, cprocs);
+		ScalapackPDGESV_calc(n, A1, nRHS, b, rank, cprocs);
 
 		stop=clock();
 		versionrun[0][rep]=(double)(stop - start);
@@ -112,10 +116,10 @@ int main(int argc, char **argv)
 			if (verbose>1)
 			{
 				printf("\nThe %s solution is:\n",versionname[0]);
-				PrintVector(b, rows);
+				PrintMatrix1D(b, nRHS, rows);
 			}
 			DeallocateMatrix1D(A1);
-			DeallocateVector(b);
+			DeallocateMatrix1D(b);
 		}
 
 		//////////////////////////////////////////////////////////////////////////////////
@@ -124,121 +128,132 @@ int main(int argc, char **argv)
 	    if (rank==0)
 	    {
 			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-		    x=AllocateVector(rows);
-			b=AllocateVector(rows); 
+		    xx=AllocateMatrix2D(rows,nRHS,CONTIGUOUS);
+			bb=AllocateMatrix2D(rows,nRHS,CONTIGUOUS);
 			
 	    	FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
+	    	OneMatrix2D(bb, rows, nRHS);
 
 			if (verbose>2)
 			{
 				printf("\n\n Matrix A:\n");
 				PrintMatrix2D(A2, rows, cols);
 				printf("\n Vector b:\n");
-				PrintVector(b, rows);
+				PrintMatrix2D(bb, rows, nRHS);
 			}
 	    }
-	    else // avoid problem (bug?) in mpich and intelmpi when calling collectives with undefined pointers in buffers even if unused!
+	    else // avoid problem (bug?) in mpi when calling collectives with undefined pointers in buffers even if unused!
 	    {
 			A2=AllocateMatrix2D(0,0,CONTIGUOUS);
-			b=NULL;
-			x=NULL;
+			bb=AllocateMatrix2D(0,0,CONTIGUOUS);
+			xx=AllocateMatrix2D(0,0,CONTIGUOUS);
 		}
 
 		start=clock();
 
-		pGaussianElimination_partialmatrix(A2, b, n, rank, cprocs);
+		pGaussianElimination_partialmatrix(n, A2, nRHS, bb, rank, cprocs);
 
 	    if (rank==0)
 		{
-			BackSubstitution(A2, b, x, n);
+			BackSubstitution(n, A2, nRHS, bb, xx);
 			stop=clock();
 			versionrun[1][rep]=(double)(stop - start);
 
 			if (verbose>1)
 			{
 				printf("\nThe %s solution is:\n",versionname[1]);
-				PrintVector(x, rows);
+				PrintMatrix2D(xx, rows, nRHS);
 			}
-			DeallocateVector(x); 
-			DeallocateVector(b);
+			DeallocateMatrix2D(bb,rows,CONTIGUOUS);
+			DeallocateMatrix2D(xx,rows,CONTIGUOUS);
+			DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 		}
-		DeallocateMatrix2D(A2,rows,CONTIGUOUS); // due to mpich and intelmpi problem
+	    else
+	    {
+			DeallocateMatrix2D(bb,0,CONTIGUOUS);
+			DeallocateMatrix2D(xx,0,CONTIGUOUS);
+	    	DeallocateMatrix2D(A2,0,CONTIGUOUS); // due to mpi problem
+	    }
 
  
 		//////////////////////////////////////////////////////////////////////////////////
 		// Gaussian Elimination cp-0
 
-
 		if (rank==0)
 		{
 			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-			b=AllocateVector(rows);
-			x=AllocateVector(rows);
-			FillMatrix2D(A2, rows, cols);
-			FillVector(b,rows,1);
+		    xx=AllocateMatrix2D(rows,nRHS,CONTIGUOUS);
+			bb=AllocateMatrix2D(rows,nRHS,CONTIGUOUS);
+
+	    	FillMatrix2D(A2, rows, cols);
+	    	OneMatrix2D(bb, rows, nRHS);
 
 			if (verbose>2)
 			{
 				printf("\n\n Matrix A:\n");
 				PrintMatrix2D(A2, rows, cols);
 				printf("\n Vector b:\n");
-				PrintVector(b, rows);
+				PrintMatrix2D(bb, rows, nRHS);
 			}
 		}
-		else // avoid problem (bug?) in mpich and intelmpi when calling collectives with undefined pointers in buffers even if unused!
+	    else // avoid problem (bug?) in mpi when calling collectives with undefined pointers in buffers even if unused!
 	    {
 			A2=AllocateMatrix2D(0,0,CONTIGUOUS);
-			b=NULL;
-			x=NULL;
+			bb=AllocateMatrix2D(0,0,CONTIGUOUS);
+			xx=AllocateMatrix2D(0,0,CONTIGUOUS);
 		}
 
 		start=clock();
 
-		pGaussianElimination_partialmatrix_cp(A2, b, n, rank, cprocs, sprocs);
+		pGaussianElimination_partialmatrix_cp(n, A2, nRHS, bb, rank, cprocs, sprocs);
 
 		if (rank==0)
 		{
-			BackSubstitution(A2, b, x, n);
+			BackSubstitution(n, A2, nRHS, bb, xx);
 			stop=clock();
 			versionrun[2][rep]=(double)(stop - start);
 
 			if (verbose>1)
 			{
 				printf("\nThe %s solution is:\n",versionname[2]);
-				PrintVector(x, rows);
+				PrintMatrix2D(xx, rows, nRHS);
 			}
-			DeallocateVector(x);
-			DeallocateVector(b);
+			DeallocateMatrix2D(bb,rows,CONTIGUOUS);
+			DeallocateMatrix2D(xx,rows,CONTIGUOUS);
+			DeallocateMatrix2D(A2,rows,CONTIGUOUS);
 		}
-		DeallocateMatrix2D(A2,rows,CONTIGUOUS); // due to mpich and intelmpi problem
-
+	    else
+	    {
+			DeallocateMatrix2D(bb,0,CONTIGUOUS);
+			DeallocateMatrix2D(xx,0,CONTIGUOUS);
+	    	DeallocateMatrix2D(A2,0,CONTIGUOUS); // due to mpi problem
+	    }
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Inhibition Method (last)
 
-		x=AllocateVector(n);
-		b=AllocateVector(rows);
+		xx=AllocateMatrix2D(rows,nRHS,CONTIGUOUS);
+		bb=AllocateMatrix2D(rows,nRHS,CONTIGUOUS);
 
 		if (rank==0)
 		{
 			A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 			FillMatrix2D(A2, rows, cols);
 
-			FillVector(b,rows,1);
+			OneMatrix2D(bb,rows,nRHS);
 
 			if (verbose>2)
 			{
 				printf("\n\n Matrix A:\n");
 				PrintMatrix2D(A2, rows, cols);
 				printf("\n Vector b:\n");
-				PrintVector(b, rows);
+				PrintMatrix2D(bb,rows,nRHS);
 			}
 		}
 
 		start = clock();
 
-		SLGEWOPV_calc_last(A2, b, x, n, rank, cprocs);
+		pDGESV_WO(n, A2, nRHS, bb, xx, rank, cprocs);
 
 		stop = clock();
 		versionrun[3][rep]=(double)(stop - start);
@@ -246,11 +261,11 @@ int main(int argc, char **argv)
 		if (rank==0 && verbose>1)
 		{
 			printf("\nThe %s solution is:\n",versionname[3]);
-			PrintVector(x, rows);
+			PrintMatrix2D(xx,rows,nRHS);
 		}
 
-		DeallocateVector(x);
-		DeallocateVector(b);
+		DeallocateMatrix2D(xx,rows,CONTIGUOUS);
+		DeallocateMatrix2D(bb,rows,CONTIGUOUS);
 		if (rank==0)
 		{
 			DeallocateMatrix2D(A2,n,CONTIGUOUS);

@@ -1,21 +1,22 @@
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+#include "BackSubst.h"
 #include "../../helpers/types.h"
-#include <mpi.h>
-
 #include "../../helpers/matrix.h"
 
-#include <unistd.h>
+
 
 /*
  * checkpointing version (cp)
  *
  * if sprocs=0, then no checkpoints
  */
-void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int rank, int cprocs, int sprocs)
+void pGaussianElimination_partialmatrix_cp(cui n, double** A, cui m, double** b, int rank, int cprocs, int sprocs)
 {
-    ui i,j,k;
+    ui i,j,k,rhs;
 
     int nprocs=cprocs+sprocs;
 
@@ -26,8 +27,8 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
     double* c;
     c=AllocateVector(n);
     
-    double* blocal;
-    blocal=AllocateVector(n);
+    double** blocal;
+    blocal=AllocateMatrix2D(n,m,CONTIGUOUS);
 
 	// row for pivoting
     double* Abase;
@@ -93,11 +94,11 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 	MPI_Type_commit (& multiple_row_type);
 
 	MPI_Datatype interleaved_row;
-	MPI_Type_vector (myrows, 1, cprocs, MPI_DOUBLE, & interleaved_row );
+	MPI_Type_vector (myrows, m*1, m*cprocs, MPI_DOUBLE, & interleaved_row );
 	MPI_Type_commit (& interleaved_row);
 
 	MPI_Datatype interleaved_row_type;
-	MPI_Type_create_resized (interleaved_row, 0, 1*sizeof(double), & interleaved_row_type);
+	MPI_Type_create_resized (interleaved_row, 0, m*sizeof(double), & interleaved_row_type);
 	MPI_Type_commit (& interleaved_row_type);
 
 	int i_am_calc;
@@ -132,11 +133,13 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 		{
 			for (i=0; i<n; i++)
 			{
-				blocal[i]=b[i];
+				for(rhs=0;rhs<m;rhs++)
+				{
+					blocal[i][rhs]=b[i][rhs];
+				}
 			}
 		}
-
-		MPI_Bcast (blocal,n,MPI_DOUBLE,0,comm_calc);
+		MPI_Bcast (&blocal[0][0],n*m,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 		//
 		// old workaround for openmpi + mpich - superseded by introducing "blocal"
@@ -165,7 +168,7 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 			}
 
 			MPI_Bcast (&Abase[k],n-k,MPI_DOUBLE,map[k],comm_calc);
-			MPI_Bcast (&blocal[k],1,MPI_DOUBLE,map[k],comm_calc);
+			MPI_Bcast (&blocal[k][0],m,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
 
 			// at each global index iteration a process drops a row (the first in the set)
 			if (map[k] == rank_calc)
@@ -181,8 +184,10 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 				{
 					Alocal[i][j]=Alocal[i][j]-( c[global[i]]*Abase[j] );
 				}
-				blocal[global[i]]=blocal[global[i]]-( c[global[i]]*blocal[k] );
-			}
+				for(rhs=0;rhs<m;rhs++)
+				{
+					blocal[global[i]][rhs]=blocal[global[i]][rhs]-( c[global[i]]*blocal[k][rhs] );
+				}			}
 
 			if (sprocs>0)
 			{
@@ -203,9 +208,10 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 	if (i_am_calc)
 	{
 	    MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[rank][0], 1, multiple_row_type, 0, comm_calc);
-	    MPI_Gather (&blocal[rank], 1, interleaved_row, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+		MPI_Gather (&blocal[rank][0], 1, interleaved_row_type, &b[0][0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+		//REMEMBER: MPI_Gather is picky: buffer pointers MUST HAVE a (not NULL) value
 
-	    //
+		//
 	    // old workaround for openmpi + mpich - superseded by introducing "blocal"
 	    /*
 		if (rank!=0)
@@ -224,14 +230,14 @@ void pGaussianElimination_partialmatrix_cp(double** A, double* b, cui n, int ran
 	free(local);
 	free(global);
 	DeallocateVector(c);
-	DeallocateVector(blocal);
+	DeallocateMatrix2D(blocal,n,CONTIGUOUS);
 	DeallocateVector(Abase);
     DeallocateMatrix2D(Alocal,myrows,CONTIGUOUS);
 }
 
-void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, int nprocs)
+void pGaussianElimination_partialmatrix(cui n, double** A, cui m, double** b, int rank, int nprocs)
 {
-    int i,j,k;
+    ui i,j,k,rhs;
 
     int myrows;
     myrows=n/nprocs;
@@ -240,8 +246,8 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
     double* c;
     c=AllocateVector(n);
 		
-	double* blocal;
-    blocal=AllocateVector(n);
+	double** blocal;
+    blocal=AllocateMatrix2D(n,m,CONTIGUOUS);
 
 	// row for pivoting
     double* Abase;
@@ -285,11 +291,11 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 	MPI_Type_commit (& multiple_row_type);
 
 	MPI_Datatype interleaved_row;
-	MPI_Type_vector (myrows, 1, nprocs, MPI_DOUBLE, & interleaved_row );
+	MPI_Type_vector (myrows, m*1, m*nprocs, MPI_DOUBLE, & interleaved_row );
 	MPI_Type_commit (& interleaved_row);
 
 	MPI_Datatype interleaved_row_type;
-	MPI_Type_create_resized (interleaved_row, 0, 1*sizeof(double), & interleaved_row_type);
+	MPI_Type_create_resized (interleaved_row, 0, m*sizeof(double), & interleaved_row_type);
 	MPI_Type_commit (& interleaved_row_type);
 
 	// spread input matrix and vector
@@ -300,10 +306,13 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 	{
 		for (i=0; i<n; i++)
 		{
-			blocal[i]=b[i];
+			for(rhs=0;rhs<m;rhs++)
+			{
+				blocal[i][rhs]=b[i][rhs];
+			}
 		}
 	}
-	MPI_Bcast (blocal,n,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	MPI_Bcast (&blocal[0][0],n*m,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 	//
 	// old workaround for openmpi + mpich - superseded by introducing "blocal"
@@ -330,7 +339,7 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 		}
 
 		MPI_Bcast (&Abase[k],n-k,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
-		MPI_Bcast (&blocal[k],1,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
+		MPI_Bcast (&blocal[k][0],m,MPI_DOUBLE,map[k],MPI_COMM_WORLD);
 
 		// at each global index iteration a process drops a row (the first in the set)
 		if (map[k] == rank)
@@ -346,14 +355,32 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 			{
 				Alocal[i][j]=Alocal[i][j]-( c[global[i]]*Abase[j] );
 			}
-			blocal[global[i]]=blocal[global[i]]-( c[global[i]]*blocal[k] );
+			for(rhs=0;rhs<m;rhs++)
+			{
+				blocal[global[i]][rhs]=blocal[global[i]][rhs]-( c[global[i]]*blocal[k][rhs] );
+			}
 		}
 	}
-	
+
 	//collect final solution
 	MPI_Gather (&Alocal[0][0], 1, multiple_row_contiguous, &A[0][0], 1, multiple_row_type, 0, MPI_COMM_WORLD);
-	MPI_Gather (&blocal[rank], 1, interleaved_row, &b[0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+	MPI_Gather (&blocal[rank][0], 1, interleaved_row_type, &b[0][0], 1, interleaved_row_type, 0, MPI_COMM_WORLD);
+	//REMEMBER: MPI_Gather is picky: buffer pointers MUST HAVE a (not NULL) value
 
+	// old workaround for openmpi
+	/*
+	for(i=0;i<n;i++)
+	{
+		if(rank==map[i])
+		{
+			MPI_Send (&blocal[i][0], m, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
+		}
+		if(rank==0)
+		{
+			MPI_Recv (&b[i][0], m, MPI_DOUBLE, map[i], i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		}
+	}
+	*/
 	//
 	// old workaround for openmpi + mpich - superseded by introducing "blocal"
 	/*
@@ -371,7 +398,7 @@ void pGaussianElimination_partialmatrix(double** A, double* b, cui n, int rank, 
 	free(local);
 	free(global);
 	DeallocateVector(c);
-	DeallocateVector(blocal);
+	DeallocateMatrix2D(blocal,n,CONTIGUOUS);
 	DeallocateVector(Abase);
     DeallocateMatrix2D(Alocal,myrows,CONTIGUOUS);
 }
@@ -505,22 +532,4 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 
 	free(map);
 	DeallocateVector(c);
-}
-
-void BackSubstitution(double** A, double* b, double* x, cui n)
-{
-		double sum;
-		int i,j;
-
-		x[n-1]=b[n-1]/A[n-1][n-1];
-		for(i=n-2;i>=0;i--)
-		{
-			sum=0.0;
-
-			for(j=i+1;j<n;j++)
-			{
-				sum=sum+A[i][j]*x[j];
-			}
-			x[i]=(b[i]-sum)/A[i][i];
-		}
 }
