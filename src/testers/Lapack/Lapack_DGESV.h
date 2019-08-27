@@ -5,7 +5,7 @@
  */
 extern void dgesv_( int* n, int* nrhs, double* a, int* lda, int* ipiv, double* b, int* ldb, int* info );
 
-void LapackDGESV_calc(double* A, double* b, int n, int* ipiv)
+void Lapack_DGESV_calc(double* A, double* b, int n, int* ipiv)
 {
 	int rows;
 	int one=1;
@@ -16,7 +16,7 @@ void LapackDGESV_calc(double* A, double* b, int n, int* ipiv)
 	dgesv_( &rows, &one, A, &rows, ipiv, b, &rows, &info );
 }
 
-void LapackDGESV(cui n, double* A, cui m, double* bb)
+void Lapack_DGESV(cui n, double* A, cui m, double* bb)
 {
 	int* ipiv = malloc(n * sizeof(int));
 	int rows;

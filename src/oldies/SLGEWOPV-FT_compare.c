@@ -10,8 +10,8 @@
 
 #include "../SLGEWOPV-FT.h"
 #include "../SLGEWOPV-mFT.h"
-#include "Scalapack/ScalapackPDGESV.h"
-#include "GaussJordanElimination/GJE-par.h"
+#include "GaussianElimination/pGE.h"
+#include "Scalapack/Scalapack_pDGESV.h"
 
 
 

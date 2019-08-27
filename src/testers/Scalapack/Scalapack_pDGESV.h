@@ -8,7 +8,7 @@
 //#define N 10
 #define NB 64
 
-void ScalapackPDGESV_calc(int n, double* A_global, int m, double* B_global, int myrank, int nprocs)
+void Scalapack_pDGESV_calc(int n, double* A_global, int m, double* B_global, int myrank, int nprocs)
 {
 	/*
 	 * n = system rank (A_global n x n)
