@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
-#include "../pviDGESV_WO_cs.h"
+#include "../pviDGESV_WO_unopt.h"
 
-double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
+double test_IMe_pviDGESV_unopt(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int nprocs)
 {
 	clock_t start, stop;
 	double** A2;
@@ -13,11 +13,12 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 
 	if (rank==0)
 	{
-		A2=AllocateMatrix2D(rows,cols,CONTIGUOUS);
-
+		A2=AllocateMatrix2D(rows, cols, CONTIGUOUS);
 		FillMatrix2D(A2, rows, cols);
+		//ReferenceMatrix2D(A2, rows, cols);
 
 		OneMatrix2D(bb, rows, nrhs);
+
 
 		if (verbosity>2)
 		{
@@ -34,8 +35,7 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 
 	start = clock();
 
-	pviDGESV_WO_cs(rows, A2, nrhs, bb, xx, rank, cprocs, sprocs);
-
+	pviDGESV_WO_unopt(rows, A2, nrhs, bb, xx, rank, nprocs);
 
 	stop = clock();
 
@@ -45,11 +45,11 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 		PrintMatrix2D(xx, rows, nrhs);
 	}
 
-	DeallocateMatrix2D(xx,rows,CONTIGUOUS);
-	DeallocateMatrix2D(bb,rows,CONTIGUOUS);
+	DeallocateMatrix2D(xx, rows, CONTIGUOUS);
+	DeallocateMatrix2D(bb, rows, CONTIGUOUS);
 	if (rank==0)
 	{
-		DeallocateMatrix2D(A2,rows,CONTIGUOUS);
+		DeallocateMatrix2D(A2, rows, CONTIGUOUS);
 	}
 	else
 	{

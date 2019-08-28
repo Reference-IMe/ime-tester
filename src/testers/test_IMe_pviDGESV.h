@@ -26,6 +26,10 @@ double test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, i
 			PrintMatrix2D(bb, rows, nrhs);
 		}
 	}
+	else
+	{
+		A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
+	}
 
 	start = clock();
 
@@ -44,6 +48,10 @@ double test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, i
 	if (rank==0)
 	{
 		DeallocateMatrix2D(A2, rows, CONTIGUOUS);
+	}
+	else
+	{
+		DeallocateMatrix2D(A2, 0, CONTIGUOUS);
 	}
 
 	return (double)(stop - start);
