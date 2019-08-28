@@ -12,6 +12,7 @@
 #include "test_GaussianElimination_pGE_cp.h"
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
+#include "test_IMe_pviDGESV_swaploop.h"
 
 int main(int argc, char **argv)
 {
@@ -45,8 +46,10 @@ int main(int argc, char **argv)
 	versionname[5]="GE-cp0  10";
 	versionname[6]="IMe     1 ";
 	versionname[7]="IMe     10";
-	versionname[8]="IMe-cs0 1 ";
-	versionname[9]="IMe-cs0 10";
+	//versionname[8]="IMe-cs0 1 ";
+	//versionname[9]="IMe-cs0 10";
+	versionname[8]="IMe-sl  1 ";
+	versionname[9]="IMe-sl  10";
 	int versions = 10;
 
 	for (i=0; i<versions; i++)
@@ -82,8 +85,10 @@ int main(int argc, char **argv)
     	versionrun[5][rep]=test_pGaussianElimination_cp(versionname[5], verbose, rows, cols, nRHS, rank, cprocs, sprocs);	// GE checkpointed with 10 rhs
     	versionrun[6][rep]=test_IMe_pviDGESV(versionname[6], verbose, rows, cols, 1, rank, cprocs);    						// IMe with 1 rhs
     	versionrun[7][rep]=test_IMe_pviDGESV(versionname[7], verbose, rows, cols, nRHS, rank, cprocs);						// IMe with 10 rhs
-    	versionrun[8][rep]=test_IMe_pviDGESV_cs(versionname[8], verbose, rows, cols, 1, rank, cprocs, sprocs);    			// IMe with 1 rhs
-    	versionrun[9][rep]=test_IMe_pviDGESV_cs(versionname[9], verbose, rows, cols, nRHS, rank, cprocs, sprocs);			// IMe with 10 rhs
+    	//versionrun[8][rep]=test_IMe_pviDGESV_cs(versionname[8], verbose, rows, cols, 1, rank, cprocs, sprocs);    			// IMe with 1 rhs
+    	//versionrun[9][rep]=test_IMe_pviDGESV_cs(versionname[9], verbose, rows, cols, nRHS, rank, cprocs, sprocs);			// IMe with 10 rhs
+    	versionrun[8][rep]=test_IMe_pviDGESV_swaploop(versionname[8], verbose, rows, cols, 1, rank, cprocs);    		// IMe with 1 rhs
+    	versionrun[9][rep]=test_IMe_pviDGESV_swaploop(versionname[9], verbose, rows, cols, nRHS, rank, cprocs);			// IMe with 10 rhs
 
 		//////////////////////////////////////////////////////////////////////////////////
 
