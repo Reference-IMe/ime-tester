@@ -11,6 +11,8 @@
 #include "test_IMe_pviDGESV_swaploop.h"
 #include "test_IMe_pviDGESV_unopt.h"
 #include "test_IMe_pviDGESV_cs.h"
+#include "test_IMe_pviDGESV_blind.h"
+#include "test_IMe_pviDGESV_last.h"
 
 int main(int argc, char **argv)
 {
@@ -21,9 +23,9 @@ int main(int argc, char **argv)
 
     int i,rep;
 
-    double versionrun[10][100];
-    const char* versionname[10];
-    double versiontot[10];
+    double versionrun[20][100];
+    const char* versionname[20];
+    double versiontot[20];
 
     int n=atoi(argv[1]);
 
@@ -44,8 +46,12 @@ int main(int argc, char **argv)
 	versionname[5]="IMe     10";
 	versionname[6]="IMe-cs  1 ";
 	versionname[7]="IMe-cs  10";
+	versionname[8]="IMe-bld 1 ";
+	versionname[9]="IMe-bld 10";
+	versionname[10]="IMe-lst 1 ";
+	versionname[11]="IMe-lst 10";
 
-	int versions = 8;
+	int versions = 12;
 
 	for (i=0; i<versions; i++)
 	{
@@ -74,12 +80,16 @@ int main(int argc, char **argv)
 
      	versionrun[0][rep]=test_IMe_pviDGESV_unopt(versionname[0], verbose, rows, cols, 1, rank, cprocs);  			// IMe unoptimized with 1 rhs
     	versionrun[1][rep]=test_IMe_pviDGESV_unopt(versionname[1], verbose, rows, cols, nRHS, rank, cprocs);		// IMe unoptimized with 10 rhs
-    	versionrun[2][rep]=test_IMe_pviDGESV_swaploop(versionname[2], verbose, rows, cols, 1, rank, cprocs);    			// IMe swap loop with 1 rhs
-     	versionrun[3][rep]=test_IMe_pviDGESV_swaploop(versionname[3], verbose, rows, cols, nRHS, rank, cprocs);				// IMe swap loop with 10 rh
-    	versionrun[4][rep]=test_IMe_pviDGESV(versionname[4], verbose, rows, cols, 1, rank, cprocs);    						// IMe with 1 rhs
-    	versionrun[5][rep]=test_IMe_pviDGESV(versionname[5], verbose, rows, cols, nRHS, rank, cprocs);						// IMe with 10 rhs
-    	versionrun[6][rep]=test_IMe_pviDGESV_cs(versionname[6], verbose, rows, cols, 1, rank, cprocs, sprocs);    			// IMe checksumming with 1 rhs
-    	versionrun[7][rep]=test_IMe_pviDGESV_cs(versionname[7], verbose, rows, cols, nRHS, rank, cprocs, sprocs);			// IMe checksumming with 10 rhs
+    	versionrun[2][rep]=test_IMe_pviDGESV_swaploop(versionname[2], verbose, rows, cols, 1, rank, cprocs);    	// IMe swap loop with 1 rhs
+     	versionrun[3][rep]=test_IMe_pviDGESV_swaploop(versionname[3], verbose, rows, cols, nRHS, rank, cprocs);		// IMe swap loop with 10 rh
+    	versionrun[4][rep]=test_IMe_pviDGESV(versionname[4], verbose, rows, cols, 1, rank, cprocs);    				// IMe with 1 rhs
+    	versionrun[5][rep]=test_IMe_pviDGESV(versionname[5], verbose, rows, cols, nRHS, rank, cprocs);				// IMe with 10 rhs
+    	versionrun[6][rep]=test_IMe_pviDGESV_cs(versionname[6], verbose, rows, cols, 1, rank, cprocs, sprocs);    	// IMe checksumming with 1 rhs
+    	versionrun[7][rep]=test_IMe_pviDGESV_cs(versionname[7], verbose, rows, cols, nRHS, rank, cprocs, sprocs);	// IMe checksumming with 10 rhs
+    	versionrun[8][rep]=test_IMe_pviDGESV_blind(versionname[8], verbose, rows, cols, 1, rank, cprocs);    		// IMe blind with 1 rhs
+    	versionrun[9][rep]=test_IMe_pviDGESV_blind(versionname[9], verbose, rows, cols, nRHS, rank, cprocs);		// IMe blind with 10 rhs
+    	versionrun[10][rep]=test_IMe_pviDGESV_last(versionname[10], verbose, rows, cols, 1, rank, cprocs);    		// IMe latest optimization with 1 rhs
+    	versionrun[11][rep]=test_IMe_pviDGESV_last(versionname[11], verbose, rows, cols, nRHS, rank, cprocs);		// IMe latest optimization with 10 rhs
 
 		//////////////////////////////////////////////////////////////////////////////////
 
