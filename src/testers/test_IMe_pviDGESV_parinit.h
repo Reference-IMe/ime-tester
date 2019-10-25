@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
-#include "../pviDGESV_WO_last.h"
+#include "../pviDGESV_WO_parinit.h"
 
-double test_IMe_pviDGESV_last(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int nprocs)
+double test_IMe_pviDGESV_parinit(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int nprocs)
 {
 	clock_t start, stop;
 	double** A2;
@@ -33,7 +33,7 @@ double test_IMe_pviDGESV_last(const char* label, int verbosity, int rows, int co
 
 	start = clock();
 
-	pviDGESV_WO_last(rows, A2, nrhs, bb, xx, rank, nprocs);
+	pviDGESV_WO_parinit(rows, A2, nrhs, bb, xx, rank, nprocs);
 
 	stop = clock();
 
