@@ -12,7 +12,7 @@ folders:
 	mkdir -p ./bin
 
 testers: 
-	cd $(SRC_DIR)/testers && $(MAKE) -f marconi-knl.openmpi.mk testers
+	cd $(SRC_DIR)/testers && $(MAKE) -f marconi.mpich-intel.mk testers
 
 clean:
 	rm -rf ./bin/*

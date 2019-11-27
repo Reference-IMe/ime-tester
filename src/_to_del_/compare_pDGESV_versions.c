@@ -7,11 +7,8 @@
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
 
-#include "test_Scalapack_pDGESV.h"
-#include "test_GaussianElimination_pGE.h"
-#include "test_GaussianElimination_pGE_cp.h"
 #include "test_IMe_pviDGESV.h"
-#include "test_IMe_pviDGESV_cs.h"
+
 
 int main(int argc, char **argv)
 {
@@ -22,9 +19,9 @@ int main(int argc, char **argv)
 
     int i,rep;
 
-    double versionrun[10][100];
-    const char* versionname[10];
-    double versiontot[10];
+    double versionrun[20][100];
+    const char* versionname[20];
+    double versiontot[20];
 
     int n=atoi(argv[1]);
 
@@ -37,18 +34,10 @@ int main(int argc, char **argv)
 
     int nRHS=10;
 
-	versionname[0]="SPK     1 ";
-	versionname[1]="SPK     10";
-	versionname[2]="GE      1 ";
-	versionname[3]="GE      10";
-	versionname[4]="GE-cp0  1 ";
-	versionname[5]="GE-cp0  10";
-	versionname[6]="IMe     1 ";
-	versionname[7]="IMe     10";
-	versionname[8]="IMe-cs0 1 ";
-	versionname[9]="IMe-cs0 10";
+	versionname[0]="IMe     1 ";
+	versionname[1]="IMe     10";
 
-	int versions = 10;
+	int versions = 2;
 
 	for (i=0; i<versions; i++)
 	{
@@ -75,16 +64,8 @@ int main(int argc, char **argv)
 
     	//////////////////////////////////////////////////////////////////////////////////
 
-    	versionrun[0][rep]=test_Scalapack_pDGESV(versionname[0], verbose, rows, cols, 1, rank, cprocs);    					// Scalapack with 1 rhs
-    	versionrun[1][rep]=test_Scalapack_pDGESV(versionname[1], verbose, rows, cols, nRHS, rank, cprocs);					// Scalapack with 10 rhs
-    	versionrun[2][rep]=test_pGaussianElimination(versionname[2], verbose, rows, cols, 1, rank, cprocs);    				// GE with 1 rhs
-    	versionrun[3][rep]=test_pGaussianElimination(versionname[3], verbose, rows, cols, nRHS, rank, cprocs);				// GE with 10 rhs
-    	versionrun[4][rep]=test_pGaussianElimination_cp(versionname[4], verbose, rows, cols, 1, rank, cprocs, sprocs); 		// GE checkpointed with 1 rhs
-    	versionrun[5][rep]=test_pGaussianElimination_cp(versionname[5], verbose, rows, cols, nRHS, rank, cprocs, sprocs);	// GE checkpointed with 10 rhs
-    	versionrun[6][rep]=test_IMe_pviDGESV(versionname[6], verbose, rows, cols, 1, rank, cprocs);    						// IMe with 1 rhs
-    	versionrun[7][rep]=test_IMe_pviDGESV(versionname[7], verbose, rows, cols, nRHS, rank, cprocs);						// IMe with 10 rhs
-    	versionrun[8][rep]=test_IMe_pviDGESV_cs(versionname[8], verbose, rows, cols, 1, rank, cprocs, sprocs);    			// IMe with 1 rhs
-    	versionrun[9][rep]=test_IMe_pviDGESV_cs(versionname[9], verbose, rows, cols, nRHS, rank, cprocs, sprocs);			// IMe with 10 rhs
+    	versionrun[0][rep]=test_IMe_pviDGESV(versionname[0], verbose, rows, cols, 1, rank, cprocs);    		// IMe latest optimization with 1 rhs
+    	versionrun[1][rep]=test_IMe_pviDGESV(versionname[1], verbose, rows, cols, nRHS, rank, cprocs);		// IMe latest optimization with 10 rhs
 
 		//////////////////////////////////////////////////////////////////////////////////
 
