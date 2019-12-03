@@ -3,9 +3,8 @@ MPICC = mpiicc
 DEBUG = -g -O3
 CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG)
 
-all : testers
-
-testers : compare_DGESV compare_pDGESV compare_pDGESV_versions
+all: compare_DGESV compare_pDGESV compare_pDGESV_versions
+.PHONY: all
   
 compare_DGESV : compare_DGESV.c
 	$(CC) $(CFLAGS) compare_DGESV.c -o $(BIN_DIR)/compare_DGESV -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm

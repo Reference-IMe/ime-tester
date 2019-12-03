@@ -9,7 +9,6 @@
 #include "test_GaussianElimination_GE.h"
 #include "test_Lapack_DGESV.h"
 #include "test_IMe_DGESV.h"
-#include "test_IMe1D_DGESV.h"
 
 int main(int argc, char **argv)
 {
@@ -34,11 +33,9 @@ int main(int argc, char **argv)
 	versionname[1]="LPK   10";
 	versionname[2]="GE    1 ";
 	versionname[3]="GE    10";
-	versionname[4]="IMe1D 1 ";
-	versionname[5]="IMe1D 10";
-	versionname[6]="IMe   1 ";
-	versionname[7]="IMe   10";
-	int versions = 8;
+	versionname[4]="IMe   1 ";
+	versionname[5]="IMe   10";
+	int versions = 6;
 
 	for (i=0; i<versions; i++)
 	{
@@ -69,10 +66,8 @@ int main(int argc, char **argv)
     	versionrun[1][rep]=test_Lapack_DGESV(versionname[1], verbose, rows, cols, nRHS);			// Lapack with 10 rhs
     	versionrun[2][rep]=test_GaussianElimination(versionname[2], verbose, rows, cols, 1);		// Gaussian Elimination with 1 rhs
     	versionrun[3][rep]=test_GaussianElimination(versionname[3], verbose, rows, cols, nRHS);		// Gaussian Elimination with 10 rhs
-    	versionrun[4][rep]=test_IMe1D_DGESV(versionname[4], verbose, rows, cols, 1);				// IMe-1D with 1 rhs
-    	versionrun[5][rep]=test_IMe1D_DGESV(versionname[5], verbose, rows, cols, nRHS);				// IMe-1D with 10 rhs
-    	versionrun[6][rep]=test_IMe_DGESV(versionname[6], verbose, rows, cols, 1);					// IMe with 1 rhs
-    	versionrun[7][rep]=test_IMe_DGESV(versionname[7], verbose, rows, cols, nRHS);				// IMe with 10 rhs
+    	versionrun[4][rep]=test_IMe_DGESV(versionname[4], verbose, rows, cols, 1);					// IMe with 1 rhs
+    	versionrun[5][rep]=test_IMe_DGESV(versionname[5], verbose, rows, cols, nRHS);				// IMe with 10 rhs
 
 		//////////////////////////////////////////////////////////////////////////////////
 
