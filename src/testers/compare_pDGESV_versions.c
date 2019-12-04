@@ -9,13 +9,14 @@
 
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
+#include "test_IMe_pviDGESV_ft1.h"
 
 
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
-    int rank, totprocs;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);		/* get current process id */
+    int main_rank, totprocs; //
+    MPI_Comm_rank(MPI_COMM_WORLD, &main_rank);		/* get current process id */
     MPI_Comm_size(MPI_COMM_WORLD, &totprocs);	/* get number of processes */
 
     int i,rep;
@@ -33,21 +34,31 @@ int main(int argc, char **argv)
     int repetitions=atoi(argv[3]);
     int verbose=atoi(argv[4]);
 
+    if ((n % cprocs) !=0)
+    {
+    	if (main_rank==0)
+    	{
+    		printf("ERR: The size of the matrix has to be a multiple of the number of calc. nodes\n");
+    	}
+    	MPI_Finalize();
+        return(1);
+    }
     int nRHS=10;
 
 	versionname[0]="IMe-cs  1 ";
 	versionname[1]="IMe-cs  10";
 	versionname[2]="IMe     1 ";
 	versionname[3]="IMe     10";
+	versionname[4]="IMe-ft  1 ";
 
-	int versions = 4;
+	int versions = 5;
 
 	for (i=0; i<versions; i++)
 	{
 		versiontot[i] = 0;
 	}
 
-	if (rank==0 && verbose>0)
+	if (main_rank==0 && verbose>0)
 	{
 		printf("\nMatrix size: %dx%d",n,n);
 		printf("\nCheckpoint : ");
@@ -63,18 +74,19 @@ int main(int argc, char **argv)
 
     for (rep=0; rep<repetitions; rep++)
     {
-    	if (rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
+    	if (main_rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
 
     	//////////////////////////////////////////////////////////////////////////////////
 
-     	versionrun[0][rep]=test_IMe_pviDGESV_cs(versionname[0], verbose, rows, cols, 1, rank, cprocs, sprocs);    	// IMe checksumming with 1 rhs
-    	versionrun[1][rep]=test_IMe_pviDGESV_cs(versionname[1], verbose, rows, cols, nRHS, rank, cprocs, sprocs);	// IMe checksumming with 10 rhs
-    	versionrun[2][rep]=test_IMe_pviDGESV(versionname[2], verbose, rows, cols, 1, rank, cprocs);    		// IMe latest optimization with 1 rhs
-    	versionrun[3][rep]=test_IMe_pviDGESV(versionname[3], verbose, rows, cols, nRHS, rank, cprocs);		// IMe latest optimization with 10 rhs
+     	versionrun[0][rep]=test_IMe_pviDGESV_cs(versionname[0], verbose, rows, cols, 1, main_rank, cprocs, sprocs);    	// IMe checksumming with 1 rhs
+    	versionrun[1][rep]=test_IMe_pviDGESV_cs(versionname[1], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// IMe checksumming with 10 rhs
+    	//versionrun[2][rep]=test_IMe_pviDGESV(versionname[2], verbose, rows, cols, 1, main_rank, cprocs);    		// IMe latest optimization with 1 rhs
+    	//versionrun[3][rep]=test_IMe_pviDGESV(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs);		// IMe latest optimization with 10 rhs
+    	versionrun[4][rep]=test_IMe_pviDGESV_ft1(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// IMe latest optimization with 1 rhs
 
 		//////////////////////////////////////////////////////////////////////////////////
 
-    	if (rank==0)
+    	if (main_rank==0)
 		{
 			for (i=0; i<versions; i++)
 			{
@@ -87,7 +99,7 @@ int main(int argc, char **argv)
 		}
     }
 
-	if (rank==0)
+	if (main_rank==0)
 	{
 		printf("\n\n Summary:");
 		for (i=0; i<versions; i++)
@@ -102,6 +114,8 @@ int main(int argc, char **argv)
 		printf("\n");
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("Done %d.\n",main_rank);
 	MPI_Finalize();
     return(0);
 }

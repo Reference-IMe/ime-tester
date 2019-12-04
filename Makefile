@@ -64,7 +64,7 @@ $(BIN_DIR):
 $(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c
 	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
 
-$(BIN_DIR)/%: $(SRC_DIR)/%.c
+$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h
 #	$(MPICC) $(CFLAGS) $< -o $@  -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
 	$(MPICC) $(CFLAGS) $< -o $@ $(MACHINEFLAGS)
 	
