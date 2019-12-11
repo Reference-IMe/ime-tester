@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGESV_WO_ft1.h"
 
-double test_IMe_pviDGESV_ft1(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
+double test_IMe_pviDGESV_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
 	clock_t start, stop;
 	double** A2;
@@ -34,7 +34,7 @@ double test_IMe_pviDGESV_ft1(const char* label, int verbosity, int rows, int col
 
 	start = clock();
 
-	pviDGESV_WO_ft1(rows, A2, nrhs, bb, xx, rank, cprocs, sprocs);
+	pviDGESV_WO_ft1_sim(rows, A2, nrhs, bb, xx, rank, cprocs, sprocs, failing_rank, failing_level);
 
 
 	stop = clock();
