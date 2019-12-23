@@ -10,6 +10,7 @@ CC = icc
 
 DEBUG = -g -O3
 CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG)
+FFLAGS = $(DEBUG)
 
 SEQ_EXE = $(BIN_DIR)/compare_DGESV
 PAR_EXE = $(BIN_DIR)/compare_pDGESV $(BIN_DIR)/compare_pDGESV_versions
@@ -26,6 +27,7 @@ ifeq ($(machine),marconi) # if marconi
   ifeq ($(mpi),intel)
     # marconi intelmpi
     MPICC = mpiicc
+    MPIFC = mpiifort
     MACHINEFLAGS= -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
   else
     ifeq ($(mpi),ch)
@@ -57,16 +59,17 @@ endif
 all: $(BIN_DIR) $(EXE)
 .PHONY: all
 
-
+$(SRC_DIR)/ScaLAPACK/%.o: $(SRC_DIR)/ScaLAPACK/%.f
+	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
+	
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 	
 $(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c
 	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
 
-$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h
-#	$(MPICC) $(CFLAGS) $< -o $@  -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
-	$(MPICC) $(CFLAGS) $< -o $@ $(MACHINEFLAGS)
+$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h
+	$(MPICC) $(CFLAGS) $< -o $@ -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
 	
 clean:
 	rm -f $(EXE)

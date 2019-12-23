@@ -16,4 +16,11 @@ extern int  numroc_( int* n, int* nb, int* iproc, int* isrcproc, int* nprocs);
 extern void pdgemr2d_ (int* m , int* n , double* a , int* ia , int* ja , int* desca , double* b , int* ib , int* jb , int* descb , int* ictxt );
 extern void pdgesv_( int* n, int* nrhs, double* A, int* ia, int* ja, int* desca, int* ipiv, double* B, int* ib, int* jb, int* descb, int* info);
 
+extern void pdgetrf_ckp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
+extern void pdgetf2_ckp_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
+
+extern void pdgetrs_( char *trans, int*n, int *nrhs, double *A, int *ia, int *ja, int *descA, int *ipiv, double *B, int *ib, int *jb, int *descB, int *info );
+
+extern void pdtran_( int *m, int *n, double *ALPHA, double *A, int *ia, int *ja, int *descA, double *BETA, double *B, int *ib, int *jb, int *descB);
+
 #endif /* __SCALAPACK_H__ */

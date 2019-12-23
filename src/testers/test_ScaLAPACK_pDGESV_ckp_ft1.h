@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
-#include "Scalapack/Scalapack_pDGESV.h"
+#include "ScaLAPACK/Scalapack_pDGESV_ckp_ft1_sim.h"
 
-double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs)
+double test_Scalapack_pDGESV_ckp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
 	clock_t start, stop;
 	double* A;
@@ -25,7 +25,7 @@ double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int col
 
 	start=clock();
 
-	Scalapack_pDGESV_calc(rows, A, nrhs, bb, rank, cprocs);
+	Scalapack_pDGESV_ckp_ft1_sim(rows, A, nrhs, bb, rank, cprocs, sprocs, failing_rank, failing_level);
 
 	stop=clock();
 
@@ -34,6 +34,7 @@ double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int col
 		if (verbosity>1)
 		{
 			printf("\nThe %s solution is:\n",label);
+			//PrintMatrix1D(bb, nrhs, rows);
 			PrintMatrix1D(bb, nrhs, rows);
 		}
 		DeallocateMatrix1D(A);

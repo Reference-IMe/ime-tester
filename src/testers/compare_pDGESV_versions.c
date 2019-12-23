@@ -10,6 +10,8 @@
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
+#include "test_ScaLAPACK_pDGESV_ckp_ft1.h"
+#include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
 
 
 int main(int argc, char **argv)
@@ -92,13 +94,15 @@ int main(int argc, char **argv)
     }
     int nRHS=10;
 
-	versionname[0]="IMe-cs  1 ";
-	versionname[1]="IMe-cs  10";
-	versionname[2]="IMe     1 ";
-	versionname[3]="IMe     10";
-	versionname[4]="IMe-ft  1 ";
+	versionname[0]="IMe-cs     1 ";
+	versionname[1]="IMe-cs     10";
+	versionname[2]="IMe-ft1    1 ";
+	versionname[3]="IMe-ft1    10";
+	versionname[4]="SPK-SV-ft1 1 ";
+	versionname[5]="SPK-SV-ft1 10";
+	versionname[6]="SPK-LU-ft1   ";
 
-	int versions = 5;
+	int versions = 7;
 
 	for (i=0; i<versions; i++)
 	{
@@ -127,11 +131,16 @@ int main(int argc, char **argv)
 
      	versionrun[0][rep]=test_IMe_pviDGESV_cs(versionname[0], verbose, rows, cols, 1, main_rank, cprocs, sprocs);    	// IMe checksumming with 1 rhs
     	versionrun[1][rep]=test_IMe_pviDGESV_cs(versionname[1], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// IMe checksumming with 10 rhs
+    	versionrun[2][rep]=test_IMe_pviDGESV_ft1_sim(versionname[2], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// IMe single FT with 1 rhs
+    	versionrun[3][rep]=test_IMe_pviDGESV_ft1_sim(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// IMe single FT with 10 rhs
+    	versionrun[4][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);
+    	versionrun[5][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[5], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);
+    	versionrun[6][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[6], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);
+    	//versionrun[7][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[7], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);
     	//versionrun[2][rep]=test_IMe_pviDGESV(versionname[2], verbose, rows, cols, 1, main_rank, cprocs);    		// IMe latest optimization with 1 rhs
     	//versionrun[3][rep]=test_IMe_pviDGESV(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs);		// IMe latest optimization with 10 rhs
-    	versionrun[4][rep]=test_IMe_pviDGESV_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);		// IMe latest optimization with 1 rhs
 
-		//////////////////////////////////////////////////////////////////////////////////
+    	//////////////////////////////////////////////////////////////////////////////////
 
     	if (main_rank==0)
 		{
@@ -161,8 +170,11 @@ int main(int argc, char **argv)
 		printf("\n");
 	}
 
+	// slow down exit
+	//sleep(3);
 	//MPI_Barrier(MPI_COMM_WORLD);
 	//printf("Done %d.\n",main_rank);
+
 	MPI_Finalize();
     return(0);
 }

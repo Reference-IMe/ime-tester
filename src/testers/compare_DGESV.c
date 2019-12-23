@@ -7,8 +7,8 @@
 #include "../helpers/vector.h"
 
 #include "test_GaussianElimination_GE.h"
-#include "test_Lapack_DGESV.h"
 #include "test_IMe_DGESV.h"
+#include "test_LAPACK_DGESV.h"
 
 int main(int argc, char **argv)
 {

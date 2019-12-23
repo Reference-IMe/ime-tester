@@ -1,5 +1,5 @@
 #include "../helpers/matrix.h"
-#include "Lapack/Lapack_DGESV.h"
+#include "LAPACK/Lapack_DGESV.h"
 
 double test_Lapack_DGESV(const char* label, int verbosity, int rows, int cols, int nrhs)
 {

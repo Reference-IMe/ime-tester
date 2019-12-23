@@ -7,11 +7,11 @@
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
 
-#include "test_Scalapack_pDGESV.h"
 #include "test_GaussianElimination_pGE.h"
 #include "test_GaussianElimination_pGE_cp.h"
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
+#include "test_ScaLAPACK_pDGESV.h"
 
 int main(int argc, char **argv)
 {
