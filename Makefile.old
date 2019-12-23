@@ -47,34 +47,14 @@ ifeq ($(machine),marconi) # if marconi
 else
   ifeq ($(machine),zavai) # if zavai
     MACHINEFLAGS=
-  else # end zavai
+  else
     ifeq ($(machine),cresco6) # if cresco6
-      ifeq ($(mpi),intel) # cresco6 intelmpi
-        # cresco6 intelmpi
-        MPICC = mpiicc
-        MPIFC = mpiifort
-        MACHINEFLAGS_ser= -I${MKLROOT}/include -L${MKLROOT}/lib -mkl -ldl -lm
-        MACHINEFLAGS= -I${MKLROOT}/include -L${MKLROOT}/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
-      else # end cresco6 intel
-        ifeq ($(mpi),ch) # cresco6 mpich
-          # marconi mpich
-          MPICC = mpicc
-          MACHINEFLAGS= 
-        else # end cresco6 mpich
-          ifeq ($(mpi),open) # cresco6 openmpi
-            # marconi openmpi
-            MPICC = mpicc
-            MACHINEFLAGS=
-          else # end cresco6 openmpi
-            $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = intel|ch|open')
-          endif # end cresco6 openmpi (and all)
-        endif # end cresco6 mpich (and all)
-      endif # end cresco6 intelmpi (and all)
-    else # end cresco 6
+      MACHINEFLAGS=
+    else
       $(error Unknown machine '$(machine)', please specify 'machine = marconi|zavai|cresco6')
-    endif # end cresco6 (and all)
-  endif # end zavai
-endif # end marconi (and all)
+    endif
+  endif
+endif
 
 all: $(BIN_DIR) $(EXE)
 .PHONY: all
@@ -86,8 +66,7 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 	
 $(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c
-	#$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
-	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV $(MACHINEFLAGS_ser)
+	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
 
 $(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h
 	$(MPICC) $(CFLAGS) $< -o $@ -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
