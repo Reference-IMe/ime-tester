@@ -6,8 +6,8 @@
 #include "../../helpers/scalapack.h"
 
 
-//void Scalapack_pDGETRF_ckp_ft1_sim(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
-void Scalapack_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+//void Scalapack_pDGETRF(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs)
+void Scalapack_pDGETRF(int n, double* A_global, int mpi_rank, int cprocs, int sprocs)
 {
 	/*
 	 * n = system rank (A_global n x n)

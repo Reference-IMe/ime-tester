@@ -34,7 +34,7 @@ double test_IMe_pviDGESV_ft1_sim(const char* label, int verbosity, int rows, int
 
 	start = clock();
 
-	pviDGESV_WO_ft1_sim(rows, A2, nrhs, bb, xx, rank, cprocs, sprocs, failing_rank, failing_level);
+	pviDGESV_WO_ft1_sim(rows, A2, nrhs, bb, xx, MPI_COMM_WORLD, sprocs, failing_rank, failing_level);
 
 
 	stop = clock();

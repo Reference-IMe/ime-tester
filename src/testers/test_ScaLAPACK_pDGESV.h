@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/Scalapack_pDGESV.h"
 
-double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs)
+double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -25,7 +25,7 @@ double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int col
 
 	start=clock();
 
-	Scalapack_pDGESV_calc(rows, A, nrhs, bb, rank, cprocs);
+	Scalapack_pDGESV_calc(rows, A, nrhs, bb, rank, cprocs, sprocs);
 
 	stop=clock();
 

@@ -34,8 +34,7 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 
 	start = clock();
 
-	pviDGESV_WO_cs(rows, A2, nrhs, bb, xx, rank, cprocs, sprocs);
-
+	pviDGESV_WO_cs(rows, A2, nrhs, bb, xx, MPI_COMM_WORLD, sprocs);
 
 	stop = clock();
 

@@ -13,7 +13,7 @@ CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG) -DINJECT
 FFLAGS = $(DEBUG)
 
 SEQ_EXE = $(BIN_DIR)/compare_DGESV
-PAR_EXE = $(BIN_DIR)/compare_pDGESV $(BIN_DIR)/compare_pDGESV_versions
+PAR_EXE = $(BIN_DIR)/compare_all_versions # $(BIN_DIR)/compare_pDGESV $(BIN_DIR)/compare_pDGESV_versions
 EXE = $(SEQ_EXE) $(PAR_EXE)
 
 

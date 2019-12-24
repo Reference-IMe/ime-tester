@@ -1,8 +1,7 @@
 #include "../helpers/matrix.h"
-#include "ScaLAPACK/Scalapack_pDGETRF_ckp_ft1_sim.h"
+#include "ScaLAPACK/Scalapack_pDGETRF.h"
 
-//double test_Scalapack_pDGETRF_ckp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
-double test_Scalapack_pDGETRF_ckp_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+double test_Scalapack_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -26,8 +25,8 @@ double test_Scalapack_pDGETRF_ckp_ft1_sim(const char* label, int verbosity, int 
 
 	start=clock();
 
-	// Scalapack_pDGETRF_ckp_ft1_sim(rows, A, nrhs, bb, rank, cprocs, sprocs, failing_rank, failing_level); // for consistency checking
-	Scalapack_pDGETRF_ckp_ft1_sim(rows, A, rank, cprocs, sprocs, failing_rank, failing_level);
+	// Scalapack_pDGETRF(rows, A, nrhs, bb, rank, cprocs, sprocs); // for consistency checking
+	Scalapack_pDGETRF(rows, A, rank, cprocs, sprocs);
 
 	stop=clock();
 
