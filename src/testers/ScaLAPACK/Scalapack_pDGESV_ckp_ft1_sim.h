@@ -5,8 +5,6 @@
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
 
-//#define N 10
-#define NB 64
 
 void Scalapack_pDGESV_ckp_ft1_sim(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
@@ -26,7 +24,9 @@ void Scalapack_pDGESV_ckp_ft1_sim(int n, double* A_global, int m, double* B_glob
 	int descA_global[9], descB_global[9], descA[9], descB[9];
 	char order = 'R', scope = 'A';
 	// MATRIX
-	int nb = NB, nr, nc, ncrhs, lld, lld_global;
+	//#define N 10
+	//#define NB 64
+	int nb, nr, nc, ncrhs, lld, lld_global;
 	double *A, *B;
 	double *work, alpha;
 	int *ipiv;
@@ -55,6 +55,7 @@ if (mpi_rank < cprocs)
 	//printf("\nI %d have to",myrank);
 
 	// Computation of local matrix size
+	nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
@@ -99,18 +100,13 @@ if (mpi_rank < cprocs)
 
 	pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 
-
 	free(A);
 	free(B);
 	free(ipiv);
 	free(work);
 }
-else
-{
-	//printf("\nI %d NOT have to",myrank);
-}
 
-	//Close BLACS environment
+//Close BLACS environment
 		//Cblacs_barrier( context, "All");	// not working! why?
 		//MPI_Barrier(MPI_COMM_WORLD);		// working but not needed
 		//Cblacs_gridexit( context );		// not needed if calling blacs_exit

@@ -9,12 +9,13 @@ NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
 CC = icc
 
 DEBUG = -g -O3
-CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG)
+CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG) -DINJECT
 FFLAGS = $(DEBUG)
 
 SEQ_EXE = $(BIN_DIR)/compare_DGESV
 PAR_EXE = $(BIN_DIR)/compare_pDGESV $(BIN_DIR)/compare_pDGESV_versions
 EXE = $(SEQ_EXE) $(PAR_EXE)
+
 
 ifeq ($(mpi),)
   $(error Unspecified mpi flavour, please specify 'mpi = intel|ch|open')
@@ -77,8 +78,14 @@ else
   endif # end zavai
 endif # end marconi (and all)
 
-all: $(BIN_DIR) $(EXE)
+all: $(BIN_DIR) $(SRC_DIR)/FTLA/libftla.a $(EXE) # $(SRC_DIR)/FTLA/pdmatgen.o 
 .PHONY: all
+
+#$(SRC_DIR)/FTLA/pdmatgen.o: $(SRC_DIR)/FTLA/pdmatgen.f
+#	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
+	
+$(SRC_DIR)/FTLA/libftla.a:
+	cd $(SRC_DIR)/FTLA && $(MAKE)
 
 $(SRC_DIR)/ScaLAPACK/%.o: $(SRC_DIR)/ScaLAPACK/%.f
 	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
@@ -87,11 +94,12 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 	
 $(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c
-	#$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
 	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV $(MACHINEFLAGS_ser)
 
-$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h
-	$(MPICC) $(CFLAGS) $< -o $@ -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
+$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/FTLA/helpersftla.a
+	$(MPICC) $(CFLAGS)  -lifcore $< -o $@ $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(MACHINEFLAGS)
+
 	
 clean:
 	rm -f $(EXE)
+	cd $(SRC_DIR)/FTLA && $(MAKE) clean

@@ -5,8 +5,6 @@
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
 
-//#define N 10
-#define NB 64
 
 void Scalapack_pDGETRF_ckp_ft1_sim(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
@@ -26,7 +24,9 @@ void Scalapack_pDGETRF_ckp_ft1_sim(int n, double* A_global, int m, double* B_glo
 	int descA_global[9], descB_global[9], descA[9], descB[9];
 	char order = 'R', scope = 'A';
 	// MATRIX
-	int nb = NB, nr, nc, ncrhs, lld, lld_global;
+	//#define N 10
+	//#define NB 64
+	int nb = 64, nr, nc, ncrhs, lld, lld_global;
 	double *A, *B;
 	double *work, alpha;
 	int *ipiv;

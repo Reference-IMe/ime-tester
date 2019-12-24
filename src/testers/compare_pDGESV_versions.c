@@ -12,7 +12,8 @@
 #include "test_IMe_pviDGESV_ft1.h"
 #include "test_ScaLAPACK_pDGESV_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
-
+#include "test_FTLA_ftdqr.h"
+#include "test_ScaLAPACK_pDGEQRF.h"
 
 int main(int argc, char **argv)
 {
@@ -101,8 +102,10 @@ int main(int argc, char **argv)
 	versionname[4]="SPK-SV-ft1 1 ";
 	versionname[5]="SPK-SV-ft1 10";
 	versionname[6]="SPK-LU-ft1   ";
+	versionname[7]="FTLA-QR-ft1  ";
+	versionname[8]="SPK-QR       ";
 
-	int versions = 7;
+	int versions = 9;
 
 	for (i=0; i<versions; i++)
 	{
@@ -136,6 +139,8 @@ int main(int argc, char **argv)
     	versionrun[4][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);
     	versionrun[5][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[5], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);
     	versionrun[6][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[6], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);
+    	//versionrun[7][rep]=test_FTLA_ftdqr(2, 2, 0, 0, 1);
+    	versionrun[8][rep]=test_Scalapack_pDGEQRF(versionname[8], verbose, rows, cols, main_rank, cprocs, sprocs);
     	//versionrun[7][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[7], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);
     	//versionrun[2][rep]=test_IMe_pviDGESV(versionname[2], verbose, rows, cols, 1, main_rank, cprocs);    		// IMe latest optimization with 1 rhs
     	//versionrun[3][rep]=test_IMe_pviDGESV(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs);		// IMe latest optimization with 10 rhs
@@ -149,7 +154,7 @@ int main(int argc, char **argv)
 				versiontot[i] += versionrun[i][rep];
 				if (verbose>0)
 				{
-					printf("\n%s    call    run time: %f clk", versionname[i], versionrun[i][rep]);
+					printf("\n%s    call    run time: %10d clk", versionname[i], (int)versionrun[i][rep]);
 				}
 			}
 		}
@@ -160,12 +165,12 @@ int main(int argc, char **argv)
 		printf("\n\n Summary:");
 		for (i=0; i<versions; i++)
 		{
-			printf("\n%s    Total   run time: %f clk\t\t%f s", versionname[i], versiontot[i], versiontot[i] / CLOCKS_PER_SEC);
+			printf("\n%s    Total   run time: %10d clk", versionname[i], (int)versiontot[i]); // in sec. versiontot[i] / CLOCKS_PER_SEC
 		}
 		printf("\n");
 		for (i=0; i<versions; i++)
 		{
-			printf("\n%s    Average run time: %f clk\t\t%f s", versionname[i], versiontot[i]/repetitions, versiontot[i]/repetitions / CLOCKS_PER_SEC);
+			printf("\n%s    Average run time: %10d clk", versionname[i], (int)(versiontot[i]/repetitions));
 		}
 		printf("\n");
 	}
