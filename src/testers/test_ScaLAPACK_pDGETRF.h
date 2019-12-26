@@ -1,5 +1,5 @@
 #include "../helpers/matrix.h"
-#include "ScaLAPACK/Scalapack_pDGETRF.h"
+#include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 
 double test_Scalapack_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {

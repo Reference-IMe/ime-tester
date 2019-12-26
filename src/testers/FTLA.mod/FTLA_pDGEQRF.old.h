@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//#include "FTLA/slp.h"
 #include "../helpers/Cblacs.h"
 #include "../helpers/scalapack.h"
 #include "FTLA/util_matrix.h"
@@ -56,20 +55,26 @@ static double verifyX( int M, int S, double *X0, double *X, int *descX );
 
 int *errors;
 
-int test_FTLA_ftdqr(int P, int Q, int Fmin, int Fmax, int Finc)
+//int test_FTLA_ftdqr(int P, int Q, int Fmin, int Fmax, int Finc)
+FTLA_pDGEQRF_calc(rows, A_global, rank, cprocs, sprocs)
 {
-    int ictxt, info;
-    int PxQ = P * Q;
+	int zero = 0, one = 1;			//numbers
+	// MPI
+	int ndims = 2, dims[2] = {0,0};
+
+    int ictxt, ictxt_global, info;
+    int P, Q, PxQ;
     int nprow, npcol, myrow, mycol;
     ftla_work_t ftwork;
 
     int NB=64;
-    int M, N, Nc, Ne, S=1;
+    int M, N, Nc, Ne, S=1, lld, lld_global;
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     double *A0=NULL, *A=NULL;    
-    int descA[9]; 
+    int descA[9], descA_global[9];
     double *B0=NULL, *X0=NULL, *Xo=NULL, *Xf=NULL;
     int descX[9];
+    char order = 'R', scope = 'A';
 
     double t1, t2, To, Tf;
     double Rom, Rfm, Rob, Rfb, Rox, Rfx, KA;
@@ -78,21 +83,46 @@ int test_FTLA_ftdqr(int P, int Q, int Fmin, int Fmax, int Finc)
     start = end = step = 640;
 
     {/* init BLACS */
+    	MPI_Dims_create(cprocs, ndims, dims);
+    	P = dims[0];
+    	Q = dims[1];
+    	PxQ = P * Q;
         Cblacs_pinfo( &rank, &np );
         print0( ("Setting up MPI and BLACS...") );
         Cblacs_get( -1, 0, &ictxt );
         Cblacs_gridinit( &ictxt, "Row", P, Q );
         Cblacs_gridinfo( ictxt, &nprow, &npcol, &myrow, &mycol );
+    	Cblacs_get( -1, zero, &ictxt_global );
+    	Cblacs_gridinit( &ictxt_global, &order, one, one );
         print0( ("done\tPxQ=%dx%d, NB=%d\n", nprow, npcol, NB) );
         eps = pdlamch_( &ictxt, "Epsilon" );
     }
 
-    print0( ("M\tNe\t : time(s)\tgflops/proc\t(realflops)\t: |A-A~|\t|B-AX~|\t\t|X-X~|\n") );
+	lld = MAX( 1 , nr );
 
-    for( i = start; i <= end; i += step) {
-        {/* allocate matrices */
-            /* determine checksum size, generate A matrix */
-            N = M = i;
+	// Descriptors (local)
+	descinit_( descA, &N, &N, &NB, &NB, &zero, &zero, &ictxt, &lld, &info );
+
+	if (rank==0)
+	{
+		// Descriptors (global)
+		lld_global = N;
+		descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &ictxt_global, &lld_global, &info );
+	}
+	else
+	{
+		// Descriptors (global, for non-root nodes)
+		for (i=0; i<9; i++)
+		{
+			descA_global[i]=0;
+		}
+		descA_global[1]=-1;
+	}
+    //print0( ("M\tNe\t : time(s)\tgflops/proc\t(realflops)\t: |A-A~|\t|B-AX~|\t\t|X-X~|\n") );
+
+    //for( i = start; i <= end; i += step)
+    {
+            N = M = rows;
             Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A) 
             MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 #ifndef NO_EXTRAFLOPS
@@ -100,55 +130,6 @@ int test_FTLA_ftdqr(int P, int Q, int Fmin, int Fmax, int Finc)
 #else
             Ne = N;
 #endif
-            print0( ("%-7d\t%-7d\t", M, Ne) );
-
-            create_matrix( ictxt, 800, &A0, descA, M, Ne, NB, NULL, NULL );
-            create_matrix( ictxt, 0,   &A,  NULL, M, Ne, NB, NULL, NULL );
-            pdlacpy_( "All", &M, &N, A0, &i1, &i1, descA, A, &i1, &i1, descA );
-/*            KA = condA( M, N, A, descA );
-            print0( ("%-7.2g\t", KA) );
-            pdlacpy_( "All", &M, &N, A0, &i1, &i1, descA, A, &i1, &i1, descA );*/
-            /* allocate local buffer for the Q-wide local panel copy */
-            create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (Q+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
-            /* generate X0, compute B from A.X0, set X=B0 */
-            create_matrix( ictxt, 500, &X0, descX, M, S, NB, NULL, NULL );
-            create_matrix( ictxt, 0,   &B0,  NULL, M, S, NB, NULL, NULL );
-            pdgemm_( "N", "N", &M, &S, &N, &p1, A0, &i1, &i1, descA,
-                                                X0, &i1, &i1, descX,
-                                           &p0, B0, &i1, &i1, descX );
-            create_matrix( ictxt, 0,   &Xo,  NULL, M, S, NB, NULL, NULL );
-            create_matrix( ictxt, 0,   &Xf,  NULL, M, S, NB, NULL, NULL );
-            pdlacpy_( "All", &M, &S, B0, &i1, &i1, descX, Xo, &i1, &i1, descX );
-            pdlacpy_( "All", &M, &S, B0, &i1, &i1, descX, Xf, &i1, &i1, descX );
-        }
-        {/*    call ScaLAPACK QR without FT */
-            int lwork=-1;
-            double lazywork;
-            pdgeqrf_( &M, &N, NULL, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
-            lwork = (int)lazywork;
-            double *work = (double*)malloc( lwork*sizeof(double) );
-            double *tau  = (double*)malloc( Nc*sizeof(double) );
-
-            MPI_Barrier( MPI_COMM_WORLD );
-            t1 = MPI_Wtime();
-            pdgeqrf_( &M, &N, A, &i1, &i1, descA, tau, work, &lwork, &info );
-            checkerror( info, 0 );
-            t2 = MPI_Wtime();
-            t2 -= t1;
-            MPI_Reduce( &t2, &To, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
-            print0( ("o: %f\t%-11g\t\t\t: ", To, 4.0/3.0*M*M*M/1e9/To/PxQ) );
-            dprintmatrix(A, descA, "Ao", 2);
-            
-            Rom = verifyQRm( M, N, A0, A, descA, tau );
-            print0( ("%-10e\t", Rom) );
-            Rob = verifyQRb( M, N, S, A0, A, descA, tau, B0, Xo, descX );
-            print0( ("%-10e\t", Rob) );
-            Rox = verifyX( M, S, X0, Xo, descX );
-            print0( ("%-10e\n", Rox) );
-
-            free( work );
-            free( tau );
-        }        
 
         {/* call resilient QR */
             int err;

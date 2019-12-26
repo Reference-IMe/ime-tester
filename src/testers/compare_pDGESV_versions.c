@@ -6,13 +6,12 @@
 
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-
+#include "FTLA.mod/FTLA_pDGEQRF.h"
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
 #include "test_ScaLAPACK_pDGESV_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
-#include "test_FTLA_ftdqr.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
 
 int main(int argc, char **argv)

@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
-#include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
+#include "FTLA.mod/FTLA_pDGEQRF.new.h"
 
-double test_Scalapack_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_FTLA_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -20,7 +20,8 @@ double test_Scalapack_pDGEQRF(const char* label, int verbosity, int rows, int co
 
 	start=clock();
 
-	Scalapack_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
+	//FTLA_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
+	calc_FTLA_ftdqr_new(rows, A, 2, 2, 0, 0, 1);
 
 	stop=clock();
 

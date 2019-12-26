@@ -1,5 +1,5 @@
 #include "../helpers/matrix.h"
-#include "ScaLAPACK/Scalapack_pDGESV_ckp_ft1_sim.h"
+#include "ScaLAPACK.mod/ScaLAPACK_pDGESV_ckp_ft1_sim.h"
 
 double test_Scalapack_pDGESV_ckp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {

@@ -1,5 +1,5 @@
 #include "../helpers/matrix.h"
-#include "ScaLAPACK/Scalapack_pDGESV.h"
+#include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
 double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
 {

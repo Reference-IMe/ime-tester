@@ -6,7 +6,6 @@
 
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
-
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
@@ -14,8 +13,9 @@
 #include "test_ScaLAPACK_pDGESV_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGETRF.h"
 #include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
-#include "test_FTLA_ftdqr.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
+#include "test_FTLA_pDGEQRF.h"
+
 
 int main(int argc, char **argv)
 {
@@ -195,8 +195,8 @@ int main(int argc, char **argv)
     	//versionrun[12][rep]=test_FTLA_ftdtr(2, 2, 0, 0, 1); // FTLA LU no ft
     	//versionrun[13][rep]=test_FTLA_ftdtr(2, 2, 0, 0, 1); // FTLA LU ft
     	versionrun[14][rep]=test_Scalapack_pDGEQRF(versionname[14], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
-    	//versionrun[15][rep]=test_FTLA_ftdqr(2, 2, 0, 0, 1); // FTLA QR no ft
-    	//versionrun[16][rep]=test_FTLA_ftdqr(2, 2, 0, 0, 1); // FTLAQR ft
+    	versionrun[15][rep]=test_FTLA_pDGEQRF(versionname[15], verbose, rows, cols, main_rank, cprocs, sprocs); // FTLA QR no ft
+    	//versionrun[16][rep]=test_FTLA_ftdqr_old(2, 2, 0, 0, 1); // FTLAQR ft
 
     	//////////////////////////////////////////////////////////////////////////////////
 
