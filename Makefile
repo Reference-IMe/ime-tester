@@ -93,11 +93,11 @@ $(SRC_DIR)/ScaLAPACK.mod/%.o: $(SRC_DIR)/ScaLAPACK.mod/%.f
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 	
-$(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c
+$(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c $(SRC_DIR)/test_IMe_DGESV.h $(SRC_DIR)/test_GaussianElimination_GE.h $(SRC_DIR)/test_LAPACK_DGESV.h
 	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV $(MACHINEFLAGS_ser)
 
-$(BIN_DIR)/compare_all_versions: $(SRC_DIR)/compare_all_versions.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK.mod/*.o $(SRC_DIR)/ScaLAPACK.mod/*.f $(SRC_DIR)/ScaLAPACK.mod/*.h $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA.mod/*.h $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/FTLA/helpersftla.a
-	$(MPICC) $(CFLAGS)  -lifcore $< -o $(BIN_DIR)/compare_all_versions $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(MACHINEFLAGS)
+$(BIN_DIR)/compare_all_versions: $(SRC_DIR)/compare_all_versions.c $(SRC_DIR)/../*.h $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK.mod/*.f $(SRC_DIR)/ScaLAPACK.mod/*.h $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA.mod/*.h $(SRC_DIR)/FTLA/libftla.a
+	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_all_versions $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
 	
 #$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/FTLA/helpersftla.a
 #	$(MPICC) $(CFLAGS)  -lifcore $< -o $@ $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(MACHINEFLAGS)

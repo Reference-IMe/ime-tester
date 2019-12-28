@@ -1,7 +1,7 @@
 #include "../helpers/matrix.h"
-#include "FTLA.mod/FTLA_pDGEQRF.h"
+#include "FTLA.mod/FTLA_pDGETRF.h"
 
-double test_FTLA_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -20,7 +20,7 @@ double test_FTLA_pDGEQRF(const char* label, int verbosity, int rows, int cols, i
 
 	start=clock();
 
-	calc_FTLA_ftdqr(rows, A, rank, cprocs, sprocs);
+	calc_FTLA_ftdtr(rows, A, rank, cprocs, sprocs);
 
 	stop=clock();
 

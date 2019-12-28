@@ -15,13 +15,13 @@
 #include "../FTLA/ftla_cof.h"
 #include "../FTLA/ftla_driver.h"
 
-extern int i0, i1;
+static int i0=0, i1=1;
 
-extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
+static void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
 
-extern int *errors;
+int *errors;
 
-int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs)
+int calc_FTLA_ftdtr(int rows, double* A_global, int rank, int cprocs, int sprocs)
 {
 	int i;
     int NB=SCALAPACKNB;
@@ -64,7 +64,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
 		Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A)
-		//MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS
 		Ne = N + Nc*2;// + ((Nc/NB)%Q==0)*NB;
@@ -99,12 +99,15 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 
 	{/* call resilient QR */
 		int err=0;
+		/*
 		int lwork=-1;
 		double lazywork;
 		pdgeqrf_( &M, &Ne, NULL, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
 		lwork = (int)lazywork;
 		double *work = (double*)malloc( lwork*sizeof(double) );
 		double *tau  = (double*)malloc( Nc*sizeof(double) );
+		*/
+		int *ipiv = (int*)malloc(Ne*sizeof(int) );
 
 #ifdef INJECT        
 		for( F = Fmin; F<=Fmax; F+=Finc )
@@ -113,6 +116,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 #endif
 
 			Cftla_work_construct( 0, descA, 0, Ne-N, &ftwork );
+			 MPI_Barrier( MPI_COMM_WORLD );
 
 			do { // call ftpdgeqrf until we complete w/o a failure
 
@@ -120,7 +124,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 				if(err) Cftla_cof_dgeqrr( A, descA, tau, work, lwork, &ftwork );
 #endif
 
-				err = ftla_pdgeqrf( &M, &Ne, A, &i1, &i1, descA, tau, work, &lwork, &info, (int*)&ftwork );
+	            err = ftla_pdgetrf( &M, &Ne, A, &i1, &i1, descA, ipiv, &info, (int*)&ftwork );
 
 #ifdef USE_CoF
 				if(err) Cftla_cof_dgeqrr( A, descA, tau, work, lwork, &ftwork );
@@ -140,8 +144,9 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 		}
 #endif
 
-		free( work );
-		free( tau );
+		//free( work );
+		//free( tau );
+		free( ipiv );
 	}
 
 	{/* Cleanup */
@@ -158,3 +163,44 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
     return 0;
 }
 
+void create_matrix( int ctxt, int seed, double **A, int *descA,
+        int M, int N, int NB, int *np_A, int *nq_A)
+{
+    int info;
+    int nprow, npcol, myrow, mycol;
+    Cblacs_gridinfo( ctxt, &nprow, &npcol, &myrow, &mycol );
+
+    // allocate the generator matrix and check matrix
+    int np_iA = numroc_( &M, &NB, &myrow, &i0, &nprow );
+    int nq_iA = numroc_( &N, &NB, &mycol, &i0, &npcol );
+
+    if (np_iA*nq_iA!=0)
+    {
+        *A = malloc(np_iA*nq_iA*sizeof(**A)) ;
+        if (*A == NULL) Cblacs_abort( ctxt, 10 );
+        memset (*A, 0, np_iA*nq_iA*sizeof(**A));
+    }
+    else *A = NULL;
+
+    if (descA != NULL)
+    {
+        int itemp = MAX( 1, np_iA );
+        descinit_( descA, &M, &N, &NB, &NB, &i0, &i0, &ctxt, &itemp, &info );
+        if (info != 0) Cblacs_abort( ctxt, 12 );
+    }
+
+    if (seed)
+    {
+        // fill in random numbers
+        pdmatgen_ (&ctxt, "N", "N", &M, &N, &NB, &NB, *A,
+                descA+8, descA+6, descA+7,
+                &seed, &i0, &np_iA, &i0, &nq_iA,
+                &myrow, &mycol, &nprow, &npcol);
+    }
+
+    /* set np and nq */
+    if (np_A != NULL)
+        *np_A = np_iA;
+    if (nq_A != NULL)
+        *nq_A = nq_iA;
+}

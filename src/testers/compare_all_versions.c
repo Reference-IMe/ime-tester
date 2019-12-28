@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
@@ -15,6 +16,7 @@
 #include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
 #include "test_FTLA_pDGEQRF.h"
+#include "test_FTLA_pDGETRF.h"
 
 
 int main(int argc, char **argv)
@@ -55,8 +57,8 @@ int main(int argc, char **argv)
     repetitions=1;
     sprocs=0;			// no fault tolerance enabled
     file_name_len=0;	// no output to file
-    failing_rank=-1;	// no process will fail
-    failing_level=-1;
+    failing_rank=2;		// process 2 will fail
+    failing_level=2;
 
     /*
      * read command line parameters
@@ -147,26 +149,28 @@ int main(int argc, char **argv)
         return(1);
     }
     int nRHS=10;
-	versionname[ 0]= "IMe-SV      1 ";
-	versionname[ 1]= "IMe-SV      10";
-	versionname[ 2]= "IMe-SV-cs   1 ";
-	versionname[ 3]= "IMe-SV-cs   10";
-	versionname[ 4]= "IMe-SV-ft1  1 ";
-	versionname[ 5]= "IMe-SV-ft1  10";
-	versionname[ 6]= "SPK-SV      1 ";
-	versionname[ 7]= "SPK-SV      10";
-	versionname[ 8]= "SPK-SV-ft1  1 ";
-	versionname[ 9]= "SPK-SV-ft1  10";
-	versionname[10]= "SPK-LU        ";
-	versionname[11]= "SPK-LU-ft1    ";
-	versionname[12]= "FTLA-LU       ";
-	versionname[13]= "FTLA-LU-ft1   ";
-	versionname[14]= "SPK-QR        ";
-	versionname[15]= "FTLA-QR       ";
-	versionname[16]= "FTLA-QR-ft1   ";
+	versionname[ 0]= "IMe-SV        1 ";
+	versionname[ 1]= "IMe-SV        10";
+	versionname[ 2]= "IMe-SV-cs     1 ";
+	versionname[ 3]= "IMe-SV-cs     10";
+	versionname[ 4]= "IMe-SV-ft1/0  1 ";
+	versionname[ 5]= "IMe-SV-ft1/0  10";
+	versionname[ 6]= "IMe-SV-ft1/1  1 ";
+	versionname[ 7]= "IMe-SV-ft1/1  10";
+	versionname[ 8]= "SPK-SV        1 ";
+	versionname[ 9]= "SPK-SV        10";
+	versionname[10]= "SPK-SV-ft1    1 ";
+	versionname[11]= "SPK-SV-ft1    10";
+	versionname[12]= "SPK-LU          ";
+	versionname[13]= "SPK-LU-ft1      ";
+	versionname[14]= "FTLA-LU-ft1/0   ";
+	versionname[15]= "FTLA-LU-ft1/1   ";
+	versionname[16]= "SPK-QR          ";
+	versionname[17]= "FTLA-QR-ft1/0   ";
+	versionname[18]= "FTLA-QR-ft1/1   ";
 
 
-	int versions = 17;
+	int versions = 19;
 
 	for (i=0; i<versions; i++)
 	{
@@ -184,19 +188,29 @@ int main(int argc, char **argv)
     	versionrun[ 1][rep]=test_IMe_pviDGESV(versionname[1], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// vanilla IMe solve with 10 rhs
      	versionrun[ 2][rep]=test_IMe_pviDGESV_cs(versionname[2], verbose, rows, cols, 1, main_rank, cprocs, sprocs);	// checksumming IMe solve with 1 rhs
     	versionrun[ 3][rep]=test_IMe_pviDGESV_cs(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// checksumming IMe solve with 10 rhs
-    	versionrun[ 4][rep]=test_IMe_pviDGESV_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// IMe single FT solve with 1 rhs
-    	versionrun[ 5][rep]=test_IMe_pviDGESV_ft1_sim(versionname[5], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// IMe single FT solve with 10 rhs
-    	versionrun[ 6][rep]=test_Scalapack_pDGESV(versionname[6], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// SPK solve with 1 rhs
-    	versionrun[ 7][rep]=test_Scalapack_pDGESV(versionname[7], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// SPK solve with 10 rhs
-    	versionrun[ 8][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[8], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod single FT solve with 1 rhs
-    	versionrun[ 9][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[9], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
-    	versionrun[10][rep]=test_Scalapack_pDGETRF(versionname[10], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
-    	versionrun[11][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[11], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
-    	//versionrun[12][rep]=test_FTLA_ftdtr(2, 2, 0, 0, 1); // FTLA LU no ft
-    	//versionrun[13][rep]=test_FTLA_ftdtr(2, 2, 0, 0, 1); // FTLA LU ft
-    	versionrun[14][rep]=test_Scalapack_pDGEQRF(versionname[14], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
-    	versionrun[15][rep]=test_FTLA_pDGEQRF(versionname[15], verbose, rows, cols, main_rank, cprocs, sprocs); // FTLA QR no ft
-    	//versionrun[16][rep]=test_FTLA_ftdqr_old(2, 2, 0, 0, 1); // FTLAQR ft
+    	versionrun[ 4][rep]=test_IMe_pviDGESV_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, -1, -1);	// IMe single FT solve with 1 rhs and 0 faults
+    	versionrun[ 5][rep]=test_IMe_pviDGESV_ft1_sim(versionname[5], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, -1, -1);// IMe single FT solve with 10 rhs and 0 faults
+    	if (sprocs>0)
+    	{
+    		versionrun[ 6][rep]=test_IMe_pviDGESV_ft1_sim(versionname[6], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// IMe single FT solve with 1 rhs
+    		versionrun[ 7][rep]=test_IMe_pviDGESV_ft1_sim(versionname[7], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// IMe single FT solve with 10 rhs
+    	}
+    	else
+    	{
+    		versionrun[ 6][rep]=NAN;
+    		versionrun[ 7][rep]=NAN;
+    	}
+    	versionrun[ 8][rep]=test_Scalapack_pDGESV(versionname[8], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// SPK solve with 1 rhs
+    	versionrun[ 9][rep]=test_Scalapack_pDGESV(versionname[9], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// SPK solve with 10 rhs
+    	versionrun[10][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[10], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod single FT solve with 1 rhs
+    	versionrun[11][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[11], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
+    	versionrun[12][rep]=test_Scalapack_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
+    	versionrun[13][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
+    	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0); // FTLA LU with 0 faults
+    	//versionrun[15][rep]=test_FTLA_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, 1); // FTLA LU with 1 fault
+    	versionrun[16][rep]=test_Scalapack_pDGEQRF(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
+    	versionrun[17][rep]=test_FTLA_pDGEQRF(versionname[17], verbose, rows, cols, main_rank, cprocs, 0); // FTLA QR
+    	versionrun[18][rep]=test_FTLA_pDGEQRF(versionname[18], verbose, rows, cols, main_rank, cprocs, 1); // FTLA QR
 
     	//////////////////////////////////////////////////////////////////////////////////
 
@@ -207,7 +221,7 @@ int main(int argc, char **argv)
 				versiontot[i] += versionrun[i][rep];
 				if (verbose>0)
 				{
-					printf("\n%s    call    run time: %10d clk", versionname[i], (int)versionrun[i][rep]);
+					printf("\n%s    call    run time: %10.0f clk", versionname[i], versionrun[i][rep]);
 				}
 			}
 		}
@@ -218,12 +232,12 @@ int main(int argc, char **argv)
 		printf("\n\n Summary:");
 		for (i=0; i<versions; i++)
 		{
-			printf("\n%s    Total   run time: %10d clk", versionname[i], (int)versiontot[i]); // in sec. versiontot[i] / CLOCKS_PER_SEC
+			printf("\n%s    Total   run time: %10.0f clk", versionname[i], versiontot[i]); // in sec. versiontot[i] / CLOCKS_PER_SEC
 		}
 		printf("\n");
 		for (i=0; i<versions; i++)
 		{
-			printf("\n%s    Average run time: %10d clk", versionname[i], (int)(versiontot[i]/repetitions));
+			printf("\n%s    Average run time: %10.0f clk", versionname[i], (versiontot[i]/repetitions));
 		}
 		printf("\n");
 	}
