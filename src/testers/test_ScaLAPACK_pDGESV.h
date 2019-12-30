@@ -1,7 +1,14 @@
+/*
+ * test_ScaLAPACK_pDGESV.h
+ *
+ *  Created on: Dec 27, 2019
+ *      Author: marcello
+ */
+
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
-double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
+double test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -26,7 +33,7 @@ double test_Scalapack_pDGESV(const char* label, int verbosity, int rows, int col
 	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	Scalapack_pDGESV_calc(rows, A, nrhs, bb, rank, cprocs, sprocs);
+	ScaLAPACK_pDGESV_calc(rows, A, nrhs, bb, rank, cprocs, sprocs);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

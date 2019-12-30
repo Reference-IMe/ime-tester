@@ -1,7 +1,14 @@
+/*
+ * test_ScaLAPACK_pDGETRF.h
+ *
+ *  Created on: Dec 27, 2019
+ *      Author: marcello
+ */
+
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 
-double test_Scalapack_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -27,7 +34,7 @@ double test_Scalapack_pDGETRF(const char* label, int verbosity, int rows, int co
 	start=clock();
 
 	// Scalapack_pDGETRF(rows, A, nrhs, bb, rank, cprocs, sprocs); // for consistency checking
-	Scalapack_pDGETRF_calc(rows, A, rank, cprocs, sprocs);
+	ScaLAPACK_pDGETRF_calc(rows, A, rank, cprocs, sprocs);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

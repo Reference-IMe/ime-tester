@@ -202,30 +202,17 @@ int main(int argc, char **argv)
     		versionrun[ 6][rep]=NAN;
     		versionrun[ 7][rep]=NAN;
     	}
-    	versionrun[ 8][rep]=test_Scalapack_pDGESV(versionname[8], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// SPK solve with 1 rhs
-    	versionrun[ 9][rep]=test_Scalapack_pDGESV(versionname[9], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// SPK solve with 10 rhs
-    	versionrun[10][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[10], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod single FT solve with 1 rhs
-    	versionrun[11][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[11], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
-    	versionrun[12][rep]=test_Scalapack_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
-    	versionrun[13][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
-    	versionrun[16][rep]=test_Scalapack_pDGEQRF(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
-    	sleep(cleanup_interval*4);
-    	MPI_Barrier(MPI_COMM_WORLD);
-
+    	versionrun[ 8][rep]=test_ScaLAPACK_pDGESV(versionname[8], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// SPK solve with 1 rhs
+    	versionrun[ 9][rep]=test_ScaLAPACK_pDGESV(versionname[9], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// SPK solve with 10 rhs
+    	versionrun[10][rep]=test_ScaLAPACK_pDGESV_ckp_ft1_sim(versionname[10], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod single FT solve with 1 rhs
+    	versionrun[11][rep]=test_ScaLAPACK_pDGESV_ckp_ft1_sim(versionname[11], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
+    	versionrun[12][rep]=test_ScaLAPACK_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
+    	versionrun[13][rep]=test_ScaLAPACK_pDGETRF_ckp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
     	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0); // FTLA LU with 0 faults
-    	//sleep(cleanup_interval*4);
-
     	versionrun[15][rep]=test_FTLA_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, 1); // FTLA LU with 1 fault
-    	//sleep(cleanup_interval*2);
-
-
-
-
-    	versionrun[17][rep]=test_FTLA_pDGEQRF(versionname[17], verbose, rows, cols, main_rank, cprocs, 0); // FTLA QR
-    	//sleep(cleanup_interval);
-
-    	versionrun[18][rep]=test_FTLA_pDGEQRF(versionname[18], verbose, rows, cols, main_rank, cprocs, 1); // FTLA QR
-    	//sleep(cleanup_interval);
+    	versionrun[16][rep]=test_ScaLAPACK_pDGEQRF(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
+    	versionrun[17][rep]=test_FTLA_pDGEQRF(versionname[17], verbose, rows, cols, main_rank, cprocs, 0); // FTLA QR with 0 faults
+    	versionrun[18][rep]=test_FTLA_pDGEQRF(versionname[18], verbose, rows, cols, main_rank, cprocs, 1); // FTLA QR with 1 fault
 
     	//////////////////////////////////////////////////////////////////////////////////
 

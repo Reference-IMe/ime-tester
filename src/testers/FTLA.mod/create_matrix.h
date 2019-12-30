@@ -1,24 +1,17 @@
-/*  
- * 
+/*
+ * create_matrix.h
+ *
+ *  Created on: Dec 29, 2019
+ *      Author: marcello
  */
 
-#include <mpi.h>
-/*
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-*/
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
-/*
-#include "../FTLA/util_matrix.h"
-#include "../FTLA/util_inject.h"
-#include "../FTLA/ftla_ftwork.h"
-#include "../FTLA/ftla_cof.h"
-#include "../FTLA/ftla_driver.h"
-*/
+
 #ifndef __FTLA_CREATE_MATRIX_H__
 #define __FTLA_CREATE_MATRIX_H__
+
+// code extracted from ftdqr_main.c of FTLA
 
 /*
  * produce distributed matrix,  

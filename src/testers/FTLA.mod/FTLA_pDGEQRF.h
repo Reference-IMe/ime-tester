@@ -1,6 +1,11 @@
-/*  
- * 
+/*
+ * FTLA_pDGEQRF.h
+ *
+ *  Created on: Dec 27, 2019
+ *      Author: marcello
  */
+
+// code modified from ftdqr_main.c of FTLA
 
 #include <mpi.h>
 #include <stdio.h>
@@ -21,7 +26,7 @@ extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, in
 
 extern int *errors;
 
-int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs)
+int FTLA_ftdqr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs)
 {
 	int i0=0, i1=1;
 	int i;
@@ -30,7 +35,6 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
     ftla_work_t ftwork;
 
 	// MPI
-	//int np;
 	int ndims = 2, dims[2] = {0,0};
 	int P, Q;
 	MPI_Dims_create(cprocs, ndims, dims);
@@ -53,7 +57,6 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
     int descA[9], descA_global[9];
 
     {/* init BLACS */
-        //Cblacs_pinfo( &rank, &np );
         Cblacs_get( -1, 0, &ictxt );
         Cblacs_gridinit( &ictxt, "Row", P, Q );
         Cblacs_gridinfo( ictxt, &P, &Q, &myrow, &mycol );
@@ -73,8 +76,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 		Ne = N;
 #endif
 
-		int nce = numroc_( &Ne, &NB, &mycol, &i0, &npcol );
-
+		// Descriptors (local)
 		descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &Nc, &info );
 
 		if (rank==0)
@@ -155,9 +157,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 	}
 
     fflush( stdout );
-    //Cblacs_gridexit( ictxt );
-    //Cblacs_gridexit( ictxt_global );
-    //MPI_Finalize();
+
 	MPI_Barrier(MPI_COMM_WORLD);
     return 0;
 }

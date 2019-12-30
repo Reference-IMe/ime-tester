@@ -1,3 +1,10 @@
+/*
+ * ScaLAPACK_pDGEQRF.h
+ *
+ *  Created on: Dec 27, 2019
+ *      Author: marcello
+ */
+
 #include <mpi.h>
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
@@ -6,7 +13,7 @@
 #include "../../helpers/scalapack.h"
 
 
-void Scalapack_pDGEQRF_calc(int n, double* A_global, int mpi_rank, int cprocs, int sprocs)
+void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int mpi_rank, int cprocs, int sprocs)
 {
 	/*
 	 * n = system rank (A_global n x n)
@@ -37,56 +44,55 @@ void Scalapack_pDGEQRF_calc(int n, double* A_global, int mpi_rank, int cprocs, i
 	Cblacs_gridinit( &context_global, &order, one, one );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
 
-if (mpi_rank < cprocs)
-{
-	// Computation of local matrix size
-	nb = SCALAPACKNB;
-	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
-	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
-	lld = MAX( 1 , nr );
-	A = malloc(nr*nc*sizeof(double));
-	tau = malloc( nc*sizeof(double) );
-
-	// Descriptors (local)
-	descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context, &lld, &info );
-
-	if (mpi_rank==0)
+	if (mpi_rank < cprocs)
 	{
-		// Descriptors (global)
-		lld_global = n;
-		descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
-	}
-	else
-	{
-		// Descriptors (global, for non-root nodes)
-		for (i=0; i<9; i++)
+		// Computation of local matrix size
+		nb = SCALAPACKNB;
+		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
+		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
+		lld = MAX( 1 , nr );
+		A = malloc(nr*nc*sizeof(double));
+		tau = malloc( nc*sizeof(double) );
+
+		// Descriptors (local)
+		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context, &lld, &info );
+
+		if (mpi_rank==0)
 		{
-			descA_global[i]=0;
+			// Descriptors (global)
+			lld_global = n;
+			descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
 		}
-		descA_global[1]=-1;
+		else
+		{
+			// Descriptors (global, for non-root nodes)
+			for (i=0; i<9; i++)
+			{
+				descA_global[i]=0;
+			}
+			descA_global[1]=-1;
+		}
+
+		// spread matrices
+		pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context);
+
+		// init work space
+		int lwork=-1;
+		double lazywork;
+		pdgeqrf_(  &n, &n, A, &one, &one, descA, NULL, &lazywork, &lwork, &info );
+		lwork = (int)lazywork;
+		work = malloc( lwork*sizeof(double) );
+
+		// QR factorization
+		pdgeqrf_(  &n, &n, A, &one, &one, descA, tau, work, &lwork, &info );
+
+		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
+
+		// cleanup
+		free(A);
+		free(work);
+		free(tau);
 	}
 
-	// spread matrices
-	pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context);
-
-	// init work space
-	int lwork=-1;
-	double lazywork;
-	pdgeqrf_(  &n, &n, A, &one, &one, descA, NULL, &lazywork, &lwork, &info );
-	lwork = (int)lazywork;
-	work = malloc( lwork*sizeof(double) );
-
-	// QR factorization
-	pdgeqrf_(  &n, &n, A, &one, &one, descA, tau, work, &lwork, &info );
-
-	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
-
-	free(A);
-	free(work);
-	free(tau);
+	MPI_Barrier(MPI_COMM_WORLD);
 }
-	//Close BLACS environment
-		//Cblacs_gridexit( context );
-		//Cblacs_gridexit( context_global );
-		//Cblacs_exit( zero );
-	MPI_Barrier(MPI_COMM_WORLD);}

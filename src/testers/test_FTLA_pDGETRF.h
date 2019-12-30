@@ -1,3 +1,10 @@
+/*
+ * test_FTLA_pDGETRF.h
+ *
+ *  Created on: Dec 28, 2019
+ *      Author: marcello
+ */
+
 #include "../helpers/matrix.h"
 #include "FTLA.mod/FTLA_pDGETRF.h"
 
@@ -21,7 +28,7 @@ double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, i
 	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	calc_FTLA_ftdtr(rows, A, rank, cprocs, sprocs);
+	FTLA_ftdtr_calc(rows, A, rank, cprocs, sprocs);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

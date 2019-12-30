@@ -1,7 +1,14 @@
+/*
+ * test_ScaLAPACK_pDGEQRF.h
+ *
+ *  Created on: Dec 27, 2019
+ *      Author: marcello
+ */
+
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
 
-double test_Scalapack_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double* A;
@@ -21,7 +28,7 @@ double test_Scalapack_pDGEQRF(const char* label, int verbosity, int rows, int co
 	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	Scalapack_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
+	ScaLAPACK_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();
