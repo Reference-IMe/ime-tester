@@ -32,10 +32,12 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 		A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	start = clock();
 
 	pviDGESV_WO_cs(rows, A2, nrhs, bb, xx, MPI_COMM_WORLD, sprocs);
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	stop = clock();
 
 	if (rank==0 && verbosity>1)

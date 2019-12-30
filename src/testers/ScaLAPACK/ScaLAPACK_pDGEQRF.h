@@ -89,4 +89,4 @@ if (mpi_rank < cprocs)
 		//Cblacs_gridexit( context );
 		//Cblacs_gridexit( context_global );
 		//Cblacs_exit( zero );
-}
+	MPI_Barrier(MPI_COMM_WORLD);}

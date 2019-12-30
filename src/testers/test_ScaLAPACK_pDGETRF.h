@@ -23,11 +23,13 @@ double test_Scalapack_pDGETRF(const char* label, int verbosity, int rows, int co
 		}
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
 	// Scalapack_pDGETRF(rows, A, nrhs, bb, rank, cprocs, sprocs); // for consistency checking
-	Scalapack_pDGETRF(rows, A, rank, cprocs, sprocs);
+	Scalapack_pDGETRF_calc(rows, A, rank, cprocs, sprocs);
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();
 
 	if (rank==0)

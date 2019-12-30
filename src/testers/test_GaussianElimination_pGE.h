@@ -33,6 +33,7 @@ double test_pGaussianElimination(const char* label, int verbosity, int rows, int
 		xx=AllocateMatrix2D(0,0,CONTIGUOUS);
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
 	pGaussianElimination(rows, A2, nrhs, bb, rank, nprocs);
@@ -40,6 +41,8 @@ double test_pGaussianElimination(const char* label, int verbosity, int rows, int
 	if (rank==0)
 	{
 		BackSubstitution(rows, A2, nrhs, bb, xx);
+
+		MPI_Barrier(MPI_COMM_WORLD);
 		stop=clock();
 
 		if (verbosity>1)
@@ -53,6 +56,7 @@ double test_pGaussianElimination(const char* label, int verbosity, int rows, int
 	}
 	else
 	{
+		MPI_Barrier(MPI_COMM_WORLD);
 		stop=clock();
 
 		DeallocateMatrix2D(bb,0,CONTIGUOUS);

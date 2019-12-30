@@ -6,8 +6,7 @@
 #include "../../helpers/scalapack.h"
 
 
-//void Scalapack_pDGETRF(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs)
-void Scalapack_pDGETRF(int n, double* A_global, int mpi_rank, int cprocs, int sprocs)
+void Scalapack_pDGETRF_calc(int n, double* A_global, int mpi_rank, int cprocs, int sprocs)
 {
 	/*
 	 * n = system rank (A_global n x n)
@@ -22,16 +21,14 @@ void Scalapack_pDGETRF(int n, double* A_global, int mpi_rank, int cprocs, int sp
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
 	int nprow, npcol, info, ic = -1, context, context_global, context_all, myrow, mycol;
-	int descA_global[9], descA[9];
-	//int descB_global[9], descB[9];
+	int descA_global[9], descB_global[9], descA[9], descB[9];
 	char order = 'R', scope = 'A';
 	// MATRIX
 	//#define N 10
 	//#define NB 64
-	int nb = 64, nr, nc, ncrhs, lld, lld_global;
+	int nb, nr, nc, ncrhs, lld, lld_global;
 	double *A;
-	//double *B;
-	double *work, alpha;
+	//double *work, alpha;
 	int *ipiv;
 
 	// Initialize a default BLACS context and the processes grid
@@ -58,13 +55,14 @@ if (mpi_rank < cprocs)
 	//printf("\nI %d have to",myrank);
 
 	// Computation of local matrix size
+	nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
 	lld = MAX( 1 , nr );
 	A = malloc(nr*nc*sizeof(double));
 	//B = malloc(nr*ncrhs*sizeof(double));
-	work = malloc(nb*sizeof(double));
+	//work = malloc(nb*sizeof(double));
 	ipiv = malloc((lld+nb)*sizeof(int));
 
 	// Descriptors (local)
@@ -94,29 +92,27 @@ if (mpi_rank < cprocs)
 	pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context);
 	//pdgemr2d_(&n, &m, B_global, &one, &one, descB_global, B, &one, &one, descB, &context);
 
-	// LU factorization
-	pdgetrf_  (&n, &n, A, &one, &one, descA, ipiv, &info );
+	// Linear system equations solver
+	// pdgesv_(  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info );
+	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
+	pdgetrf_(      &n, &n, A, &one, &one, descA, ipiv, &info );
+	//pdgetrs_("N",  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info  );
 
-	// check factorization
-	/*
-	pdgetrs_("N",  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info  );
-	pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
-	*/
-
+	//pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
-
 
 	free(A);
 	//free(B);
 	free(ipiv);
-	free(work);
+	//free(work);
 }
 
-	//Close BLACS environment
+//Close BLACS environment
 		//Cblacs_barrier( context, "All");	// not working! why?
 		//MPI_Barrier(MPI_COMM_WORLD);		// working but not needed
 		//Cblacs_gridexit( context );		// not needed if calling blacs_exit
 		//Cblacs_gridexit( context_global );// not needed if calling blacs_exit
 	//Cblacs_exit( one );					// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
 											// error, if main function called more tha once, why?
+	MPI_Barrier(MPI_COMM_WORLD);
 }

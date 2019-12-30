@@ -113,4 +113,5 @@ if (mpi_rank < cprocs)
 		//Cblacs_gridexit( context_global );// not needed if calling blacs_exit
 	//Cblacs_exit( one );					// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
 											// error, if main function called more tha once, why?
+	MPI_Barrier(MPI_COMM_WORLD);
 }

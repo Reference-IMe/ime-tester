@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     char* file_name;
     int rows;
     int cols;
+    int cleanup_interval;
 
     int sprocs;		// number of processes to allocate for summing (0 = no fault tolerance)
     int cprocs;		// number of processes for real IMe calc
@@ -60,6 +61,7 @@ int main(int argc, char **argv)
     failing_rank=2;		// process 2 will fail
     failing_level=2;
 
+    cleanup_interval=3;
     /*
      * read command line parameters
      */
@@ -206,11 +208,24 @@ int main(int argc, char **argv)
     	versionrun[11][rep]=test_Scalapack_pDGESV_ckp_ft1_sim(versionname[11], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
     	versionrun[12][rep]=test_Scalapack_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
     	versionrun[13][rep]=test_Scalapack_pDGETRF_ckp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
-    	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0); // FTLA LU with 0 faults
-    	//versionrun[15][rep]=test_FTLA_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, 1); // FTLA LU with 1 fault
     	versionrun[16][rep]=test_Scalapack_pDGEQRF(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
+    	sleep(cleanup_interval*4);
+    	MPI_Barrier(MPI_COMM_WORLD);
+
+    	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0); // FTLA LU with 0 faults
+    	//sleep(cleanup_interval*4);
+
+    	versionrun[15][rep]=test_FTLA_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, 1); // FTLA LU with 1 fault
+    	//sleep(cleanup_interval*2);
+
+
+
+
     	versionrun[17][rep]=test_FTLA_pDGEQRF(versionname[17], verbose, rows, cols, main_rank, cprocs, 0); // FTLA QR
+    	//sleep(cleanup_interval);
+
     	versionrun[18][rep]=test_FTLA_pDGEQRF(versionname[18], verbose, rows, cols, main_rank, cprocs, 1); // FTLA QR
+    	//sleep(cleanup_interval);
 
     	//////////////////////////////////////////////////////////////////////////////////
 
@@ -241,6 +256,7 @@ int main(int argc, char **argv)
 		}
 		printf("\n");
 	}
+
 
 	// slow down exit
 	//sleep(3);

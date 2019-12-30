@@ -36,7 +36,6 @@ void Scalapack_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 	Cblacs_gridinit( &context, &order, nprow, npcol );
 	Cblacs_get( ic, zero, &context_global );
 	Cblacs_gridinit( &context_global, &order, one, one );
-	//blacs_gridinfo_( &context_global, &nprow, &npcol, &myrow, &mycol );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
 	
 if (mpi_rank < cprocs)
@@ -62,6 +61,8 @@ if (mpi_rank < cprocs)
 		lld_global = n;
 		descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
 		descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
+		//descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context, &lld_global, &info );
+		//descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context, &lld_global, &info );
 	}
 	else
 	{
@@ -91,8 +92,11 @@ if (mpi_rank < cprocs)
 	free(ipiv);
 	free(work);
 }
+	//Cblacs_barrier( context, "A");
+	//Cblacs_barrier( context_global, "A");
 	//Close BLACS environment
-	//Cblacs_gridexit( context );
 	//Cblacs_gridexit( context_global );
+	//Cblacs_gridexit( context );
 	//Cblacs_exit( zero );
+	MPI_Barrier(MPI_COMM_WORLD);
 }

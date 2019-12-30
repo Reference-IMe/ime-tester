@@ -18,10 +18,12 @@ double test_Scalapack_pDGEQRF(const char* label, int verbosity, int rows, int co
 		}
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
 	Scalapack_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();
 
 	if (rank==0)

@@ -23,10 +23,12 @@ double test_Scalapack_pDGESV_ckp_ft1_sim(const char* label, int verbosity, int r
 		}
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
 	Scalapack_pDGESV_ckp_ft1_sim(rows, A, nrhs, bb, rank, cprocs, sprocs, failing_rank, failing_level);
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();
 
 	if (rank==0)

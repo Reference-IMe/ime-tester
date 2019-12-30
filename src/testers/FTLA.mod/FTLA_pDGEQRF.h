@@ -14,8 +14,8 @@
 #include "../FTLA/ftla_ftwork.h"
 #include "../FTLA/ftla_cof.h"
 #include "../FTLA/ftla_driver.h"
-
-extern int i0, i1;
+#include "create_matrix.h"
+#include "errors.h"
 
 extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
 
@@ -23,6 +23,7 @@ extern int *errors;
 
 int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs)
 {
+	int i0=0, i1=1;
 	int i;
     int NB=SCALAPACKNB;
     int M, N, Nc, Nr, Ne, S=1;
@@ -64,7 +65,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
 		Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A)
-		//MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS
 		Ne = N + Nc*2;// + ((Nc/NB)%Q==0)*NB;
@@ -73,6 +74,8 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
 #endif
 
 		int nce = numroc_( &Ne, &NB, &mycol, &i0, &npcol );
+
+		descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &Nc, &info );
 
 		if (rank==0)
 		{
@@ -155,6 +158,7 @@ int calc_FTLA_ftdqr(int rows, double* A_global, int rank, int cprocs, int sprocs
     //Cblacs_gridexit( ictxt );
     //Cblacs_gridexit( ictxt_global );
     //MPI_Finalize();
+	MPI_Barrier(MPI_COMM_WORLD);
     return 0;
 }
 

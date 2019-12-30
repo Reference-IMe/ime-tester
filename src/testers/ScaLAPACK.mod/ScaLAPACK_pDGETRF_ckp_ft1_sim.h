@@ -28,10 +28,10 @@ void Scalapack_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 	// MATRIX
 	//#define N 10
 	//#define NB 64
-	int nb = 64, nr, nc, ncrhs, lld, lld_global;
+	int nb, nr, nc, ncrhs, lld, lld_global;
 	double *A;
 	//double *B;
-	double *work, alpha;
+	//double *work, alpha;
 	int *ipiv;
 
 	// Initialize a default BLACS context and the processes grid
@@ -58,13 +58,14 @@ if (mpi_rank < cprocs)
 	//printf("\nI %d have to",myrank);
 
 	// Computation of local matrix size
+	nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
 	lld = MAX( 1 , nr );
 	A = malloc(nr*nc*sizeof(double));
 	//B = malloc(nr*ncrhs*sizeof(double));
-	work = malloc(nb*sizeof(double));
+	//work = malloc(nb*sizeof(double));
 	ipiv = malloc((lld+nb)*sizeof(int));
 
 	// Descriptors (local)
@@ -109,7 +110,7 @@ if (mpi_rank < cprocs)
 	free(A);
 	//free(B);
 	free(ipiv);
-	free(work);
+	//free(work);
 }
 
 	//Close BLACS environment
@@ -119,4 +120,5 @@ if (mpi_rank < cprocs)
 		//Cblacs_gridexit( context_global );// not needed if calling blacs_exit
 	//Cblacs_exit( one );					// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
 											// error, if main function called more tha once, why?
+	MPI_Barrier(MPI_COMM_WORLD);
 }
