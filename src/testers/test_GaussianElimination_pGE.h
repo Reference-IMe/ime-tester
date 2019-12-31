@@ -64,5 +64,6 @@ double test_pGaussianElimination(const char* label, int verbosity, int rows, int
 		DeallocateMatrix2D(A2,0,CONTIGUOUS); // due to mpi problem
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
 	return (double)(stop - start);
 }

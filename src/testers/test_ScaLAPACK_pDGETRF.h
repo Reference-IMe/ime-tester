@@ -5,12 +5,14 @@
  *      Author: marcello
  */
 
+#include <mpi.h>
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 
 double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
+	double span, maxspan;
 	double* A;
 	//double* bb;
 
@@ -30,14 +32,17 @@ double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int co
 		}
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
 	// Scalapack_pDGETRF(rows, A, nrhs, bb, rank, cprocs, sprocs); // for consistency checking
 	ScaLAPACK_pDGETRF_calc(rows, A, rank, cprocs, sprocs);
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();
+
+	span=(double)(stop - start);
+    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
 
 	if (rank==0)
 	{
@@ -50,5 +55,6 @@ double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int co
 		//DeallocateMatrix1D(bb);
 	}
 
-	return (double)(stop - start);
+	MPI_Barrier(MPI_COMM_WORLD);
+	return maxspan;
 }

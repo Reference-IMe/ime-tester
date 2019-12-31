@@ -40,19 +40,16 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 	MPI_Dims_create(cprocs, ndims, dims);
 	P = dims[0];
 	Q = dims[1];
-    int PxQ = P * Q;
-
+    // BLACS
+    int ictxt, ictxt_global, info;
+    int myrow, mycol, lld;
     // faults
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     int Fmin, Fmax;
     int Finc = 1;
     Fmin= Fmax = sprocs;
     int err = 0;
-
-    // BLACS
-    int ictxt, ictxt_global, info;
-    int nprow, npcol, myrow, mycol;
-
+    // matrices
     double* A=NULL;
     int descA[9], descA_global[9];
 
@@ -67,7 +64,9 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 	{/* allocate matrices */
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
-		Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A)
+		Nc = numroc_( &N, &NB, &mycol, &i0, &Q ); //LOCc(N_A)
+		Nr = numroc_( &N, &NB, &myrow, &i0, &P ); //LOCr(N_A)
+		lld = MAX( 1 , Nr );
 		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS
@@ -77,7 +76,7 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 #endif
 
 		// Descriptors (local)
-		descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &Nc, &info );
+		descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &lld, &info );
 
 		if (rank==0)
 		{
@@ -97,6 +96,8 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 
 		/* allocate local buffer for the Q-wide local panel copy */
 		create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (Q+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
+
+		MPI_Barrier(MPI_COMM_WORLD);
 
 		// spread matrices
 		pdgemr2d_(&N, &N, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ictxt);

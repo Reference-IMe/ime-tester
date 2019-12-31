@@ -11,7 +11,7 @@
 #ifndef __SCALAPACK_H__
 #define __SCALAPACK_H__
 
-#define SCALAPACKNB 4 // blocking factor
+#define SCALAPACKNB 64 // blocking factor
 
 extern void descinit_( int* desc, int* m, int* n, int* mb, int* nb, int* irsrc, int* icsrc, int* ictxt, int* lld, int* info);
 extern int  numroc_( int* n, int* nb, int* iproc, int* isrcproc, int* nprocs);
@@ -21,8 +21,9 @@ extern void pdgetrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, 
 extern void pdgetrs_( char *trans, int*n, int *nrhs, double *A, int *ia, int *ja, int *descA, int *ipiv, double *B, int *ib, int *jb, int *descB, int *info );
 extern void pdtran_( int *m, int *n, double *ALPHA, double *A, int *ia, int *ja, int *descA, double *BETA, double *B, int *ib, int *jb, int *descB);
 
-extern void pdgetrf_ckp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
-extern void pdgetf2_ckp_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
+// ScaLAPACK modified
+extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *info );
+extern void pdgetf2_cp_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
 
 // FTLA
 extern void pdmatgen_ (int *, char *, char *, int *, int *, int *, int *, double *, int *, int *, int *, int *, int *, int *, int *, int *, int *, int *, int *, int *);

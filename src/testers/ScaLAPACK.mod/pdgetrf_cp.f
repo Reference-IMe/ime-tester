@@ -1,4 +1,6 @@
-      SUBROUTINE PDGETRF_CKP( M, N, A, IA, JA, DESCA, IPIV, INFO )
+*      SUBROUTINE PDGETRF_CP( M, N, A, IA, JA, DESCA, IPIV, INFO )
+      SUBROUTINE PDGETRF_CP(M, N, A, IA, JA, DESCA,
+     $                            ACP, IACP, JACP, DESCACP, IPIV, INFO)
 *
 *  -- ScaLAPACK routine (version 1.7) --
 *     University of Tennessee, Knoxville, Oak Ridge National Laboratory,
@@ -6,11 +8,11 @@
 *     May 25, 2001
 *
 *     .. Scalar Arguments ..
-      INTEGER            IA, INFO, JA, M, N
+      INTEGER            IA, INFO, JA, M, N, IACP, JACP
 *     ..
 *     .. Array Arguments ..
-      INTEGER            DESCA( * ), IPIV( * )
-      DOUBLE PRECISION   A( * )
+      INTEGER            DESCA( * ), DESCACP( * ), IPIV( * )
+      DOUBLE PRECISION   A( * ), ACP( * )
 *     ..
 *
 *  Purpose
@@ -152,7 +154,7 @@
 *     .. External Subroutines ..
       EXTERNAL           BLACS_GRIDINFO, CHK1MAT, IGAMN2D, PCHK1MAT,
      $                   PB_TOPGET, PB_TOPSET, PDGEMM, PDGETF2,
-     $                   PDLASWP, PDTRSM, PXERBLA, PDGETF2_CKP
+     $                   PDLASWP, PDTRSM, PXERBLA, PDGETF2_CP
 *     ..
 *     .. External Functions ..
       INTEGER            ICEIL
@@ -223,7 +225,7 @@
 *     Factor diagonal and subdiagonal blocks and test for exact
 *     singularity.
 *
-      CALL PDGETF2_CKP( M, JB, A, IA, JA, DESCA, IPIV, INFO )
+      CALL PDGETF2_CP( M, JB, A, IA, JA, DESCA, IPIV, INFO )
 *
       IF( JB+1.LE.N ) THEN
 *
@@ -257,7 +259,7 @@
 *        Factor diagonal and subdiagonal blocks and test for exact
 *        singularity.
 *
-         CALL PDGETF2_CKP( M-J+JA, JB, A, I, J, DESCA, IPIV, IINFO )
+         CALL PDGETF2_CP( M-J+JA, JB, A, I, J, DESCA, IPIV, IINFO )
 *
          IF( INFO.EQ.0 .AND. IINFO.GT.0 )
      $      INFO = IINFO + J - JA
@@ -289,6 +291,14 @@
      $                      I, J+JB, DESCA, ONE, A, I+JB, J+JB, DESCA )
 *
             END IF
+         END IF
+*
+         PRINT*
+         PRINT*, "checkpoint", J
+         CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
+     $                       ACP, IACP, JACP, DESCACP, ICTXT)
+         IF( (J.LT.70).AND.(70.LT.(J+DESCA(NB_))) ) THEN
+            PRINT*, "fault!"
          END IF
 *
    10 CONTINUE

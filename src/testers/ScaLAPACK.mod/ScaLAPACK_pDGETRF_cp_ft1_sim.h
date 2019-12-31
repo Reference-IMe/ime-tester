@@ -1,5 +1,5 @@
 /*
- * ScaLAPACK_pDGETRF_ckp_ft1_sim.h
+ * ScaLAPACK_pDGETRF_cp_ft1_sim.h
  *
  *  Created on: Dec 28, 2019
  *      Author: marcello
@@ -14,7 +14,7 @@
 
 // TODO: checkpointing
 
-void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
 	/*
 	 * n = system rank (A_global n x n)
@@ -28,13 +28,14 @@ void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
 	int nprow, npcol, info, ic = -1, context, context_global, context_all, myrow, mycol;
-	int descA_global[9], descA[9];
+	int descA_global[9], descA[9], descAcp_global[9];
 	//int descB_global[9], descB[9];
 	char order = 'R', scope = 'A';
 	// MATRIX
 
 	int nb, nr, nc, ncrhs, lld, lld_global;
 	double *A;
+	double *Acp_global;
 	//double *B;
 	//double *work, alpha;
 	int *ipiv;
@@ -47,8 +48,8 @@ void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 	Cblacs_gridinit( &context, &order, nprow, npcol );
 	Cblacs_get( ic, zero, &context_global );
 	Cblacs_gridinit( &context_global, &order, one, one );
-	Cblacs_get( ic, zero, &context_all );
-	Cblacs_gridinit( &context_all, &order, one, nprocs );
+	//Cblacs_get( ic, zero, &context_all );
+	//Cblacs_gridinit( &context_all, &order, one, nprocs );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
 
 
@@ -77,6 +78,9 @@ void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 			lld_global = n;
 			descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
 			//descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
+
+			Acp_global = malloc(n*n*sizeof(double));
+			descinit_( descAcp_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
 		}
 		else
 		{
@@ -85,9 +89,11 @@ void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 			{
 				descA_global[i]=0;
 				//descB_global[i]=0;
+				descAcp_global[i]=0;
 			}
 			descA_global[1]=-1;
 			//descB_global[1]=-1;
+			descAcp_global[1]=-1;
 		}
 
 		// spread matrices
@@ -95,7 +101,7 @@ void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 		//pdgemr2d_(&n, &m, B_global, &one, &one, descB_global, B, &one, &one, descB, &context);
 
 		// LU factorization
-		pdgetrf_  (&n, &n, A, &one, &one, descA, ipiv, &info );
+		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, Acp_global, &one, &one, descAcp_global, ipiv, &info );
 
 		// check factorization
 		/*
@@ -110,6 +116,10 @@ void ScaLAPACK_pDGETRF_ckp_ft1_sim(int n, double* A_global, int mpi_rank, int cp
 		//free(B);
 		free(ipiv);
 		//free(work);
+		if (mpi_rank==0)
+		{
+			free(Acp_global);
+		}
 	}
 
 		//Close BLACS environment

@@ -1,16 +1,18 @@
 /*
  * test_ScaLAPACK_pDGEQRF.h
  *
- *  Created on: Dec 27, 2019
+ *  Created on: Dec 5, 2019
  *      Author: marcello
  */
 
+#include <mpi.h>
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
 
 double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
+	double span, maxspan;
 	double* A;
 
 	if (rank==0)
@@ -25,13 +27,16 @@ double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int co
 		}
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
 	ScaLAPACK_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();
+
+	span=(double)(stop - start);
+    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
 
 	if (rank==0)
 	{
@@ -43,5 +48,6 @@ double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int co
 		DeallocateMatrix1D(A);
 	}
 
-	return (double)(stop - start);
+	MPI_Barrier(MPI_COMM_WORLD);
+	return maxspan;
 }

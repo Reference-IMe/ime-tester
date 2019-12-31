@@ -10,9 +10,9 @@
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
-#include "test_ScaLAPACK_pDGESV_ckp_ft1.h"
-#include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
+#include "test_ScaLAPACK_pDGESV_cp_ft1.h"
+#include "test_ScaLAPACK_pDGETRF_cp_ft1.h"
 
 int main(int argc, char **argv)
 {

@@ -1,9 +1,18 @@
+/*
+ * test_IMe_pviDGESV_ft1.h
+ *
+ *  Created on: Nov 20, 2019
+ *      Author: marcello
+ */
+
+#include <mpi.h>
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGESV_WO_ft1.h"
 
 double test_IMe_pviDGESV_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
 	clock_t start, stop;
+	double span, maxspan;
 	double** A2;
 	double** bb;
 	double** xx;
@@ -32,13 +41,16 @@ double test_IMe_pviDGESV_ft1_sim(const char* label, int verbosity, int rows, int
 		A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	start = clock();
 
 	pviDGESV_WO_ft1_sim(rows, A2, nrhs, bb, xx, MPI_COMM_WORLD, sprocs, failing_rank, failing_level);
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	//MPI_Barrier(MPI_COMM_WORLD);
 	stop = clock();
+
+	span=(double)(stop - start);
+    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
 
 	if (rank==0 && verbosity>1)
 	{
@@ -57,5 +69,6 @@ double test_IMe_pviDGESV_ft1_sim(const char* label, int verbosity, int rows, int
 		DeallocateMatrix2D(A2, 0, CONTIGUOUS);
 	}
 
-	return (double)(stop - start);
+	MPI_Barrier(MPI_COMM_WORLD);
+	return maxspan;
 }

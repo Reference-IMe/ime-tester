@@ -11,12 +11,12 @@
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
 #include "test_ScaLAPACK_pDGESV.h"
-#include "test_ScaLAPACK_pDGESV_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGETRF.h"
-#include "test_ScaLAPACK_pDGETRF_ckp_ft1.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
 #include "test_FTLA_pDGEQRF.h"
 #include "test_FTLA_pDGETRF.h"
+#include "test_ScaLAPACK_pDGESV_cp_ft1.h"
+#include "test_ScaLAPACK_pDGETRF_cp_ft1.h"
 
 
 int main(int argc, char **argv)
@@ -204,10 +204,10 @@ int main(int argc, char **argv)
     	}
     	versionrun[ 8][rep]=test_ScaLAPACK_pDGESV(versionname[8], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// SPK solve with 1 rhs
     	versionrun[ 9][rep]=test_ScaLAPACK_pDGESV(versionname[9], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// SPK solve with 10 rhs
-    	versionrun[10][rep]=test_ScaLAPACK_pDGESV_ckp_ft1_sim(versionname[10], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod single FT solve with 1 rhs
-    	versionrun[11][rep]=test_ScaLAPACK_pDGESV_ckp_ft1_sim(versionname[11], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
+    	versionrun[10][rep]=test_ScaLAPACK_pDGESV_cp_ft1_sim(versionname[10], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod single FT solve with 1 rhs
+    	versionrun[11][rep]=test_ScaLAPACK_pDGESV_cp_ft1_sim(versionname[11], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// SPKmod single FT solve with 10 rhs
     	versionrun[12][rep]=test_ScaLAPACK_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization
-    	versionrun[13][rep]=test_ScaLAPACK_pDGETRF_ckp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
+    	versionrun[13][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
     	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0); // FTLA LU with 0 faults
     	versionrun[15][rep]=test_FTLA_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, 1); // FTLA LU with 1 fault
     	versionrun[16][rep]=test_ScaLAPACK_pDGEQRF(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs);											// SPK LU factorization

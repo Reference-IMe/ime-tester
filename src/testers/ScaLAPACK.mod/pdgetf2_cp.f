@@ -1,4 +1,4 @@
-      SUBROUTINE PDGETF2_CKP( M, N, A, IA, JA, DESCA, IPIV, INFO )
+      SUBROUTINE PDGETF2_CP( M, N, A, IA, JA, DESCA, IPIV, INFO )
 *
 *  -- ScaLAPACK routine (version 1.7) --
 *     University of Tennessee, Knoxville, Oak Ridge National Laboratory,

@@ -1,5 +1,5 @@
 /*
- * ScaLAPACK_pDGESV_ckp_ft1_sim.h
+ * ScaLAPACK_pDGESV_cp_ft1_sim.h
  *
  *  Created on: Dec 28, 2019
  *      Author: marcello
@@ -16,7 +16,7 @@
 // to prepare for a checkpointing version
 // TODO: checkpointing
 
-void ScaLAPACK_pDGESV_ckp_ft1_sim(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
 	/*
 	 * n = system rank (A_global n x n)

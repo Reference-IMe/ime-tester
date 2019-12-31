@@ -40,19 +40,16 @@ int FTLA_ftdqr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 	MPI_Dims_create(cprocs, ndims, dims);
 	P = dims[0];
 	Q = dims[1];
-    int PxQ = P * Q;
-
+    // BLACS
+    int ictxt, ictxt_global, info;
+    int myrow, mycol;
     // faults
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     int Fmin, Fmax;
     int Finc = 1;
     Fmin= Fmax = sprocs;
     int err = 0;
-
-    // BLACS
-    int ictxt, ictxt_global, info;
-    int nprow, npcol, myrow, mycol;
-
+    // matrices
     double* A=NULL;
     int descA[9], descA_global[9];
 
@@ -67,7 +64,7 @@ int FTLA_ftdqr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 	{/* allocate matrices */
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
-		Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A)
+		Nc = numroc_( &N, &NB, &mycol, &i0, &Q ); //LOCc(N_A)
 		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS
