@@ -22,9 +22,6 @@
 #include "ftla_cof.h"
 #include "ftla_driver.h"
 
-#include <mpi.h>
-MPI_Comm ftla_current_comm=MPI_COMM_WORLD;
-
 static int i0=0, i1=1;
 static double i1d=1.0;
 static double p0=0e0, p1=1e0, m1=-1e0;

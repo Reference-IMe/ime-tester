@@ -23,8 +23,6 @@
 #include "util_matrix.h"
 #include "slp.h"
 
-#include <mpi.h>
-extern MPI_Comm ftla_current_comm;
 
 static void recover_checksum( char side, double *A, int m, int n, int *descA, ftla_work_t *ftw );
 static void recover_abft( double *A, int m, int n, int *descA, ftla_work_t *ftw );
@@ -40,7 +38,7 @@ static int i0=0, i1=1;
 #define MAX(a,b) ((a>b)?a:b)
 
 #if 0
-#define ROOTSAY(s) do { if ((myrow+mycol)==0) printf ("%s\n", s); MPI_Barrier (ftla_current_comm); } while(0)
+#define ROOTSAY(s) do { if ((myrow+mycol)==0) printf ("%s\n", s); MPI_Barrier (MPI_COMM_WORLD); } while(0)
 #else 
 #define ROOTSAY(s)
 #endif
@@ -56,7 +54,7 @@ void Cftla_pdcsumr ( char zone, double *A, int m, int n, int *descA, ftla_work_t
     Cblacs_pinfo( &myrank, &nranks );
             
     // broadcast victim's id
-    MPI_Allreduce ( MPI_IN_PLACE, &ftw->errproc, 1, MPI_INT, MPI_MAX, ftla_current_comm);
+    MPI_Allreduce ( MPI_IN_PLACE, &ftw->errproc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
     dprintmatrix(A, descA, "Af_hole", 7);
 
@@ -129,8 +127,8 @@ static void recover_checksum (char side, double *A, int MA, int NA, int *descA, 
             i_c = np_A;
             j_c = (nqq_A-nq_A);
         }
-        MPI_Bcast( &i_c, 1, MPI_INT, ftw->errproc, ftla_current_comm );
-        MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, ftla_current_comm );
+        MPI_Bcast( &i_c, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
+        MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
 
         for (i=0; i<i_c; i+=nb)
             for (j=0, k=0; j<j_c; j+=nb, k++)
@@ -146,8 +144,8 @@ static void recover_checksum (char side, double *A, int MA, int NA, int *descA, 
                     tt[0]=g[0];
                     //printf ("(%d,%d): block (%d,%d) <------ (%d,%d)\n", myrow, mycol, g[0], g[1], tt[0],tt[1]);
                 }
-                MPI_Bcast( tt, 2, MPI_INT, ftw->errproc, ftla_current_comm );
-                MPI_Bcast( g, 2, MPI_INT, ftw->errproc, ftla_current_comm );
+                MPI_Bcast( tt, 2, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
+                MPI_Bcast( g, 2, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
 
                 Cpdgemr2d (nb, nb, A, tt[0], tt[1], descA, A, g[0], g[1], descA, ctxt);
             }
@@ -201,7 +199,7 @@ static void recover_abft (double *A, int MA, int NA, int *descA, ftla_work_t *ft
     int j_c;
     if (iamvic)
         j_c = nq_A;
-    MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, ftla_current_comm );
+    MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
 
     for (j=0; j<j_c; j+=nb)
     {
@@ -217,8 +215,8 @@ static void recover_abft (double *A, int MA, int NA, int *descA, ftla_work_t *ft
             // source matrix row (global)
             gi = indxl2g_( &i1, &nb, &myrow, &i0, &nprow );
         }
-        MPI_Bcast( &gi, 1, MPI_INT, ftw->errproc, ftla_current_comm );
-        MPI_Bcast( &gj, 1, MPI_INT, ftw->errproc, ftla_current_comm );
+        MPI_Bcast( &gi, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
+        MPI_Bcast( &gj, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
             
         infog2l_ (&gi, &gj, descA, &nprow, &npcol, &myrow, &mycol, &lrindx, &lcindx, &rsrc, &csrc );
         //printf ("(%d,%d) <--- (%d,%d)\n", rsrc, ftw->errproc%npcol, rsrc, csrc);
@@ -301,8 +299,8 @@ static void recover_local (char side, double *A, int MA, int NA, int *descA, ftl
             i_c = np_A;
             j_c = (nqq_A-nq_A);
         }
-        MPI_Bcast( &i_c, 1, MPI_INT, ftw->errproc, ftla_current_comm );
-        MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, ftla_current_comm );
+        MPI_Bcast( &i_c, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
+        MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
 
         for (i=0; i<i_c; i+=nb)
             for (j=0, k=0; j<j_c; j+=nb, k++)
@@ -318,8 +316,8 @@ static void recover_local (char side, double *A, int MA, int NA, int *descA, ftl
                     tt[0]=g[0];
                     //printf ("(%d,%d): block (%d,%d) <------ (%d,%d)\n", myrow, mycol, g[0], g[1], tt[0],tt[1]);
                 }
-                MPI_Bcast( tt, 2, MPI_INT, ftw->errproc, ftla_current_comm );
-                MPI_Bcast( g, 2, MPI_INT, ftw->errproc, ftla_current_comm );
+                MPI_Bcast( tt, 2, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
+                MPI_Bcast( g, 2, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
 
                 Cpdgemr2d (nb, nb, A, tt[0], tt[1], descA, A, g[0], g[1], descA, ctxt);
             }
@@ -370,7 +368,7 @@ static void recover_local_fillin (double *A, int MA, int NA, int *descA, ftla_wo
     int j_c;
     if (iamvic)
         j_c = nq_A;
-    MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, ftla_current_comm );
+    MPI_Bcast( &j_c, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
 
     for (j=0; j<j_c; j+=nb)
     {
@@ -383,8 +381,8 @@ static void recover_local_fillin (double *A, int MA, int NA, int *descA, ftla_wo
             // source matrix row (global)
             gi = indxl2g_( &i1, &nb, &myrow, &i0, &nprow );
         }
-        MPI_Bcast( &gi, 1, MPI_INT, ftw->errproc, ftla_current_comm );
-        MPI_Bcast( &gj, 1, MPI_INT, ftw->errproc, ftla_current_comm );
+        MPI_Bcast( &gi, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
+        MPI_Bcast( &gj, 1, MPI_INT, ftw->errproc, MPI_COMM_WORLD );
             
         infog2l_ (&gi, &gj, descA, &nprow, &npcol, &myrow, &mycol, &lrindx, &lcindx, &rsrc, &csrc );
         //printf ("(%d,%d) <--- (%d,%d)\n", rsrc, ftw->errproc%npcol, rsrc, csrc);

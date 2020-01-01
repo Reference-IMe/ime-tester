@@ -104,4 +104,5 @@ $(BIN_DIR)/compare_all_versions: $(SRC_DIR)/compare_all_versions.c $(SRC_DIR)/..
 
 clean:
 	rm -f $(EXE)
+	rm -f $(SRC_DIR)/ScaLAPACK.mod/*.o
 	cd $(SRC_DIR)/FTLA && $(MAKE) clean

@@ -19,14 +19,16 @@
 #include "../FTLA/ftla_ftwork.h"
 #include "../FTLA/ftla_cof.h"
 #include "../FTLA/ftla_driver.h"
+#include "commons.h"
 #include "create_matrix.h"
-#include "errors.h"
 
 extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
 
 extern int *errors;
 
-int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs)
+extern MPI_Comm ftla_current_comm;
+
+int FTLA_ftdtr_calc(int rows, double* A_global, int mpi_rank, int cprocs, int sprocs)
 {
 	int i0=0, i1=1;
 	int i;
@@ -36,10 +38,21 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
-	int P, Q;
+	int P=-1;
+	int Q=-1;
 	MPI_Dims_create(cprocs, ndims, dims);
 	P = dims[0];
 	Q = dims[1];
+
+	if (mpi_rank>=cprocs)
+	{
+		MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, MPI_UNDEFINED, &ftla_current_comm);
+	}
+	else
+	{
+		MPI_Comm_split(MPI_COMM_WORLD, 1, mpi_rank, &ftla_current_comm);
+	}
+
     // BLACS
     int ictxt, ictxt_global, info;
     int myrow, mycol, lld;
@@ -75,10 +88,21 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 		Ne = N;
 #endif
 
-		// Descriptors (local)
-		descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &lld, &info );
+		if (mpi_rank < cprocs)	// only calc nodes have a local copy of submatrix A
+		{
+			// Descriptors (local)
+			descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &lld, &info );
+		}
+		else
+		{
+			for (i=0; i<9; i++)
+			{
+				descA[i]=0;
+			}
+			descA[1]=-1;
+		}
 
-		if (rank==0)
+		if (mpi_rank==0)
 		{
 			// Descriptors (global)
 			descinit_( descA_global, &N, &N, &i1, &i1, &i0, &i0, &ictxt_global, &N, &info );
@@ -92,18 +116,21 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 			}
 			descA_global[1]=-1;
 		}
-		create_matrix( ictxt, 0,   &A,  descA, M, Ne, NB, NULL, NULL );
 
-		/* allocate local buffer for the Q-wide local panel copy */
-		create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (Q+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
+		if (mpi_rank < cprocs)	// only calc nodes initialize matrices
+		{
+			create_matrix( ictxt, 0,   &A,  descA, M, Ne, NB, NULL, NULL );
 
-		MPI_Barrier(MPI_COMM_WORLD);
+			/* allocate local buffer for the Q-wide local panel copy */
+			create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (Q+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
 
-		// spread matrices
-		pdgemr2d_(&N, &N, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ictxt);
+			// spread matrices
+			pdgemr2d_(&N, &N, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ictxt);
+		}
 	}
 
-	{/* call resilient QR */
+	if (mpi_rank < cprocs)
+	{/* call resilient LU */
 		int err=0;
 		int* ipiv = (int*)malloc(Ne*sizeof(int) );
 
@@ -143,7 +170,12 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int rank, int cprocs, int sprocs
 
 		free(ipiv);
 	}
+	else
+	{
+		Cftla_work_construct( 0, descA, 0, Ne-N, &ftwork );
+	}
 
+	if (mpi_rank < cprocs)
 	{/* Cleanup */
 		if( NULL != A  ) free( A );
 		A = NULL;

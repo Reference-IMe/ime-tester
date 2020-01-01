@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "slp.h"
 #include "util_matrix.h"
 #include "util_inject.h"
@@ -22,11 +21,7 @@
 #include "ftla_cof.h"
 #include "ftla_driver.h"
 
-#include <mpi.h>
-MPI_Comm ftla_current_comm=MPI_COMM_WORLD;
-
 static int i0=0, i1=1;
-static double i1d=1.0;
 static double p0=0e0, p1=1e0, m1=-1e0;
 static double eps;
 static int rank, np;
@@ -38,12 +33,12 @@ static int rank, np;
    exit( 0 );} \
 } while( 0 )
 
-
 static void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int NB, int *np_A, int *nq_A);
-//static double condA( int M, int N, double* A0, int* descA );
-static double verifyLUm( int M, int N, double *A0, double *Alu, int *descA, int *ipiv );
-static double verifyLUb( int M, int N, int S, double *A0, double *Alu, int *descA, int *ipiv, double *B0, double *X, int *descX );
+static double condA( int M, int N, double* A0, int* descA );
+static double verifyQRm( int M, int N, double *A0, double *Aqr, int *descA, double *tau );
+static double verifyQRb( int M, int N, int S, double *A0, double *Aqr, int *descA, double *tau, double *B0, double *X, int *descX );
 static double verifyX( int M, int S, double *X0, double *X, int *descX );
+
 
 int *errors;
 
@@ -63,9 +58,9 @@ int main( int argc, char **argv )
     int descX[9];
 
     double t1, t2, To, Tf;
-    double Rom=0.0, Rfm=0.0, Rox, Rfx,Rob,Rfb;//, KA;
+    double Rom, Rfm, Rob, Rfb, Rox, Rfx, KA;
     int err = 0;
-    int i, j, start, end, step;
+    int i, start, end, step;
     start = end = step = 640;
 
     {/* read command line parameter */
@@ -132,13 +127,9 @@ int main( int argc, char **argv )
         {/* allocate matrices */
             /* determine checksum size, generate A matrix */
             N = M = i;
-            /*NUMROC computes the NUMber of Rows Or Columns of a distributed
-            matrix owned by the process indicated by IPROC.*/
             Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A) 
             MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
-            
 #ifndef NO_EXTRAFLOPS
-            //Nc*2 perchè replica le colonne di checksum
             Ne = N + Nc*2;// + ((Nc/NB)%Q==0)*NB;
 #else
             Ne = N;
@@ -147,24 +138,7 @@ int main( int argc, char **argv )
 
             create_matrix( ictxt, 800, &A0, descA, M, Ne, NB, NULL, NULL );
             create_matrix( ictxt, 0,   &A,  NULL, M, Ne, NB, NULL, NULL );
-
-            /*
-            if(rank==0){
-                printf("INITIALLY A is:\n");
-                for(i=0; i<M; i++){
-                    for(j=0; j<Ne; j++){
-                        printf("%d ",A[Ne*i+j]);
-                    } 
-                    printf("\n"); 
-                }
-            }
-            */
-            //PDTRAN( M, N, 1.0d0, A, 1, 1, DESCA, 0.0d0, C, 1, 1, DESCC )
-            //https://hpc-forge.cineca.it/files/ScuolaCalcoloParallelo_WebDAV/public/anno-2016/12_Advanced_School/scalapack_short.pdf
-            //pdtran_( &M, &N, &i1d, A0, &i1, &i1, descA, &i1d, A, &i1, &i1, descA );
-
             pdlacpy_( "All", &M, &N, A0, &i1, &i1, descA, A, &i1, &i1, descA );
-
 /*            KA = condA( M, N, A, descA );
             print0( ("%-7.2g\t", KA) );
             pdlacpy_( "All", &M, &N, A0, &i1, &i1, descA, A, &i1, &i1, descA );*/
@@ -181,85 +155,62 @@ int main( int argc, char **argv )
             pdlacpy_( "All", &M, &S, B0, &i1, &i1, descX, Xo, &i1, &i1, descX );
             pdlacpy_( "All", &M, &S, B0, &i1, &i1, descX, Xf, &i1, &i1, descX );
         }
-        {/*    call ScaLAPACK LU without FT */
-            //int lwork=-1;
-            //double lazywork;
-            //pdgetrf_( &M, &N, NULL, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
-            //pdgetrf_( &M, &N, NULL, &i1, &i1, descA, NULL, &info );
-            //lwork = (int)lazywork;
-            //double *work = (double*)malloc( lwork*sizeof(double) );
-            //double *tau  = (double*)malloc( Nc*sizeof(double) );
-            int *ipiv = (int*)malloc(M*sizeof(int) );
+        {/*    call ScaLAPACK QR without FT */
+            int lwork=-1;
+            double lazywork;
+            pdgeqrf_( &M, &N, NULL, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
+            lwork = (int)lazywork;
+            double *work = (double*)malloc( lwork*sizeof(double) );
+            double *tau  = (double*)malloc( Nc*sizeof(double) );
 
             MPI_Barrier( MPI_COMM_WORLD );
             t1 = MPI_Wtime();
-
-            pdgetrf_( &M, &N, A, &i1, &i1, descA, ipiv, &info );
-
-            //for(int y=0; y<M;y++)
-            //    print0( ("P[%d]=%d ",y,ipiv[y]) );
-            //dprintmatrix(ipiv, descX, "IPIV", 1);
+            pdgeqrf_( &M, &N, A, &i1, &i1, descA, tau, work, &lwork, &info );
             checkerror( info, 0 );
             t2 = MPI_Wtime();
             t2 -= t1;
             MPI_Reduce( &t2, &To, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
             print0( ("o: %f\t%-11g\t\t\t: ", To, 4.0/3.0*M*M*M/1e9/To/PxQ) );
             dprintmatrix(A, descA, "Ao", 2);
-
-            /*
-            if(rank==0){
-                printf("now A is:\n");
-                for(i=0; i<M; i++){
-                    for(j=0; j<Ne; j++){
-                        printf("%d ",A[Ne*i+j]);
-                    }
-                    printf("\n");
-                }
-            }
-            */
-
-            Rom = verifyLUm( M, N, A0, A, descA, ipiv );
+            
+            Rom = verifyQRm( M, N, A0, A, descA, tau );
             print0( ("%-10e\t", Rom) );
-            Rob = verifyLUb( M, N, S, A0, A, descA, ipiv, B0, Xo, descX );
+            Rob = verifyQRb( M, N, S, A0, A, descA, tau, B0, Xo, descX );
             print0( ("%-10e\t", Rob) );
             Rox = verifyX( M, S, X0, Xo, descX );
             print0( ("%-10e\n", Rox) );
 
-            //free( work );
-            //free( tau );
-            //free(ipiv);
-        }
+            free( work );
+            free( tau );
+        }        
 
         {/* call resilient QR */
             int err;
-            //int lwork=-1;
-            //double lazywork;
-            //pdgetrf_( &M, &Ne, NULL, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
-            //pdgetrf_( &M, &Ne, NULL, &i1, &i1, descA, NULL, &info );
-            //lwork = (int)lazywork;
-            //double *work = (double*)malloc( lwork*sizeof(double) );
-            //double *tau  = (double*)malloc( Nc*sizeof(double) );
-            int *ipiv = (int*)malloc(Ne*sizeof(int) );
-
+            int lwork=-1;
+            double lazywork;
+            pdgeqrf_( &M, &Ne, NULL, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
+            lwork = (int)lazywork;
+            double *work = (double*)malloc( lwork*sizeof(double) );
+            double *tau  = (double*)malloc( Nc*sizeof(double) );
+            
 #ifdef INJECT        
           for( F = Fmin; F<=Fmax; F+=Finc ) {
             errors = create_error_list( M, NB, F, Fstrat );
-            
 #endif
             /* Reset A for the second run */
             pdlacpy_( "All", &M, &N, A0, &i1, &i1, descA, A, &i1, &i1, descA );
             pdlacpy_( "All", &M, &S, B0, &i1, &i1, descX, Xf, &i1, &i1, descX );
-              
+            
             Cftla_work_construct( 0, descA, 0, Ne-N, &ftwork );
             
             MPI_Barrier( MPI_COMM_WORLD );
             t1 = MPI_Wtime();
-            do { // call ftpdgetrf until we complete w/o a failure
+            do { // call ftpdgeqrf until we complete w/o a failure
 #ifdef USE_CoF
               if(err) Cftla_cof_dgeqrr( A, descA, tau, work, lwork, &ftwork );
 #endif
-            err = ftla_pdgetrf( &M, &Ne, A, &i1, &i1, descA, ipiv, &info, (int*)&ftwork );
-            //printf("****** err=%d i1=%d\n",err,i1);
+              err = ftla_pdgeqrf( &M, &Ne, A, &i1, &i1, descA, tau, work, &lwork, &info, (int*)&ftwork );
+              //printf("****** err=%d i1=%d\n",err,i1);
             
 #ifdef USE_CoF
               if(err) Cftla_cof_dgeqrr( A, descA, tau, work, lwork, &ftwork );
@@ -271,10 +222,10 @@ int main( int argc, char **argv )
             MPI_Reduce( &t2, &Tf, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
             print0( ("\t% 8df: %f\t%-11g\t%-11g\t: ", F, Tf, 4.0/3.0*M*M*M/1e9/Tf/PxQ, 4.0/3.0*M*M*Ne/1e9/Tf/PxQ) );
             dprintmatrix(A, descA, "Af", 2);
-
-            Rfm = verifyLUm( M, N, A0, A, descA, ipiv );
+                        
+            Rfm = verifyQRm( M, N, A0, A, descA, tau );
             print0( ("%-10e\t", Rfm) );
-            Rfb = verifyLUb( M, N, S, A0, A, descA, ipiv, B0, Xf, descX );
+            Rfb = verifyQRb( M, N, S, A0, A, descA, tau, B0, Xf, descX );
             print0( ("%-10e\t", Rfb) );
             Rfx = verifyX( M, S, X0, Xf, descX );
             print0( ("%-10e\n", Rfx) );
@@ -301,9 +252,8 @@ int main( int argc, char **argv )
 #ifdef INJECT
           }
 #endif
-            //free( work );
-            //free( tau );
-            free(ipiv);
+            free( work );
+            free( tau );
         }
         {/* Cleanup */
             if( NULL != A0 ) free( A0 );
@@ -374,28 +324,8 @@ void create_matrix( int ctxt, int seed, double **A, int *descA,
         *nq_A = nq_iA;
 }
 
-/* Compute the norm of X-X~ */
-static double verifyX( int M, int S, double *X0, double *X, int *descX ) {
-    int ctxt=descX[CTXT_];
-    int nb = descX[NB_];
-    double *Xs=NULL;
-    double resid;
-    create_matrix( ctxt,  0, &Xs,  NULL, M, S, nb, NULL, NULL );
-    pdlacpy_( "All", &M, &S, X, &i1, &i1, descX, Xs, &i1, &i1, descX );
-    //for(int i=1;i<M;i++)
-    //    print0(("X0 = %lf X =%lf\n",X0[i],X[i]));
-    pdmatadd_( &M, &S, &p1, X0, &i1, &i1, descX, 
-                       &m1, Xs, &i1, &i1, descX );
-    resid = pdlange_( "F", &M, &S, Xs, &i1, &i1, descX, NULL ) / 
-            pdlange_( "F", &M, &S, X0, &i1, &i1, descX, NULL );
-    
-    if( NULL != Xs ) free( Xs );
-    return resid;
-}
-
-
-/* Verify that P*L*U=A */
-static double verifyLUm( int M, int N, double *A0, double *Alu, int *descA, int *ipiv ) {
+/* Verify that Q*R=A */
+static double verifyQRm( int M, int N, double *A0, double *Aqr, int *descA, double *tau ) {
     double resid;
     double *work=NULL;
     double *A=NULL;
@@ -421,11 +351,11 @@ static double verifyLUm( int M, int N, double *A0, double *Alu, int *descA, int 
     lwork = nb * ( 2*Mp0 + Nq0 + nb );
     work = (double *)malloc( lwork*sizeof(double) );
 
-    /* Work on a copy of Alu */
+    /* Work on a copy of A */
     create_matrix( ctxt,  0, &A, NULL, M, N, nb, NULL, NULL );
-    pdlacpy_( "All", &M, &N, Alu, &i1, &i1, descA, A, &i1, &i1, descA );
+    pdlacpy_( "All", &M, &N, Aqr, &i1, &i1, descA, A, &i1, &i1, descA );
 
-    pdgetrrv_( &M, &N, A, &i1, &i1, descA, ipiv, work );
+    pdgeqrrv_( &M, &N, A, &i1, &i1, descA, tau, work );
     pdmatadd_( &M, &N, &p1, A0, &i1, &i1, descA, &m1, A, &i1, &i1, descA );
     resid = pdlange_( "F", &M, &N, A, &i1, &i1, descA, NULL ) / 
             pdlange_( "F", &M, &N, A0, &i1, &i1, descA, NULL ) / 
@@ -436,30 +366,41 @@ static double verifyLUm( int M, int N, double *A0, double *Alu, int *descA, int 
     return resid;
 }
 
-
 /* Verify the backward error of the solution of Ax=B obtained from the 
- * LU decomposition of A ---> TODO*/
-static double verifyLUb( int M, int N, int S, double *A0, double *Alu, int *descA, int *ipiv, double* B0, double *X, int *descX) {
+ * QR decomposition of A */
+static double verifyQRb( int M, int N, int S, double *A0, double *Aqr, int *descA, double *tau, double* B0, double *X, int *descX ) {
     double  *A=NULL, *R=NULL;
     int     ctxt=descA[CTXT_];
     int     nb = descA[NB_];
-    int     nprow, npcol, myrow, mycol, Mp0, Nq0, iarow, iacol, lwork; double lazywork; double *work=NULL;
-    int     info,y;
+    int     lwork; double lazywork; double *work=NULL;
+    int     info;
     double  Anorm, Xnorm, Rnorm, resid;
     
     create_matrix( ctxt,  0,   &A,   NULL, M, N, nb, NULL, NULL );
-    pdlacpy_( "All", &M, &N, Alu, &i1, &i1, descA, A, &i1, &i1, descA );
+    pdlacpy_( "All", &M, &N, Aqr, &i1, &i1, descA, A, &i1, &i1, descA );
     create_matrix( ctxt,  0,   &R,   NULL, M, S, nb, NULL, NULL );
     pdlacpy_( "All", &M, &S, B0,  &i1, &i1, descX, R, &i1, &i1, descX );
 
-    int *iwork = (int*)malloc(M*sizeof(int) );
-    /* Compute the solution of LUx=B */
-    pdgetrs_( "N", &M, &i1, A, &i1, &i1, descA, ipiv, X, &i1, &i1, descX, &info );
-    
+    /* Compute the solution of QRx=B */
+    lwork = -1;
+    pdormqr_( "L", "T", &M, &S, &M, A, &i1, &i1, descA, tau, 
+              X, &i1, &i1, descX, &lazywork, &lwork, &info );
+    lwork = (int) lazywork;
+    work = (double*) malloc( lwork * sizeof(double) );
+    //multiply X = Q**T * X , where Q is found in A
+    //since X is passed Xo or Xf, which are init to B --> X=Q**T * B
+    pdormqr_( "L", "T", &M, &S, &M, A, &i1, &i1, descA, tau, 
+              X, &i1, &i1, descX, work, &lwork, &info );
+    //solves A*X = alpha*X,
+    //where A is upper triangular (U), assumed not unit triangular, alpha=p1=1.0
+    //since X=Q**T * B --> solves A*X=Q**T * B
+    pdtrsm_( "L", "U", "N", "N", &M, &S, &p1, A, &i1, &i1, descA,
+             X, &i1, &i1, descX );
     
     /* Compute norms and backward error residual */
     Anorm = pdlange_( "F", &M, &N, A0, &i1, &i1, descA, NULL );
     Xnorm = pdlange_( "F", &M, &S,  X, &i1, &i1, descX, NULL );
+    //multiply R = A0 * X
     pdgemm_( "N", "N", &M, &S, &N, &p1, A0, &i1, &i1, descA, 
                                          X, &i1, &i1, descX, 
                                    &m1,  R, &i1, &i1, descX );
@@ -469,3 +410,57 @@ static double verifyLUb( int M, int N, int S, double *A0, double *Alu, int *desc
     if( NULL != A ) free( A ); if( NULL != R ) free( R );
     return resid;
 }
+
+/* Compute the norm of X-X~ */
+static double verifyX( int M, int S, double *X0, double *X, int *descX ) {
+    int ctxt=descX[CTXT_];
+    int nb = descX[NB_];
+    double *Xs=NULL;
+    double resid;
+    create_matrix( ctxt,  0, &Xs,  NULL, M, S, nb, NULL, NULL );
+    pdlacpy_( "All", &M, &S, X, &i1, &i1, descX, Xs, &i1, &i1, descX );
+
+    pdmatadd_( &M, &S, &p1, X0, &i1, &i1, descX, 
+                       &m1, Xs, &i1, &i1, descX );
+    resid = pdlange_( "F", &M, &S, Xs, &i1, &i1, descX, NULL ) / 
+            pdlange_( "F", &M, &S, X0, &i1, &i1, descX, NULL );
+    
+    if( NULL != Xs ) free( Xs );
+    return resid;
+}
+
+/* Compute Condition number of A */
+static double condA( int M, int N, double* A0, int* descA ) {
+    double lazywork;
+    int info, lwork, liwork;
+    double* work; int *iwork;
+    double rcond;
+    double anorm;
+    int ictxt=descA[CTXT_];
+    int nb = descA[NB_];
+    int nprow, npcol, myrow, mycol;
+    Cblacs_gridinfo( ictxt, &nprow, &npcol, &myrow, &mycol );
+        
+    lwork = numroc_( &M, &nb, &myrow, &i1, &myrow );
+    work = malloc( lwork*sizeof(double) );
+    anorm = pdlange_( "I", &M, &N, A0, &i1, &i1, descA, work );
+    free( work );
+    iwork = malloc( (M+nb)*sizeof(int) );
+    pdgetrf_( &M, &N, A0, &i1, &i1, descA, iwork, &info );
+    free( iwork );
+    lwork = liwork = -1;
+    pdgecon_( "I", &M, A0, &i1, &i1, descA, &anorm, &rcond, &lazywork, &lwork, &liwork, &liwork, &info );
+    lwork = (int)lazywork;
+    work = malloc( lwork*sizeof(double) );
+    iwork = malloc( liwork*sizeof(int) );
+    pdgecon_( "I", &N, A0, &i1, &i1, descA, &anorm, &rcond, work, &lwork, iwork, &liwork, &info );
+    free( work ); free( iwork );
+    return rcond;
+}
+    
+#if 0
+/* Verify orthogonality of QR decomposition */
+double verifyQRo() {
+    
+}
+#endif

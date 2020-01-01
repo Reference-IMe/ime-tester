@@ -19,7 +19,7 @@ int failing_level;
 int faulty = 0;
 int faulty_location=0;
 
-MPI_Comm current_comm, current_world_comm, ccomm;
+MPI_Comm ftla_current_comm, current_world_comm, ccomm;
 
 // needed for FT
 #include <signal.h>
@@ -31,18 +31,18 @@ void common_error_handler(int s)
 	// avoid race conditions (https://digilander.libero.it/uzappi/C/librerie/funzioni/signal.html)
 	signal(s, SIG_IGN);
 
-	MPI_Comm_rank(current_comm, &rank);
-	MPI_Comm_size(current_comm, &world_size);
+	MPI_Comm_rank(ftla_current_comm, &rank);
+	MPI_Comm_size(ftla_current_comm, &world_size);
 
 	//Localize fault
 	MPI_Group failed_group;
-	MPIX_Comm_failure_ack(current_comm);
-	MPIX_Comm_failure_get_acked(current_comm, &failed_group);
+	MPIX_Comm_failure_ack(ftla_current_comm);
+	MPIX_Comm_failure_get_acked(ftla_current_comm, &failed_group);
 	//MPI_Comm_set_errhandler(current_comm, MPI_ERRORS_RETURN);
 	//signal(SIGUSR1, common_handler_error);
 
 	MPI_Group current_group;
-	MPI_Comm_group(current_comm, &current_group);
+	MPI_Comm_group(ftla_current_comm, &current_group);
 	int *ranks = (int *)malloc( world_size * sizeof(int) );
 	int *ranks_out = (int *)malloc( 1 * sizeof(int) );
 	for(i=0; i<world_size;i++)
@@ -60,9 +60,9 @@ void common_error_handler(int s)
 
 	MPI_Comm surviving_comm;
 	MPI_Group tmp_group, surviving_group;
-	MPI_Comm_group(current_comm, &tmp_group);
+	MPI_Comm_group(ftla_current_comm, &tmp_group);
 	MPI_Group_excl(tmp_group, 1, &failed_rank, &surviving_group);
-	MPI_Comm_create_group(current_comm, surviving_group, 0, &surviving_comm);
+	MPI_Comm_create_group(ftla_current_comm, surviving_group, 0, &surviving_comm);
 
 	free(ranks);
 	free(ranks_out);
@@ -70,8 +70,8 @@ void common_error_handler(int s)
 	MPI_Group_free(&tmp_group);
 	MPI_Group_free(&surviving_group);
 
-	MPI_Comm_free(&current_comm);
-	current_comm=surviving_comm;
+	MPI_Comm_free(&ftla_current_comm);
+	ftla_current_comm=surviving_comm;
 
 	signal(SIGUSR1, common_error_handler);
 }

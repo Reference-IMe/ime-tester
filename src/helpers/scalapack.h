@@ -11,7 +11,7 @@
 #ifndef __SCALAPACK_H__
 #define __SCALAPACK_H__
 
-#define SCALAPACKNB 64 // blocking factor
+#define SCALAPACKNB 4 // blocking factor
 
 extern void descinit_( int* desc, int* m, int* n, int* mb, int* nb, int* irsrc, int* icsrc, int* ictxt, int* lld, int* info);
 extern int  numroc_( int* n, int* nb, int* iproc, int* isrcproc, int* nprocs);
