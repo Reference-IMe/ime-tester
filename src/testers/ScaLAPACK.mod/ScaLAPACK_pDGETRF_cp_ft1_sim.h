@@ -14,7 +14,7 @@
 
 // TODO: checkpointing
 
-void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
 {
 	/*
 	 * n = system rank (A_global n x n)
@@ -27,15 +27,17 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_global, int mpi_rank, int cpr
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
-	int nprow, npcol, info, ic = -1, context, context_global, context_all, myrow, mycol;
-	int descA_global[9], descA[9], descAcp_global[9];
+	int ic = -1, info;
+	int context_distributed, context_source, context_cp, context_all;
+	int nprow, npcol, myrow, mycol;
+	int tmprow,tmpcol,tmpmyrow, tmpmycol;
+	int descA_source[9], descA[9], descA_cp[9];
 	//int descB_global[9], descB[9];
 	char order = 'R', scope = 'A';
 	// MATRIX
-
 	int nb, nr, nc, ncrhs, lld, lld_global;
 	double *A;
-	double *Acp_global;
+	double *A_cp;
 	//double *B;
 	//double *work, alpha;
 	int *ipiv;
@@ -44,64 +46,114 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_global, int mpi_rank, int cpr
 	MPI_Dims_create(cprocs, ndims, dims);
 	nprow = dims[0];
 	npcol = dims[1];
-	Cblacs_get( ic, zero, &context );
-	Cblacs_gridinit( &context, &order, nprow, npcol );
-	Cblacs_get( ic, zero, &context_global );
-	Cblacs_gridinit( &context_global, &order, one, one );
-	//Cblacs_get( ic, zero, &context_all );
-	//Cblacs_gridinit( &context_all, &order, one, nprocs );
-	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
 
+	// context for all processes
+	Cblacs_get( ic, zero, &context_all );
+	Cblacs_gridinit( &context_all, &order, one, nprocs );
 
-	if (mpi_rank < cprocs)
+	// context for distributed matrix A
+	Cblacs_get( ic, zero, &context_distributed );
+	Cblacs_gridinit( &context_distributed, &order, nprow, npcol );
+	Cblacs_gridinfo( context_distributed, &nprow, &npcol, &myrow, &mycol );
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("context_distributed: %d in %dx%d id %d,%d\n",mpi_rank,nprow,npcol,myrow,mycol);
+
+	// context for source global matrix A (A_source)
+	Cblacs_get( ic, zero, &context_source );
+	Cblacs_gridinit( &context_source, &order, one, one );
+	Cblacs_gridinfo( context_source, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("context_source: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
+
+	// context for checkpointing global matrix (A_cp)
+	Cblacs_get( ic, zero, &context_cp );
+	//Cblacs_gridinit( &context_cp_only, &order, one, one );
+	int map_cp[1][1];
+	map_cp[0][0]=cprocs;
+	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
+	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
+	MPI_Barrier(MPI_COMM_WORLD);
+	printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
+
+	lld_global = n;
+
+	if (mpi_rank==0) // root node
 	{
-		//printf("\nI %d have to",myrank);
+		// Descriptors (global)
+		descinit_( descA_source, &n, &n, &one, &one, &zero, &zero, &context_source, &lld_global, &info );
+		//descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
+	}
+	else
+	{
+		// Descriptors (global, for non-root nodes)
+		A=NULL;
+		for (i=0; i<9; i++)
+		{
+			descA_source[i]=0;
+			//descB_global[i]=0;
+		}
+		descA_source[1]=-1;
+		//descB_global[1]=-1;
+	}
 
-		// Computation of local matrix size
-		nb = SCALAPACKNB;
-		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
-		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
-		//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
-		lld = MAX( 1 , nr );
+	if (mpi_rank==cprocs) // spare (checkpointing) node
+	{
+		// Descriptors (one_row)
+		A_cp = malloc(n*n*sizeof(double));
+		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &lld_global, &info );
+	}
+	else
+	{
+		// Descriptors (global, for non-spare nodes)
+		A_cp=NULL;
+		for (i=0; i<9; i++)
+		{
+			descA_cp[i]=0;
+		}
+		descA_cp[1]=-1;
+	}
+
+	// Computation of local matrix size
+	nb = SCALAPACKNB;
+	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
+	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
+	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
+	lld = MAX( 1 , nr );
+	// all processes have to know descA
+	descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lld, &info );
+
+	if (mpi_rank < cprocs) // non-spare nodes
+	{
+
 		A = malloc(nr*nc*sizeof(double));
 		//B = malloc(nr*ncrhs*sizeof(double));
 		//work = malloc(nb*sizeof(double));
 		ipiv = malloc((lld+nb)*sizeof(int));
 
 		// Descriptors (local)
-		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context, &lld, &info );
-		//descinit_( descB, &n, &m, &nb, &nb, &zero, &zero, &context, &lld, &info );
+		// all processes have to know descA (not only non-spare nodes)
+		//descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lld, &info );
 
-		if (mpi_rank==0)
+	}
+	else
+	{
+		A=NULL;
+		/*
+		for (i=0; i<9; i++)
 		{
-			// Descriptors (global)
-			lld_global = n;
-			descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
-			//descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
+			descA[i]=0;
+		}
+		*/
+		descA[1]=-1;
+	}
 
-			Acp_global = malloc(n*n*sizeof(double));
-			descinit_( descAcp_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
-		}
-		else
-		{
-			// Descriptors (global, for non-root nodes)
-			for (i=0; i<9; i++)
-			{
-				descA_global[i]=0;
-				//descB_global[i]=0;
-				descAcp_global[i]=0;
-			}
-			descA_global[1]=-1;
-			//descB_global[1]=-1;
-			descAcp_global[1]=-1;
-		}
 
 		// spread matrices
-		pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context);
+		pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
 		//pdgemr2d_(&n, &m, B_global, &one, &one, descB_global, B, &one, &one, descB, &context);
 
 		// LU factorization
-		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, Acp_global, &one, &one, descAcp_global, ipiv, &info );
+		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, ipiv, &failing_level, &context_all, &info );
 
 		// check factorization
 		/*
@@ -109,25 +161,20 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_global, int mpi_rank, int cpr
 		pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 		*/
 
-		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
+		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
 
+	if (mpi_rank < cprocs)
+	{
 		// cleanup
 		free(A);
 		//free(B);
 		free(ipiv);
 		//free(work);
-		if (mpi_rank==0)
-		{
-			free(Acp_global);
-		}
+	}
+	else
+	{
+		free(A_cp);
 	}
 
-		//Close BLACS environment
-		//Cblacs_barrier( context, "All");	// not working! why?
-		//MPI_Barrier(MPI_COMM_WORLD);		// working but not needed
-		//Cblacs_gridexit( context );		// not needed if calling blacs_exit
-		//Cblacs_gridexit( context_global );// not needed if calling blacs_exit
-		//Cblacs_exit( one );				// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
-											// error, if main function called more tha once, why?
 	MPI_Barrier(MPI_COMM_WORLD);
 }

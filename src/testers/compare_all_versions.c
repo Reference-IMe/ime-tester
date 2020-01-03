@@ -185,7 +185,7 @@ int main(int argc, char **argv)
     	if (main_rank==0 && verbose>0) {printf("\n Run #%d",rep+1);}
 
     	//////////////////////////////////////////////////////////////////////////////////
-
+/*
      	versionrun[ 0][rep]=test_IMe_pviDGESV(versionname[0], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// vanilla IMe solve with 1 rhs
     	versionrun[ 1][rep]=test_IMe_pviDGESV(versionname[1], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// vanilla IMe solve with 10 rhs
      	versionrun[ 2][rep]=test_IMe_pviDGESV_cs(versionname[2], verbose, rows, cols, 1, main_rank, cprocs, sprocs);	// checksumming IMe solve with 1 rhs
@@ -221,21 +221,22 @@ int main(int argc, char **argv)
     	}
 
     	versionrun[12][rep]=test_ScaLAPACK_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
-
+*/
 		if (sprocs>0)
     	{
-    		//versionrun[13][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
-    		versionrun[13][rep]=-99;																			// not yet SPKmod LU factorization single FT
+    		versionrun[13][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
+    		//versionrun[13][rep]=-99;																			// not yet SPKmod LU factorization single FT
         	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0);	// FTLA LU with 0 faults
         	versionrun[15][rep]=test_FTLA_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, 1);	// FTLA LU with 1 fault
     	}
     	else
     	{
-    		versionrun[13][rep]=-1;																				// don't run SPKmod LU factorization single FT
+    		versionrun[13][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT
+    		//versionrun[13][rep]=-1;																				// don't run SPKmod LU factorization single FT
         	versionrun[14][rep]=test_FTLA_pDGETRF(versionname[14], verbose, rows, cols, main_rank, cprocs, 0);	// FTLA LU with 0 faults
         	versionrun[15][rep]=-1;																				// don't run FTLA LU with 1 fault
     	}
-
+/*
     	versionrun[16][rep]=test_ScaLAPACK_pDGEQRF(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
 
     	if (sprocs>0)
@@ -248,7 +249,7 @@ int main(int argc, char **argv)
     		versionrun[17][rep]=test_FTLA_pDGEQRF(versionname[17], verbose, rows, cols, main_rank, cprocs, 0);	// FTLA QR with 0 faults
     		versionrun[18][rep]=-1;																				// don't run FTLA QR with 1 fault
     	}
-
+*/
 
     	//////////////////////////////////////////////////////////////////////////////////
 

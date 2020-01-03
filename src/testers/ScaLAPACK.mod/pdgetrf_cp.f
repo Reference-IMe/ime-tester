@@ -1,6 +1,9 @@
 *      SUBROUTINE PDGETRF_CP( M, N, A, IA, JA, DESCA, IPIV, INFO )
-      SUBROUTINE PDGETRF_CP(M, N, A, IA, JA, DESCA,
-     $                            ACP, IACP, JACP, DESCACP, IPIV, INFO)
+      SUBROUTINE PDGETRF_CP(M, N,
+     $                      A, IA, JA, DESCA,
+     $                      ACP, IACP, JACP, DESCACP,
+     $                      IPIV,
+     $                      JFAULT, ICTXTALL, INFO)
 *
 *  -- ScaLAPACK routine (version 1.7) --
 *     University of Tennessee, Knoxville, Oak Ridge National Laboratory,
@@ -8,7 +11,7 @@
 *     May 25, 2001
 *
 *     .. Scalar Arguments ..
-      INTEGER            IA, INFO, JA, M, N, IACP, JACP
+      INTEGER            IA, INFO, JA, M, N, IACP, JACP, JFAULT
 *     ..
 *     .. Array Arguments ..
       INTEGER            DESCA( * ), DESCACP( * ), IPIV( * )
@@ -146,7 +149,8 @@
 *     .. Local Scalars ..
       CHARACTER          COLBTOP, COLCTOP, ROWBTOP
       INTEGER            I, ICOFF, ICTXT, IINFO, IN, IROFF, J, JB, JN,
-     $                   MN, MYCOL, MYROW, NPCOL, NPROW
+     $                   MN, MYCOL, MYROW, NPCOL, NPROW,
+     $                   ICTXTALL, NPROCS, MYPNUM
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -163,6 +167,29 @@
 *     .. Intrinsic Functions ..
       INTRINSIC          MIN, MOD
 *     ..
+*     .. my Executable Statements ..
+*
+      CALL BLACS_PINFO( MYPNUM, NPROCS )
+*
+      IF (MYPNUM.EQ.(NPROCS-1)) THEN
+        PRINT*, "spare procs, doing"
+        MN = MIN( M, N )
+        IN = MIN( ICEIL( IA, DESCA( MB_ ) )*DESCA( MB_ ), IA+M-1 )
+        JN = MIN( ICEIL( JA, DESCA( NB_ ) )*DESCA( NB_ ), JA+MN-1 )
+        JB = JN - JA + 1
+          DO 102 J = JN+1, JA+MN-1, DESCA( NB_ )
+             JB = MIN( MN-J+JA, DESCA( NB_ ) )
+             I = IA + J - JA
+             PRINT*
+             PRINT*, "checkpoint", J
+         CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
+     $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
+             IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
+                PRINT*, "fault!"
+             END IF
+*
+  102    CONTINUE
+      ELSE
 *     .. Executable Statements ..
 *
 *     Get grid parameters
@@ -296,8 +323,8 @@
          PRINT*
          PRINT*, "checkpoint", J
          CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
-     $                       ACP, IACP, JACP, DESCACP, ICTXT)
-         IF( (J.LT.70).AND.(70.LT.(J+DESCA(NB_))) ) THEN
+     $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
+         IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
             PRINT*, "fault!"
          END IF
 *
@@ -313,6 +340,9 @@
       CALL PB_TOPSET( ICTXT, 'Broadcast', 'Rowwise', ROWBTOP )
       CALL PB_TOPSET( ICTXT, 'Broadcast', 'Columnwise', COLBTOP )
       CALL PB_TOPSET( ICTXT, 'Combine', 'Columnwise', COLCTOP )
+*
+*     end of main if for CP
+      END IF
 *
       RETURN
 *
