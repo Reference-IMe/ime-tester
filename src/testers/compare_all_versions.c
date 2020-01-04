@@ -219,9 +219,9 @@ int main(int argc, char **argv)
     		versionrun[10][rep]=-1; // don't run SPKmod single FT solve with 1 rhs
     		versionrun[11][rep]=-1; // don't run SPKmod single FT solve with 10 rhs
     	}
-
-    	versionrun[12][rep]=test_ScaLAPACK_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
 */
+    	versionrun[12][rep]=test_ScaLAPACK_pDGETRF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
+
 		if (sprocs>0)
     	{
     		versionrun[13][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT

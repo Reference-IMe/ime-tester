@@ -150,8 +150,7 @@
       CHARACTER          COLBTOP, COLCTOP, ROWBTOP
       INTEGER            I, ICOFF, ICTXT, IINFO, IN, IROFF, J, JB, JN,
      $                   MN, MYCOL, MYROW, NPCOL, NPROW,
-     $                   ICTXTALL, NPROCS, MYPNUM, JCP, FAULTOCCURRED,
-     $                   LASTCP
+     $                   ICTXTALL, NPROCS, MYPNUM, JCP
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -159,8 +158,7 @@
 *     .. External Subroutines ..
       EXTERNAL           BLACS_GRIDINFO, CHK1MAT, IGAMN2D, PCHK1MAT,
      $                   PB_TOPGET, PB_TOPSET, PDGEMM, PDGETF2,
-     $                   PDLASWP, PDTRSM, PXERBLA, PDGETF2_CP,
-     $                   BLACS_PINFO, BLACS_BARRIER
+     $                   PDLASWP, PDTRSM, PXERBLA, PDGETF2_CP
 *     ..
 *     .. External Functions ..
       INTEGER            ICEIL
@@ -175,7 +173,6 @@
 *
 *     init counter for checkpointing
       JCP = CPF
-      FAULTOCCURRED=0
 *
       IF (MYPNUM.EQ.(NPROCS-1)) THEN
         PRINT*, "spare procs, doing"
@@ -183,49 +180,28 @@
         IN = MIN( ICEIL( IA, DESCA( MB_ ) )*DESCA( MB_ ), IA+M-1 )
         JN = MIN( ICEIL( JA, DESCA( NB_ ) )*DESCA( NB_ ), JA+MN-1 )
         JB = JN - JA + 1
-*        do while in F77
-          J = JN+1
-  102     IF (J.LE.JA+MN-1) THEN
+          DO 102 J = JN+1, JA+MN-1, DESCA( NB_ )
              JB = MIN( MN-J+JA, DESCA( NB_ ) )
              I = IA + J - JA
              IF (JCP.EQ.0) THEN
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                 PRINT*
-                PRINT*, FAULTOCCURRED, "checkpoint", J
+                PRINT*, "checkpoint", J
                 CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
-*               save checkpoint instant
-                LASTCP=J
-*               reset counter for checkpointing
+*                reset counter for checkpointing
                 JCP=CPF
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
              ELSE
                 PRINT*
-                PRINT*, FAULTOCCURRED, " NO checkpoint", J
+                PRINT*, " NO checkpoint", J
 *                decrease counter for checkpointing
                 JCP=JCP-1
              END IF
 *
-             IF (FAULTOCCURRED.EQ.0) THEN
-               IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*, "fault!"
-                 FAULTOCCURRED=1
-                 PRINT*, "recovering.."
-                 CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
-     $                               A, IA, JA, DESCA, ICTXTALL)
-                 J=LASTCP
-                 JCP=CPF
-                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                 PRINT*, "..recovered"
-               END IF
+             IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
+                PRINT*, "fault!"
              END IF
 *
-             J=J+DESCA( NB_ )
-*
-            GO TO 102
-         END IF
-*        end do while
-*
+  102    CONTINUE
       ELSE
 *     .. Executable Statements ..
 *
@@ -316,9 +292,7 @@
 *
 *     Loop over the remaining blocks of columns.
 *
-*     do while in F77
-       J = JN+1
-  100  IF (J.LE.JA+MN-1) THEN
+      DO 10 J = JN+1, JA+MN-1, DESCA( NB_ )
          JB = MIN( MN-J+JA, DESCA( NB_ ) )
          I = IA + J - JA
 *
@@ -360,43 +334,24 @@
          END IF
 *
              IF (JCP.EQ.0) THEN
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                 PRINT*
-                PRINT*, FAULTOCCURRED, "checkpoint", J
+                PRINT*, "checkpoint", J
                 CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
-*               save checkpoint instant
-                LASTCP=J
-*               reset counter for checkpointing
+*                reset counter for checkpointing
                 JCP=CPF
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
              ELSE
                 PRINT*
-                PRINT*, FAULTOCCURRED, " NO checkpoint", J
+                PRINT*, " NO checkpoint", J
 *                decrease counter for checkpointing
                 JCP=JCP-1
              END IF
 *
-             IF (FAULTOCCURRED.EQ.0) THEN
-               IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*, "fault!"
-                 FAULTOCCURRED=1
-                 PRINT*, "recovering.."
-                 CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
-     $                               A, IA, JA, DESCA, ICTXTALL)
-                 J=LASTCP
-                 JCP=CPF
-                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                 PRINT*, "..recovered"
-               END IF
-             END IF
-*
-             J=J+DESCA( NB_ )
-*
-            GO TO 100
+         IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
+            PRINT*, "fault!"
          END IF
-*        end do while
 *
+   10 CONTINUE
 *
       IF( INFO.EQ.0 )
      $   INFO = MN + 1

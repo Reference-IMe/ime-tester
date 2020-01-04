@@ -24,6 +24,7 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	int i, j;				//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
+	int cpfreq = 2; 		// checkpointing frequency
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
@@ -101,6 +102,7 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		// Descriptors (one_row)
 		A_cp = malloc(n*n*sizeof(double));
 		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &lld_global, &info );
+		OneMatrix1D(A_cp, n, n);
 	}
 	else
 	{
@@ -111,6 +113,8 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 			descA_cp[i]=0;
 		}
 		descA_cp[1]=-1;
+		descA_cp[4]=nb;
+		descA_cp[5]=nb;
 	}
 
 	// Computation of local matrix size
@@ -119,8 +123,6 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
 	lld = MAX( 1 , nr );
-	// all processes have to know descA
-	descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lld, &info );
 
 	if (mpi_rank < cprocs) // non-spare nodes
 	{
@@ -132,28 +134,32 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 
 		// Descriptors (local)
 		// all processes have to know descA (not only non-spare nodes)
-		//descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lld, &info );
+		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lld, &info );
 
 	}
 	else
 	{
 		A=NULL;
-		/*
 		for (i=0; i<9; i++)
 		{
 			descA[i]=0;
 		}
-		*/
+		// all processes have to know something about descA (not only non-spare nodes)
+		// can't use descinint, due to illegal values of spare process not belonging to the right context
 		descA[1]=-1;
+		descA[4]=nb;
+		descA[5]=nb;
 	}
 
 
 		// spread matrices
 		pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
+		//if (mpi_rank < cprocs) pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_distributed);
 		//pdgemr2d_(&n, &m, B_global, &one, &one, descB_global, B, &one, &one, descB, &context);
 
+		failing_level=n-failing_level;
 		// LU factorization
-		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, ipiv, &failing_level, &context_all, &info );
+		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, ipiv, &cpfreq, &failing_level, &context_all, &info );
 
 		// check factorization
 		/*
@@ -162,6 +168,7 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		*/
 
 		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
+		//if (mpi_rank < cprocs) pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_distributed);
 
 	if (mpi_rank < cprocs)
 	{

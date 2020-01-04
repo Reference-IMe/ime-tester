@@ -22,7 +22,7 @@ extern void pdgetrs_( char *trans, int*n, int *nrhs, double *A, int *ia, int *ja
 extern void pdtran_( int *m, int *n, double *ALPHA, double *A, int *ia, int *ja, int *descA, double *BETA, double *B, int *ib, int *jb, int *descB);
 
 // ScaLAPACK modified
-extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *jfault, int* ictxt, int *info );
+extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *cpfreq, int *jfault, int* ictxt, int *info );
 extern void pdgetf2_cp_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
 
 // FTLA
