@@ -16,13 +16,14 @@
 extern void descinit_( int* desc, int* m, int* n, int* mb, int* nb, int* irsrc, int* icsrc, int* ictxt, int* lld, int* info);
 extern int  numroc_( int* n, int* nb, int* iproc, int* isrcproc, int* nprocs);
 extern void pdgemr2d_ (int* m , int* n , double* a , int* ia , int* ja , int* desca , double* b , int* ib , int* jb , int* descb , int* ictxt );
+extern void pigemr2d_ (int* m , int* n , int* a , int* ia , int* ja , int* desca , int* b , int* ib , int* jb , int* descb , int* ictxt );
 extern void pdgesv_( int* n, int* nrhs, double* A, int* ia, int* ja, int* desca, int* ipiv, double* B, int* ib, int* jb, int* descb, int* info);
 extern void pdgetrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
 extern void pdgetrs_( char *trans, int*n, int *nrhs, double *A, int *ia, int *ja, int *descA, int *ipiv, double *B, int *ib, int *jb, int *descB, int *info );
 extern void pdtran_( int *m, int *n, double *ALPHA, double *A, int *ia, int *ja, int *descA, double *BETA, double *B, int *ib, int *jb, int *descB);
 
 // ScaLAPACK modified
-extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *cpfreq, int *jfault, int* ictxt, int *info );
+extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *ipivcp, int *nipiv, int *cpfreq, int *jfault, int* ictxt, int *info );
 extern void pdgetf2_cp_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
 
 // FTLA

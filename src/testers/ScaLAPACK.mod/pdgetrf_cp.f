@@ -2,7 +2,7 @@
       SUBROUTINE PDGETRF_CP(M, N,
      $                      A, IA, JA, DESCA,
      $                      ACP, IACP, JACP, DESCACP,
-     $                      IPIV, CPF,
+     $                      IPIV, IPIVCP, MIPIV, CPF,
      $                      JFAULT, ICTXTALL, INFO)
 *
 *  -- ScaLAPACK routine (version 1.7) --
@@ -11,11 +11,12 @@
 *     May 25, 2001
 *
 *     .. Scalar Arguments ..
-      INTEGER            IA, INFO, JA, M, N, IACP, JACP, JFAULT, CPF
+      INTEGER            IA, INFO, JA, M, N, IACP, JACP, JFAULT, CPF,
+     $                   MIPIV
 *     ..
 *     .. Array Arguments ..
-      INTEGER            DESCA( * ), DESCACP( * ), IPIV( * )
-      DOUBLE PRECISION   A( * ), ACP( * )
+      INTEGER          DESCA( * ), DESCACP( * ), IPIV( * ), IPIVCP( * )
+      DOUBLE PRECISION A( * ), ACP( * )
 *     ..
 *
 *  Purpose
@@ -151,7 +152,7 @@
       INTEGER            I, ICOFF, ICTXT, IINFO, IN, IROFF, J, JB, JN,
      $                   MN, MYCOL, MYROW, NPCOL, NPROW,
      $                   ICTXTALL, NPROCS, MYPNUM, JCP, FAULTOCCURRED,
-     $                   LASTCP
+     $                   LASTCP, IERR
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -171,6 +172,8 @@
 *     ..
 *     .. my Executable Statements ..
 *
+      INCLUDE "mpif.h"
+      CALL MPI_COMM_RANK (MPI_COMM_WORLD, MYPNUM, IERR)
       CALL BLACS_PINFO( MYPNUM, NPROCS )
 *
 *     init counter for checkpointing
@@ -188,12 +191,14 @@
   102     IF (J.LE.JA+MN-1) THEN
              JB = MIN( MN-J+JA, DESCA( NB_ ) )
              I = IA + J - JA
-             IF (JCP.EQ.0) THEN
+             IF ((FAULTOCCURRED.EQ.0).AND.(JCP.EQ.0)) THEN
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                 PRINT*
                 PRINT*, FAULTOCCURRED, "checkpoint", J
                 CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
+                 CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
+     $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
 *               save checkpoint instant
                 LASTCP=J
 *               reset counter for checkpointing
@@ -207,14 +212,16 @@
              END IF
 *
              IF (FAULTOCCURRED.EQ.0) THEN
-               IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*, "fault!"
+               IF( (J.LE.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
+                 PRINT*, "fault!",J,"LE",JFAULT,"LT",J+DESCA(NB_)
                  FAULTOCCURRED=1
                  PRINT*, "recovering.."
                  CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
+                 CALL MPI_SCATTER(IPIVCP, MIPIV, MPI_INTEGER, IPIV,
+     $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
                  J=LASTCP
-                 JCP=CPF
+*                 JCP=CPF
                  CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                  PRINT*, "..recovered"
                END IF
@@ -359,12 +366,14 @@
             END IF
          END IF
 *
-             IF (JCP.EQ.0) THEN
+             IF ((FAULTOCCURRED.EQ.0).AND.(JCP.EQ.0)) THEN
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                 PRINT*
                 PRINT*, FAULTOCCURRED, "checkpoint", J
                 CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
+                CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
+     $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
 *               save checkpoint instant
                 LASTCP=J
 *               reset counter for checkpointing
@@ -378,14 +387,16 @@
              END IF
 *
              IF (FAULTOCCURRED.EQ.0) THEN
-               IF( (J.LT.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*, "fault!"
+               IF( (J.LE.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
+                 PRINT*, "fault!",J,"LE",JFAULT,"LT",J+DESCA(NB_)
                  FAULTOCCURRED=1
                  PRINT*, "recovering.."
                  CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
+                 CALL MPI_SCATTER(IPIVCP, MIPIV, MPI_INTEGER, IPIV,
+     $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
                  J=LASTCP
-                 JCP=CPF
+*                 JCP=CPF
                  CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                  PRINT*, "..recovered"
                END IF

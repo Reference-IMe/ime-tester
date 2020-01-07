@@ -84,9 +84,12 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
 	lldA = MAX( 1 , nr );
-	MPI_Allreduce( MPI_IN_PLACE, &lldA, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 	nIPIV = (lldA+nb);
+	nrIPIV = numroc_( &nIPIV, &one, &myrow, &zero, &nprow );
+	ncIPIV = numroc_( &cprocs, &one, &mycol, &zero, &npcol );
+	printf("%d:%dx%d\n",nIPIV,nrIPIV,ncIPIV);
+	lldIPIV = MAX( 1 , nrIPIV );
 
 	lldA_source = n;
 
@@ -116,8 +119,8 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
 		OneMatrix1D(A_cp, n, n);
 
-		//IPIV_cp=malloc(nIPIV*cprocs*sizeof(int)); // with cprocs is not good because MPI_GATHER wants a buffer for everyone
-		IPIV_cp=malloc(nIPIV*nprocs*sizeof(int));
+		IPIV_cp=malloc(nIPIV*cprocs*sizeof(int));
+		descinit_( descIPIV_cp, &nIPIV, &cprocs, &one, &one, &zero, &zero, &context_cp, &nIPIV, &info );
 	}
 	else
 	{
@@ -130,8 +133,13 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 			descIPIV_cp[i]=0;
 		}
 		descA_cp[1]=-1;
-		descA_cp[4]=nb; // *** important!
-		descA_cp[5]=nb; // ***
+		//descA_cp[4]=nb;
+		//descA_cp[5]=nb;
+
+		descIPIV_cp[1]=1;
+		descIPIV_cp[1]=-1;
+		//descIPIV_cp[4]=nb;
+		//descIPIV_cp[5]=nb;
 	}
 
 	if (mpi_rank < cprocs) // non-spare nodes
@@ -144,12 +152,12 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		// Descriptors (local)
 		// all processes have to know descA (not only non-spare nodes)
 		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lldA, &info );
+		descinit_( descIPIV, &nIPIV, &cprocs, &one, &one, &zero, &zero, &context_distributed, &lldIPIV, &info );
 	}
 	else
 	{
 		A=NULL;
-		//IPIV=NULL;
-		IPIV = malloc(nIPIV*sizeof(int)); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
+		IPIV=NULL;
 		for (i=0; i<9; i++)
 		{
 			descA[i]=0;
@@ -158,20 +166,25 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		// all processes have to know something about descA (not only non-spare nodes)
 		// can't use descinint, due to illegal values of spare process not belonging to the right context
 		descA[1]=-1;
-		descA[4]=nb;
-		descA[5]=nb;
+		//descA[4]=nb;
+		//descA[5]=nb;
 
+		descIPIV[1]=1;
 		descIPIV[1]=-1;
+		//descIPIV[4]=1;
+		//descIPIV[5]=1;
 	}
 
 
 		// spread matrices
-		pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
+		//pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
 		//if (mpi_rank < cprocs) pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_distributed);
+
+		pigemr2d_(&nIPIV, &cprocs, IPIV_cp, &one, &one, descIPIV_cp, IPIV, &one, &one, descIPIV, &context_all);
 
 		failing_level=n-failing_level;
 		// LU factorization
-		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, IPIV, IPIV_cp, &nIPIV, &cpfreq, &failing_level, &context_all, &info );
+		//pdgetrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, IPIV, &cpfreq, &failing_level, &context_all, &info );
 
 		// check factorization
 		/*
@@ -179,7 +192,7 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 		*/
 
-		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
+		//pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
 		//if (mpi_rank < cprocs) pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_distributed);
 
 	if (mpi_rank < cprocs)
@@ -194,7 +207,6 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	{
 		free(A_cp);
 		free(IPIV_cp);
-		free(IPIV);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
