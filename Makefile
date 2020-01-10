@@ -1,6 +1,6 @@
-# machine	= marconi|zavai|cresco6
-# mpi		= intel|ch|open
 
+MACHINELIST = marconi|galileo|ubuntu|cresco6
+MPIFLAVOURS = intel|ch|open
 PROJECT_DIR = $(CURDIR)
 BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src/testers
@@ -18,13 +18,14 @@ EXE = $(SEQ_EXE) $(PAR_EXE)
 
 
 ifeq ($(mpi),)
-  $(error Unspecified mpi flavour, please specify 'mpi = intel|ch|open')
+  $(error Unspecified mpi flavour, please specify 'mpi = $(MPIFLAVOURS)')
 endif
 ifeq ($(machine),)
-  $(error Unspecified machine, please specify 'machine = marconi|zavai|cresco6')
+  $(error Unspecified machine, please specify 'machine = $(MACHINELIST)')
 endif
 
-ifeq ($(machine),marconi) # if marconi
+#ifeq ($(machine),marconi) # if marconi
+ifeq ($(machine),$(filter $(machine),marconi galileo))
   ifeq ($(mpi),intel)
     # marconi intelmpi
     MPICC = mpiicc
@@ -42,14 +43,14 @@ ifeq ($(machine),marconi) # if marconi
         MPICC = mpicc
         MACHINEFLAGS= -L${SCALAPACK_LIB} -lscalapack -L${LAPACK_LIB} -llapack -L${BLAS_LIB} -lblas -lifcore -lm
       else
-        $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = intel|ch|open')
+        $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = $(MPIFLAVOURS)')
       endif
     endif
   endif # end marconi
 else
-  ifeq ($(machine),zavai) # if zavai
+  ifeq ($(machine),ubuntu) # if ubuntu
     MACHINEFLAGS=
-  else # end zavai
+  else # end ubuntu
     ifeq ($(machine),cresco6) # if cresco6
       ifeq ($(mpi),intel) # cresco6 intelmpi
         # cresco6 intelmpi
@@ -68,14 +69,14 @@ else
             MPICC = mpicc
             MACHINEFLAGS=
           else # end cresco6 openmpi
-            $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = intel|ch|open')
+            $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = $(MPIFLAVOURS)')
           endif # end cresco6 openmpi (and all)
         endif # end cresco6 mpich (and all)
       endif # end cresco6 intelmpi (and all)
     else # end cresco 6
-      $(error Unknown machine '$(machine)', please specify 'machine = marconi|zavai|cresco6')
+      $(error Unknown machine '$(machine)', please specify 'machine = $(MACHINELIST)')
     endif # end cresco6 (and all)
-  endif # end zavai
+  endif # end ubuntu
 endif # end marconi (and all)
 
 all: $(BIN_DIR) $(SRC_DIR)/FTLA/libftla.a $(EXE) # $(SRC_DIR)/FTLA/pdmatgen.o 
@@ -96,8 +97,8 @@ $(BIN_DIR):
 $(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c $(SRC_DIR)/test_IMe_DGESV.h $(SRC_DIR)/test_GaussianElimination_GE.h $(SRC_DIR)/test_LAPACK_DGESV.h
 	$(CC) $(CFLAGS) $(SRC_DIR)/compare_DGESV.c -o $(BIN_DIR)/compare_DGESV $(MACHINEFLAGS_ser)
 
-$(BIN_DIR)/compare_all_versions: $(SRC_DIR)/compare_all_versions.c $(SRC_DIR)/../*.h $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgetf2_cp.o $(SRC_DIR)/ScaLAPACK.mod/*.h $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA.mod/*.h $(SRC_DIR)/FTLA/libftla.a
-	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_all_versions $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgetf2_cp.o -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
+$(BIN_DIR)/compare_all_versions: $(SRC_DIR)/compare_all_versions.c $(SRC_DIR)/../*.h $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK.mod/*.h $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA.mod/*.h $(SRC_DIR)/FTLA/libftla.a
+	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_all_versions $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
 	
 #$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/FTLA/helpersftla.a
 #	$(MPICC) $(CFLAGS)  -lifcore $< -o $@ $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(MACHINEFLAGS)

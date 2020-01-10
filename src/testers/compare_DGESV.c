@@ -10,25 +10,91 @@
 #include "test_IMe_DGESV.h"
 #include "test_LAPACK_DGESV.h"
 
+
 int main(int argc, char **argv)
 {
     int i,rep;
 
-    int n=atoi(argv[1]);
-    int rows=n;
-    int cols=n;
+    double versionrun[20][100];
+    const char* versionname[20];
+    double versiontot[20];
 
-    int ft=atoi(argv[2]);
+    int n;		// matrix size
+    int cnd;	// condition number
+    int seed;	// seed for random matrix generation
+    int file_name_len;
+    char* file_name;
+    int rows;
+    int cols;
 
-    int repetitions=atoi(argv[3]);
+    int repetitions;
+    int verbose;
 
-    int verbose=atoi(argv[4]);
+    /*
+     * default values
+     */
+    n=8;
+    cnd=1;
+    seed=1;
+    verbose=1;			// minimum verbosity
+    repetitions=1;
+    file_name_len=0;	// no output to file
+
+    /*
+     * read command line parameters
+     */
+	for( i = 1; i < argc; i++ )
+	{
+		if( strcmp( argv[i], "-n" ) == 0 ) {
+			n = atoi(argv[i+1]);
+			i++;
+		}
+		if( strcmp( argv[i], "-cnd" ) == 0 ) {
+			cnd = atoi(argv[i+1]);
+			i++;
+		}
+		if( strcmp( argv[i], "-seed" ) == 0 ) {
+			seed = atoi(argv[i+1]);
+			i++;
+		}
+		if( strcmp( argv[i], "-v" ) == 0 ) {
+			verbose = atoi(argv[i+1]);
+			i++;
+		}
+		if( strcmp( argv[i], "-r" ) == 0 ) {
+			repetitions = atoi(argv[i+1]);
+			i++;
+		}
+		if( strcmp( argv[i], "-o" ) == 0 ) {
+			file_name_len = strlen(argv[i+1]);
+			file_name = malloc(file_name_len+1);
+			strcpy(file_name, argv[i+1]);
+			i++;
+		}
+	}
+
+	rows=n;
+    cols=n;
+
+    if (verbose>0)
+    {
+		printf("     Matrix size:                   %dx%d\n",rows,cols);
+		printf("     Matrix condition number:       %d\n",cnd);
+		printf("     Matrix random generation seed: %d\n",seed);
+
+		printf("     Run repetitions:               %d\n",repetitions);
+
+		if (file_name_len>0)
+		{
+			printf("     Output file:                   %s\n",file_name);
+		}
+		else
+		{
+			printf("WRN: No output to file\n");
+		}
+    }
 
     int nRHS=10;
-
-    double versionrun[10][100];
-    double versiontot[10];
-    const char* versionname[10];
 	versionname[0]="LPK   1 ";
 	versionname[1]="LPK   10";
 	versionname[2]="GE    1 ";
@@ -42,23 +108,10 @@ int main(int argc, char **argv)
 		versiontot[i] = 0;
 	}
 
-	if (verbose>0)
-	{
-		printf("\nMatrix size: %dx%d",n,n);
-		printf("\nCheckpoint : ");
-		if(ft==0)
-		{
-			printf("no\n");
-		}
-		else
-		{
-			printf("yes\n");
-		}
-	}
 
     for (rep=0; rep<repetitions; rep++)
     {
-    	if (verbose>0) {printf("\n\n Run #%d",rep+1);}
+    	if (verbose>0) {printf("\n Run #%d",rep+1);}
 
     	//////////////////////////////////////////////////////////////////////////////////
 
@@ -76,20 +129,22 @@ int main(int argc, char **argv)
 			versiontot[i] += versionrun[i][rep];
 			if (verbose>0)
 			{
-				printf("\n%s    call    run time: %f clk", versionname[i], versionrun[i][rep]);
+				printf("\n%s    call    run time: %10.0f clk", versionname[i], versionrun[i][rep]);
 			}
 		}
     }
+
 	printf("\n\n Summary:");
 	for (i=0; i<versions; i++)
 	{
-		printf("\n%s    Total   run time: %f clk\t\t%f s", versionname[i], versiontot[i], versiontot[i] / CLOCKS_PER_SEC);
+		printf("\n%s    Total   run time: %10.0f clk", versionname[i], versiontot[i]); // in sec. versiontot[i] / CLOCKS_PER_SEC
 	}
 	printf("\n");
 	for (i=0; i<versions; i++)
-		{
-			printf("\n%s    Average run time: %f clk\t\t%f s", versionname[i], versiontot[i]/repetitions, versiontot[i]/repetitions / CLOCKS_PER_SEC);
-		}
+	{
+		printf("\n%s    Average run time: %10.0f clk", versionname[i], (versiontot[i]/repetitions));
+	}
 	printf("\n");
+
     return(0);
 }
