@@ -179,9 +179,9 @@
       CHARACTER          COLBTOP, ROWBTOP
       INTEGER            I, IACOL, IAROW, ICOFF, ICTXT, IINFO, IPW, J,
      $                   JB, JN, K, LWMIN, MP0, MYCOL, MYROW, NPCOL,
-     $                   NPROW, NQ0
+     $                   NPROW, NQ0,
      $                   NPROCS, MYPNUM, JCP, FAULTOCCURRED,
-     $                   LASTCP, IERR
+     $                   LASTCP, IERR, CPAFTERFAULT
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -205,11 +205,14 @@
       CALL BLACS_PINFO( MYPNUM, NPROCS )
 *
 *     init counter for checkpointing
-      JCP = CPF
+      JCP = 0
       FAULTOCCURRED=0
+*      continue (-1) checkpointing after first fault or not (1)
+*      CPAFTERFAULT=1
+      CPAFTERFAULT=-1
 *
       IF (MYPNUM.EQ.(NPROCS-1)) THEN
-        PRINT*, "spare procs, doing"
+*        PRINT*, "spare procs, doing"
         K = MIN( M, N )
         JN = MIN( ICEIL( JA, DESCA( NB_ ) ) * DESCA( NB_ ), JA+K-1 )
         JB = JN - JA + 1
@@ -218,10 +221,9 @@
   102     IF (J.LE.JA+K-1) THEN
              JB = MIN( K-J+JA, DESCA( NB_ ) )
              I = IA + J - JA
-             IF ((FAULTOCCURRED.EQ.0).AND.(JCP.EQ.0)) THEN
+             IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                PRINT*
-                PRINT*, FAULTOCCURRED, "checkpoint", J
+           PRINT*, J,"iter, with",FAULTOCCURRED,"faults: checkpoint"
                 CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
                 CALL MPI_GATHER(TAU, LTAU, MPI_DOUBLE_PRECISION,
@@ -236,15 +238,14 @@
                 JCP=CPF
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
              ELSE
-                PRINT*
-                PRINT*, FAULTOCCURRED, " NO checkpoint", J
+                PRINT*, J,"iter, with",FAULTOCCURRED,"faults"
 *                decrease counter for checkpointing
                 JCP=JCP-1
              END IF
 *
              IF (FAULTOCCURRED.EQ.0) THEN
                IF( (J.LE.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*, "fault!",J,"LE",JFAULT,"LT",J+DESCA(NB_)
+                 PRINT*,J,"iter, fault! at",JFAULT,"<",J+DESCA(NB_)
                  FAULTOCCURRED=1
                  PRINT*, "recovering.."
                  CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
@@ -382,10 +383,9 @@
      $                     A, I, J+JB, DESCA, WORK( IPW ) )
          END IF
 *
-             IF ((FAULTOCCURRED.EQ.0).AND.(JCP.EQ.0)) THEN
+             IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                PRINT*
-                PRINT*, FAULTOCCURRED, "checkpoint", J
+*                PRINT*, FAULTOCCURRED, "checkpoint", J
                 CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
                 CALL MPI_GATHER(TAU, LTAU, MPI_DOUBLE_PRECISION,
@@ -400,17 +400,16 @@
                 JCP=CPF
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
              ELSE
-                PRINT*
-                PRINT*, FAULTOCCURRED, " NO checkpoint", J
+*                PRINT*, FAULTOCCURRED, " NO checkpoint", J
 *                decrease counter for checkpointing
                 JCP=JCP-1
              END IF
 *
              IF (FAULTOCCURRED.EQ.0) THEN
                IF( (J.LE.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*, "fault!",J,"LE",JFAULT,"LT",J+DESCA(NB_)
+*                 PRINT*, "fault!",J,"LE",JFAULT,"LT",J+DESCA(NB_)
                  FAULTOCCURRED=1
-                 PRINT*, "recovering.."
+*                 PRINT*, "recovering.."
                  CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
                  CALL MPI_SCATTER(TAUCP, LTAU, MPI_DOUBLE_PRECISION,
@@ -422,7 +421,7 @@
                  J=LASTCP
 *                 JCP=CPF
                  CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                 PRINT*, "..recovered"
+*                 PRINT*, "..recovered"
                END IF
              END IF
 *

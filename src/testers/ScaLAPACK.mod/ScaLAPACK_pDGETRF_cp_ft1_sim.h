@@ -58,25 +58,24 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	Cblacs_get( ic, zero, &context_distributed );
 	Cblacs_gridinit( &context_distributed, &order, nprow, npcol );
 	Cblacs_gridinfo( context_distributed, &nprow, &npcol, &myrow, &mycol );
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("context_distributed: %d in %dx%d id %d,%d\n",mpi_rank,nprow,npcol,myrow,mycol);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("context_distributed: %d in %dx%d id %d,%d\n",mpi_rank,nprow,npcol,myrow,mycol);
 
 	// context for source global matrix A (A_source)
 	Cblacs_get( ic, zero, &context_source );
 	Cblacs_gridinit( &context_source, &order, one, one );
 	Cblacs_gridinfo( context_source, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("context_source: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("context_source: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// context for checkpointing global matrix (A_cp)
 	Cblacs_get( ic, zero, &context_cp );
-	//Cblacs_gridinit( &context_cp_only, &order, one, one );
 	int map_cp[1][1];
 	map_cp[0][0]=cprocs;
 	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
 	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// Computation of local matrix size
 	nb = SCALAPACKNB;

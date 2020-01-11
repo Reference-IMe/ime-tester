@@ -59,25 +59,24 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	Cblacs_get( ic, zero, &context_distributed );
 	Cblacs_gridinit( &context_distributed, &order, nprow, npcol );
 	Cblacs_gridinfo( context_distributed, &nprow, &npcol, &myrow, &mycol );
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("context_distributed: %d in %dx%d id %d,%d\n",mpi_rank,nprow,npcol,myrow,mycol);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("context_distributed: %d in %dx%d id %d,%d\n",mpi_rank,nprow,npcol,myrow,mycol);
 
 	// context for source global matrix A (A_source)
 	Cblacs_get( ic, zero, &context_source );
 	Cblacs_gridinit( &context_source, &order, one, one );
 	Cblacs_gridinfo( context_source, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("context_source: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("context_source: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// context for checkpointing global matrix (A_cp)
 	Cblacs_get( ic, zero, &context_cp );
-	//Cblacs_gridinit( &context_cp_only, &order, one, one );
 	int map_cp[1][1];
 	map_cp[0][0]=cprocs;
 	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
 	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	MPI_Barrier(MPI_COMM_WORLD);
-	printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// Computation of local matrix size
 	nb = SCALAPACKNB;
@@ -146,7 +145,7 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
 		OneMatrix1D(A_cp, n, n);
 
-		work_cp=malloc(lwork*nprocs*sizeof(double)); // with cprocs is not good because MPI_GATHER wants a buffer for everyone
+		work_cp=malloc(lwork*nprocs*sizeof(double)); // with cprocs instead of nprocs is not good because MPI_GATHER wants a buffer for everyone!
 		tau_cp=malloc(ltau*nprocs*sizeof(double));
 	}
 	else
@@ -168,7 +167,7 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
 
 	failing_level=n-failing_level;
-	// QR factorization pdgeqrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, double *tau, double *taucp, int *ltau, double *work, double *workcp, int *lwork, int *cpfreq, int *jfault, int* ictxt, int *info );
+	// QR factorization
 	pdgeqrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &cpfreq, &failing_level, &context_all, &info );
 
 	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);

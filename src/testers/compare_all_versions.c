@@ -10,6 +10,8 @@
 #include "test_IMe_pviDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
+#include "test_IMe_pviDGEF.h"
+#include "test_IMe_pviDGEF_ft1.h"
 #include "test_ScaLAPACK_pDGESV.h"
 #include "test_ScaLAPACK_pDGETRF.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
@@ -168,7 +170,7 @@ int main(int argc, char **argv)
 	versionname[10]= "SPK-SV-ft1    1 ";
 	versionname[11]= "SPK-SV-ft1    10";
 
-	versionname[12]= "IMe-XK-         ";
+	versionname[12]= "IMe-XK          ";
 	versionname[13]= "IMe-XK-ft1/0    ";
 	versionname[14]= "IMe-XK-ft1/1    ";
 
@@ -232,10 +234,9 @@ int main(int argc, char **argv)
     		versionrun[10][rep]=-1; // don't run SPKmod single FT solve with 1 rhs
     		versionrun[11][rep]=-1; // don't run SPKmod single FT solve with 10 rhs
     	}
-
-     	versionrun[12][rep]=-99; // not yet IMe factorization only
-    	versionrun[13][rep]=-99; // not yet IMe factorization only and 0 faults
-    	versionrun[14][rep]=-99; // not yet IMe factorization only and 1 fault
+     	versionrun[12][rep]=test_IMe_pviDGEF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs); // IMe factorization only
+    	versionrun[13][rep]=test_IMe_pviDGEF_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, -1, -1); // IMe factorization only and 0 faults
+    	versionrun[14][rep]=test_IMe_pviDGEF_ft1_sim(versionname[14], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level); // IMe factorization only and 1 fault
 
     	versionrun[15][rep]=test_ScaLAPACK_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
 
