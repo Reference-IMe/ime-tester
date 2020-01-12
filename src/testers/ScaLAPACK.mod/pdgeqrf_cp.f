@@ -204,15 +204,22 @@
       CALL MPI_COMM_RANK (MPI_COMM_WORLD, MYPNUM, IERR)
       CALL BLACS_PINFO( MYPNUM, NPROCS )
 *
-*     init counter for checkpointing
-      JCP = 0
+*     init counters for checkpointing
+      IF (CPF.LT.0) THEN
+*       checkpointing disabled
+        JCP=-1
+      ELSE
+*       checkpointing enabled
+        JCP = 0
+      END IF
+*
       FAULTOCCURRED=0
 *      continue (-1) checkpointing after first fault or not (1)
 *      CPAFTERFAULT=1
       CPAFTERFAULT=-1
 *
       IF (MYPNUM.EQ.(NPROCS-1)) THEN
-*        PRINT*, "spare procs, doing"
+*       PRINT*, "spare procs, doing"
         K = MIN( M, N )
         JN = MIN( ICEIL( JA, DESCA( NB_ ) ) * DESCA( NB_ ), JA+K-1 )
         JB = JN - JA + 1
@@ -222,14 +229,16 @@
              JB = MIN( K-J+JA, DESCA( NB_ ) )
              I = IA + J - JA
              IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-           PRINT*, J,"iter, with",FAULTOCCURRED,"faults: checkpoint"
-                CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
+               CALL BLACS_BARRIER ( ICTXTALL, 'A' )
+*              do checkpointing
+               PRINT*, "## pgeqrf_cp:",
+     $                J,"iter, with",FAULTOCCURRED,"faults: checkpoint"
+               CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
-                CALL MPI_GATHER(TAU, LTAU, MPI_DOUBLE_PRECISION,
+               CALL MPI_GATHER(TAU, LTAU, MPI_DOUBLE_PRECISION,
      $                           TAUCP, LTAU, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-                CALL MPI_GATHER(WORK, LWORK, MPI_DOUBLE_PRECISION,
+               CALL MPI_GATHER(WORK, LWORK, MPI_DOUBLE_PRECISION,
      $                           WORKCP, LWORK, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
 *               save checkpoint instant
@@ -238,28 +247,36 @@
                 JCP=CPF
                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
              ELSE
-                PRINT*, J,"iter, with",FAULTOCCURRED,"faults"
-*                decrease counter for checkpointing
-                JCP=JCP-1
+*              skip checkpointing
+*               PRINT*, J,"iter, with",FAULTOCCURRED,"faults"
+*              decrease counter for checkpointing
+               JCP=JCP-1
              END IF
 *
              IF (FAULTOCCURRED.EQ.0) THEN
                IF( (J.LE.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-                 PRINT*,J,"iter, fault! at",JFAULT,"<",J+DESCA(NB_)
+*                fault!
+                 PRINT*, "## pgeqrf_cp:",
+     $                  J,"iter, fault! at",JFAULT,"<",J+DESCA(NB_)
                  FAULTOCCURRED=1
-                 PRINT*, "recovering.."
-                 CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
+                 IF (JCP.LT.0) THEN
+*                  can't recover, exit
+                   J=JA+K
+                   PRINT*, "## pgeqrf_cp: ..unrecoverable! exiting.."
+                 ELSE
+                   PRINT*, "## pgeqrf_cp: recovering.."
+                   CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
-                 CALL MPI_SCATTER(TAUCP, LTAU, MPI_DOUBLE_PRECISION,
+                   CALL MPI_SCATTER(TAUCP, LTAU, MPI_DOUBLE_PRECISION,
      $                           TAU, LTAU, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-                 CALL MPI_SCATTER(WORKCP, LWORK, MPI_DOUBLE_PRECISION,
+                   CALL MPI_SCATTER(WORKCP, LWORK, MPI_DOUBLE_PRECISION,
      $                           WORK, LWORK, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-                 J=LASTCP
-*                 JCP=CPF
-                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                 PRINT*, "..recovered"
+                   J=LASTCP
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
+                   PRINT*, "## pgeqrf_cp: ..recovered"
+                 END IF
                END IF
              END IF
 *
@@ -384,44 +401,49 @@
          END IF
 *
              IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-*                PRINT*, FAULTOCCURRED, "checkpoint", J
-                CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
+               CALL BLACS_BARRIER ( ICTXTALL, 'A' )
+*              do checkpointing
+               CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
-                CALL MPI_GATHER(TAU, LTAU, MPI_DOUBLE_PRECISION,
+               CALL MPI_GATHER(TAU, LTAU, MPI_DOUBLE_PRECISION,
      $                           TAUCP, LTAU, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-                CALL MPI_GATHER(WORK, LWORK, MPI_DOUBLE_PRECISION,
+               CALL MPI_GATHER(WORK, LWORK, MPI_DOUBLE_PRECISION,
      $                           WORKCP, LWORK, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-*               save checkpoint instant
-                LASTCP=J
-*               reset counter for checkpointing
-                JCP=CPF
-                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
+*              save checkpoint instant
+               LASTCP=J
+*              reset counter for checkpointing
+               JCP=CPF
+               CALL BLACS_BARRIER ( ICTXTALL, 'A' )
              ELSE
-*                PRINT*, FAULTOCCURRED, " NO checkpoint", J
-*                decrease counter for checkpointing
-                JCP=JCP-1
+*              skip checkpointing
+*              decrease counter for checkpointing
+               JCP=JCP-1
              END IF
 *
              IF (FAULTOCCURRED.EQ.0) THEN
                IF( (J.LE.JFAULT).AND.(JFAULT.LT.(J+DESCA(NB_))) ) THEN
-*                 PRINT*, "fault!",J,"LE",JFAULT,"LT",J+DESCA(NB_)
+*                fault!
                  FAULTOCCURRED=1
-*                 PRINT*, "recovering.."
-                 CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
+                 IF (JCP.LT.0) THEN
+*                  can't recover, exit
+                   J=JA+MN
+*                   PRINT*, "..unrecoverable! exiting.."
+                 ELSE
+*                   PRINT*, "recovering.."
+                   CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
-                 CALL MPI_SCATTER(TAUCP, LTAU, MPI_DOUBLE_PRECISION,
+                   CALL MPI_SCATTER(TAUCP, LTAU, MPI_DOUBLE_PRECISION,
      $                           TAU, LTAU, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-                 CALL MPI_SCATTER(WORKCP, LWORK, MPI_DOUBLE_PRECISION,
+                   CALL MPI_SCATTER(WORKCP, LWORK, MPI_DOUBLE_PRECISION,
      $                           WORK, LWORK, MPI_DOUBLE_PRECISION,
      $                           NPROCS-1, MPI_COMM_WORLD, IERR)
-                 J=LASTCP
-*                 JCP=CPF
-                 CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-*                 PRINT*, "..recovered"
+                   J=LASTCP
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
+*                   PRINT*, "..recovered"
+                 END IF
                END IF
              END IF
 *

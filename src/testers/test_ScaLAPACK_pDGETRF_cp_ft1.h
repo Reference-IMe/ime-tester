@@ -10,7 +10,7 @@
 #include "ScaLAPACK.mod/ScaLAPACK_pDGETRF_cp_ft1_sim.h"
 
 //double test_Scalapack_pDGETRF_ckp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
-double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs, int failing_rank, int failing_level, int checkpoint_freq)
 {
 	clock_t start, stop;
 	double span, maxspan;
@@ -36,7 +36,7 @@ double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int r
 	//MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	ScaLAPACK_pDGETRF_cp_ft1_sim(rows, A, rank, cprocs, sprocs, failing_rank, failing_level);
+	ScaLAPACK_pDGETRF_cp_ft1_sim(rows, A, rank, cprocs, sprocs, failing_rank, failing_level, checkpoint_freq);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

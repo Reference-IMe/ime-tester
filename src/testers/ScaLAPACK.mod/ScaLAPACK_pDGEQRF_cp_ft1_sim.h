@@ -14,7 +14,7 @@
 
 // TODO: checkpointing
 
-void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level, int checkpoint_freq)
 {
 	/*
 	 * n = system rank (A_global n x n)
@@ -24,7 +24,7 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	int i, j;				//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
-	int cpfreq = 2; 		// checkpointing frequency
+	//int cpfreq = 2; 		// checkpointing frequency
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
@@ -166,9 +166,13 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	// spread matrices
 	pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
 
-	failing_level=n-failing_level;
+	if (failing_level>=0)
+	{
+		failing_level=n-failing_level;
+	}
+
 	// QR factorization
-	pdgeqrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &cpfreq, &failing_level, &context_all, &info );
+	pdgeqrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &context_all, &info );
 
 	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
 

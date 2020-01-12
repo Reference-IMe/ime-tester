@@ -9,7 +9,7 @@
 #include "../helpers/matrix.h"
 #include "ScaLAPACK.mod/ScaLAPACK_pDGEQRF_cp_ft1_sim.h"
 
-double test_ScaLAPACK_pDGEQRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+double test_ScaLAPACK_pDGEQRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs, int failing_rank, int failing_level, int checkpoint_freq)
 {
 	clock_t start, stop;
 	double span, maxspan;
@@ -35,7 +35,7 @@ double test_ScaLAPACK_pDGEQRF_cp_ft1_sim(const char* label, int verbosity, int r
 	//MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	ScaLAPACK_pDGEQRF_cp_ft1_sim(rows, A, rank, cprocs, sprocs, failing_rank, failing_level);
+	ScaLAPACK_pDGEQRF_cp_ft1_sim(rows, A, rank, cprocs, sprocs, failing_rank, failing_level, checkpoint_freq);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

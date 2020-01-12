@@ -53,6 +53,11 @@ int main(int argc, char **argv)
     int verbose;
     int failing_rank;
     int failing_level;
+    int checkpoint_skip_interval;
+
+    int scalapack_iter;
+
+	FILE* fp;
 
     /*
      * default values
@@ -66,7 +71,7 @@ int main(int argc, char **argv)
     file_name_len=0;	// no output to file
     failing_rank=2;		// process 2 will fail
     failing_level=2;
-
+    checkpoint_skip_interval=-1; // -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
     cleanup_interval=3;
     /*
      * read command line parameters
@@ -111,24 +116,51 @@ int main(int argc, char **argv)
 			failing_level = atoi(argv[i+1]);
 			i++;
 		}
+		if( strcmp( argv[i], "-cp" ) == 0 ) {
+			checkpoint_skip_interval = atoi(argv[i+1]);
+			i++;
+		}
 	}
 
 	rows=n;
     cols=n;
     cprocs=totprocs-sprocs;		// number of processes for real IMe calc
+    scalapack_iter=ceil(rows/SCALAPACKNB);
 
     if (main_rank==0 && verbose>0)
     {
+		//printf("     Matrix condition number:       %d\n",cnd);
+		//printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
-		printf("     Matrix condition number:       %d\n",cnd);
-		printf("     Matrix random generation seed: %d\n",seed);
+		printf("     IMe iterations:                %d\n",rows);
+		printf("     SPK-like iterations:           %d\n",scalapack_iter);
 
 		printf("     Fault tolerance:               ");
 		if (sprocs>0)
 		{
 			printf("enabled = %d\n",sprocs);
-			printf("     Failing rank:                  %d\n",failing_rank);
-			printf("     Failing level:                 %d\n",failing_level);
+			printf("     IMe failing rank:              %d\n",failing_rank);
+			printf("     IMe failing level:             %d\n",failing_level);
+			printf("     SPK-like failing level:        %d\n",n-failing_level);
+			printf("     SPK-like failing iteration:    %d\n",(int)ceil((n-failing_level)/SCALAPACKNB));
+			printf("     Checkpoint skip interval:      %d\n",checkpoint_skip_interval);
+
+			printf("     Checkpoint freq.:              ");
+			if (checkpoint_skip_interval<0)
+			{
+				printf("never\n");
+			}
+			else
+			{
+				if (checkpoint_skip_interval==0)
+				{
+					printf("always\n");
+				}
+				else
+				{
+					printf("every %d iterations\n",checkpoint_skip_interval+1);
+				}
+			}
 		}
 		else
 		{
@@ -196,6 +228,34 @@ int main(int argc, char **argv)
 		versiontot[i] = 0;
 	}
 
+#define fpinfo(string_label,integer_info) if (main_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info);}
+#define fpdata(track_num) if (main_rank==0) {fprintf(fp,"data,%s,%d,%.0f\n",versionname[track_num],rep+1,versionrun[ track_num][rep]);}
+
+	time_t rawtime;
+	struct tm *readtime;
+	time ( &rawtime );
+	readtime = localtime ( &rawtime );
+
+	if (file_name_len>0 && main_rank==0)
+	{
+		fp=fopen(file_name,"w");
+		fpinfo("year",readtime->tm_year+1900);
+		fpinfo("month",readtime->tm_mon+1);
+		fpinfo("day",readtime->tm_mday);
+		fpinfo("hour",readtime->tm_hour);
+		fpinfo("minute",readtime->tm_min);
+		fpinfo("second",readtime->tm_sec);
+		fpinfo("number of processes",totprocs);
+		fpinfo("fault tolerance",sprocs);
+		fpinfo("failing rank",failing_rank);
+		fpinfo("failing level",failing_level);
+		fpinfo("checkpoint skip interval",checkpoint_skip_interval);
+		fpinfo("matrix size",n);
+		fpinfo("repetitions",repetitions);
+
+		fprintf(fp,"head,code name,run num. (0=avg),run time\n");
+	}
+
 
     for (rep=0; rep<repetitions; rep++)
     {
@@ -204,72 +264,133 @@ int main(int argc, char **argv)
     	//////////////////////////////////////////////////////////////////////////////////
 
      	versionrun[ 0][rep]=test_IMe_pviDGESV(versionname[0], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// vanilla IMe solve with 1 rhs
-    	versionrun[ 1][rep]=test_IMe_pviDGESV(versionname[1], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// vanilla IMe solve with 10 rhs
-     	versionrun[ 2][rep]=test_IMe_pviDGESV_cs(versionname[2], verbose, rows, cols, 1, main_rank, cprocs, sprocs);	// checksumming IMe solve with 1 rhs
-    	versionrun[ 3][rep]=test_IMe_pviDGESV_cs(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// checksumming IMe solve with 10 rhs
-    	versionrun[ 4][rep]=test_IMe_pviDGESV_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, -1, -1);	// IMe single FT solve with 1 rhs and 0 faults
-    	versionrun[ 5][rep]=test_IMe_pviDGESV_ft1_sim(versionname[5], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, -1, -1);// IMe single FT solve with 10 rhs and 0 faults
+     	fpdata(0);
+
+     	versionrun[ 1][rep]=test_IMe_pviDGESV(versionname[1], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// vanilla IMe solve with 10 rhs
+ 		fpdata(1);
+
+ 		versionrun[ 2][rep]=test_IMe_pviDGESV_cs(versionname[2], verbose, rows, cols, 1, main_rank, cprocs, sprocs);	// checksumming IMe solve with 1 rhs
+ 		fpdata(2);
+
+ 		versionrun[ 3][rep]=test_IMe_pviDGESV_cs(versionname[3], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// checksumming IMe solve with 10 rhs
+ 		fpdata(3);
+
+ 		versionrun[ 4][rep]=test_IMe_pviDGESV_ft1_sim(versionname[4], verbose, rows, cols, 1, main_rank, cprocs, sprocs, -1, -1);	// IMe single FT solve with 1 rhs and 0 faults
+ 		fpdata(4);
+
+ 		versionrun[ 5][rep]=test_IMe_pviDGESV_ft1_sim(versionname[5], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, -1, -1);// IMe single FT solve with 10 rhs and 0 faults
+ 		fpdata(5);
 
     	if (sprocs>0)
     	{
     		versionrun[ 6][rep]=test_IMe_pviDGESV_ft1_sim(versionname[6], verbose, rows, cols, 1, main_rank, cprocs, sprocs, failing_rank, failing_level);   // IMe single FT solve with 1 rhs
-    		versionrun[ 7][rep]=test_IMe_pviDGESV_ft1_sim(versionname[7], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// IMe single FT solve with 10 rhs
+     		fpdata(6);
+
+     		versionrun[ 7][rep]=test_IMe_pviDGESV_ft1_sim(versionname[7], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs, failing_rank, failing_level);// IMe single FT solve with 10 rhs
+     		fpdata(7);
     	}
     	else
     	{
     		versionrun[ 6][rep]=-1; // don't run IMe single FT solve with 1 rhs
+     		fpdata(6);
+
     		versionrun[ 7][rep]=-1; // don't run IMe single FT solve with 10 rhs
+     		fpdata(7);
     	}
 
     	versionrun[ 8][rep]=test_ScaLAPACK_pDGESV(versionname[8], verbose, rows, cols, 1, main_rank, cprocs, sprocs);		// SPK solve with 1 rhs
+ 		fpdata(8);
+
     	versionrun[ 9][rep]=test_ScaLAPACK_pDGESV(versionname[9], verbose, rows, cols, nRHS, main_rank, cprocs, sprocs);	// SPK solve with 10 rhs
+ 		fpdata(9);
 
     	if (sprocs>0)
     	{
     		versionrun[10][rep]=-99; // not yet SPKmod single FT solve with 1 rhs
+     		fpdata(10);
+
     		versionrun[11][rep]=-99; // not yet SPKmod single FT solve with 10 rhs
+     		fpdata(11);
     	}
     	else
     	{
     		versionrun[10][rep]=-1; // don't run SPKmod single FT solve with 1 rhs
+     		fpdata(10);
+
     		versionrun[11][rep]=-1; // don't run SPKmod single FT solve with 10 rhs
+     		fpdata(11);
     	}
      	versionrun[12][rep]=test_IMe_pviDGEF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs); // IMe factorization only
-    	versionrun[13][rep]=test_IMe_pviDGEF_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, -1, -1); // IMe factorization only and 0 faults
-    	versionrun[14][rep]=test_IMe_pviDGEF_ft1_sim(versionname[14], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level); // IMe factorization only and 1 fault
+ 		fpdata(12);
+
+ 		versionrun[13][rep]=test_IMe_pviDGEF_ft1_sim(versionname[13], verbose, rows, cols, main_rank, cprocs, sprocs, -1, -1); // IMe factorization only and 0 faults
+ 		fpdata(13);
+
+ 		versionrun[14][rep]=test_IMe_pviDGEF_ft1_sim(versionname[14], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level); // IMe factorization only and 1 fault
+ 		fpdata(14);
 
     	versionrun[15][rep]=test_ScaLAPACK_pDGETRF(versionname[15], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
+ 		fpdata(15);
 
 		if (sprocs>0)
     	{
-    		versionrun[16][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, -n);	// SPKmod LU factorization single FT and 0 faults
-    		versionrun[17][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[17], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod LU factorization single FT and 1 fault
-        	versionrun[18][rep]=test_FTLA_pDGETRF(versionname[18], verbose, rows, cols, main_rank, cprocs, 0);	// FTLA LU with 0 faults
-        	versionrun[19][rep]=test_FTLA_pDGETRF(versionname[19], verbose, rows, cols, main_rank, cprocs, 1);	// FTLA LU with 1 fault
+    		versionrun[16][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[16], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, -1, checkpoint_skip_interval);	// SPKmod LU factorization single FT and 0 faults
+     		fpdata(16);
+
+     		versionrun[17][rep]=test_ScaLAPACK_pDGETRF_cp_ft1_sim(versionname[17], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level, checkpoint_skip_interval);	// SPKmod LU factorization single FT and 1 fault
+     		fpdata(17);
+
+     		versionrun[18][rep]=test_FTLA_pDGETRF(versionname[18], verbose, rows, cols, main_rank, cprocs, 0);	// FTLA LU with 0 faults
+     		fpdata(18);
+
+     		versionrun[19][rep]=test_FTLA_pDGETRF(versionname[19], verbose, rows, cols, main_rank, cprocs, 1);	// FTLA LU with 1 fault
+     		fpdata(19);
     	}
     	else
     	{
     		versionrun[16][rep]=-1;	// don't run SPKmod LU factorization single FT and 0 faults
+    		fpdata(16);
+
     		versionrun[17][rep]=-1;	// don't run SPKmod LU factorization single FT and 1 fault
+    		fpdata(17);
+
     		versionrun[18][rep]=-1;	// don't run FTLA LU with 0 faults
-        	versionrun[19][rep]=-1;	// don't run FTLA LU with 1 fault
+    		fpdata(18);
+
+    		versionrun[19][rep]=-1;	// don't run FTLA LU with 1 fault
+        	fpdata(19);
     	}
 
     	versionrun[20][rep]=test_ScaLAPACK_pDGEQRF(versionname[20], verbose, rows, cols, main_rank, cprocs, sprocs); // SPK LU factorization
+    	fpdata(20);
 
     	if (sprocs>0)
     	{
-    		versionrun[21][rep]=test_ScaLAPACK_pDGEQRF_cp_ft1_sim(versionname[21], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, -n);	// SPKmod QR factorization single FT and 0 faults
-    		versionrun[22][rep]=test_ScaLAPACK_pDGEQRF_cp_ft1_sim(versionname[22], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level);	// SPKmod QR factorization single FT and 1 fault
+    		versionrun[21][rep]=test_ScaLAPACK_pDGEQRF_cp_ft1_sim(versionname[21], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, -1, checkpoint_skip_interval);	// SPKmod QR factorization single FT and 0 faults
+        	fpdata(21);
+
+        	versionrun[22][rep]=test_ScaLAPACK_pDGEQRF_cp_ft1_sim(versionname[22], verbose, rows, cols, main_rank, cprocs, sprocs, failing_rank, failing_level, checkpoint_skip_interval);	// SPKmod QR factorization single FT and 1 fault
+        	fpdata(22);
+
         	versionrun[23][rep]=test_FTLA_pDGEQRF(versionname[23], verbose, rows, cols, main_rank, cprocs, 0);	// FTLA QR with 0 faults
+        	fpdata(23);
+
         	versionrun[24][rep]=test_FTLA_pDGEQRF(versionname[24], verbose, rows, cols, main_rank, cprocs, 1);	// FTLA QR with 1 fault
+        	fpdata(24);
     	}
     	else
     	{
     		versionrun[21][rep]=-1;	// don't run SPKmod QR factorization single FT and 0 faults
+        	fpdata(21);
+
     		versionrun[22][rep]=-1;	// don't run SPKmod QR factorization single FT and 1 fault
-    		versionrun[23][rep]=-1;	// don't run FTLA QR with 0 faults
-    		versionrun[24][rep]=-1;	// don't run FTLA QR with 1 fault
+        	fpdata(22);
+
+        	versionrun[23][rep]=-1;	// don't run FTLA QR with 0 faults
+        	fpdata(23);
+
+        	versionrun[24][rep]=-1;	// don't run FTLA QR with 1 fault
+        	fpdata(24);
     	}
 
     	//////////////////////////////////////////////////////////////////////////////////
@@ -298,6 +419,11 @@ int main(int argc, char **argv)
 		for (i=0; i<versions; i++)
 		{
 			printf("\n%s    Average run time: %10.0f clk", versionname[i], (versiontot[i]/repetitions));
+
+			if (file_name_len>0)
+			{
+				fprintf(fp,"data,%s,%d,%.0f\n",versionname[i],0,(versiontot[i]/repetitions));
+			}
 		}
 		printf("\n");
 	}
@@ -307,6 +433,11 @@ int main(int argc, char **argv)
 	//sleep(3);
 	//MPI_Barrier(MPI_COMM_WORLD);
 	//printf("Done %d.\n",main_rank);
+
+	if (file_name_len>0 && main_rank==0)
+	{
+		fclose(fp);
+	}
 
 	MPI_Finalize();
     return(0);
