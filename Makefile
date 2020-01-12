@@ -13,7 +13,7 @@ CFLAGS = -Wall $(NO_WARN_UNUSED) $(DEBUG) -DINJECT
 FFLAGS = $(DEBUG)
 
 SEQ_EXE = $(BIN_DIR)/compare_DGESV
-PAR_EXE = $(BIN_DIR)/compare_all_versions # $(BIN_DIR)/compare_pDGESV $(BIN_DIR)/compare_pDGESV_versions
+PAR_EXE = $(BIN_DIR)/compare_all_versions $(BIN_DIR)/compare_checkpointing # $(BIN_DIR)/compare_pDGESV $(BIN_DIR)/compare_pDGESV_versions
 EXE = $(SEQ_EXE) $(PAR_EXE)
 
 
@@ -99,7 +99,10 @@ $(BIN_DIR)/compare_DGESV : $(SRC_DIR)/compare_DGESV.c $(SRC_DIR)/test_IMe_DGESV.
 
 $(BIN_DIR)/compare_all_versions: $(SRC_DIR)/compare_all_versions.c $(SRC_DIR)/../*.h $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK.mod/*.h $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA.mod/*.h $(SRC_DIR)/FTLA/libftla.a
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_all_versions $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
-	
+
+$(BIN_DIR)/compare_checkpointing: $(SRC_DIR)/compare_checkpointing.c $(SRC_DIR)/../*.h $(SRC_DIR)/*.h $(SRC_DIR)/ScaLAPACK.mod/*.h $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o $(SRC_DIR)/ScaLAPACK/*.h
+	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_checkpointing $(SRC_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(SRC_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o -L$(SRC_DIR)/ScaLAPACK $(MACHINEFLAGS)
+
 #$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/FTLA/helpersftla.a
 #	$(MPICC) $(CFLAGS)  -lifcore $< -o $@ $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(MACHINEFLAGS)
 
