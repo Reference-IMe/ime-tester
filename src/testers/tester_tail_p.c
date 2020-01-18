@@ -1,6 +1,13 @@
-		/*
-		 * common tail of the main bodies
-		 */
+/*
+ * tester_tail_p.c
+ *
+ *  Created on: Jan 17, 2020
+ *      Author: marcello
+ */
+
+/*
+ * ending part of code for verbatim inclusion to create a code tester for some parallel versions
+ */
 
     	//////////////////////////////////////////////////////////////////////////////////
 
@@ -15,7 +22,7 @@
 				}
 			}
 		}
-    } // close main loop
+    } // close main loop (see tester_shoulder_p.c)
 
 	if (main_rank==0)
 	{

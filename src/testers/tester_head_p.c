@@ -1,3 +1,10 @@
+/*
+ * tester_head_p.c
+ *
+ *  Created on: Jan 17, 2020
+ *      Author: marcello
+ */
+
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +18,9 @@
 #define MAX_VERSIONS 30
 #define MAX_RUNS 10
 
+/*
+ * header code for verbatim inclusion to create a code tester for some parallel versions
+ */
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
@@ -30,8 +40,8 @@ int main(int argc, char **argv)
     char* file_name;
     int rows;
     int cols;
-    //int cleanup_interval;
     int nb;		// (scalapack) blocking factor
+
     //TODO
     //int cnd;	// condition number
     //int seed;	// seed for random matrix generation
