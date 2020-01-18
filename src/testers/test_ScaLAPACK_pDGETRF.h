@@ -6,10 +6,11 @@
  */
 
 #include <mpi.h>
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 
-double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs)
 {
 	clock_t start, stop;
 	double span, maxspan;
@@ -36,7 +37,7 @@ double test_ScaLAPACK_pDGETRF(const char* label, int verbosity, int rows, int co
 	start=clock();
 
 	// Scalapack_pDGETRF(rows, A, nrhs, bb, rank, cprocs, sprocs); // for consistency checking
-	ScaLAPACK_pDGETRF_calc(rows, A, rank, cprocs, sprocs);
+	ScaLAPACK_pDGETRF_calc(rows, A, nb, rank, cprocs);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

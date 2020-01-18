@@ -6,10 +6,11 @@
  */
 
 #include <mpi.h>
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
 
-double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs)
 {
 	clock_t start, stop;
 	double span, maxspan;
@@ -30,7 +31,7 @@ double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int co
 	//MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	ScaLAPACK_pDGEQRF_calc(rows, A, rank, cprocs, sprocs);
+	ScaLAPACK_pDGEQRF_calc(rows, A, nb, rank, cprocs);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

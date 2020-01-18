@@ -13,23 +13,23 @@
 #include "../../helpers/scalapack.h"
 
 
-void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int mpi_rank, int cprocs, int sprocs)
+void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
 	/*
 	 * n = system rank (A_global n x n)
 	 */
 
 	// general
-	int i, j;						//iterators
+	int i;						//iterators
 	int zero = 0, one = 1;			//numbers
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
 	int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
 	int descA_global[9], descA[9];
-	char order = 'R', scope = 'A';
+	char order = 'R';
 	// MATRIX
-	int nb, nr, nc, lld, lld_global;
+	int nr, nc, lld, lld_global;
 	double* A;
 	double* work;
 	double* tau;
@@ -47,7 +47,7 @@ void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int mpi_rank, int cprocs, i
 	if (mpi_rank < cprocs)
 	{
 		// Computation of local matrix size
-		nb = SCALAPACKNB;
+		//nb = SCALAPACKNB;
 		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 		lld = MAX( 1 , nr );

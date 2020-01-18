@@ -1,3 +1,4 @@
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "LAPACK/LAPACK_DGESV.h"
 

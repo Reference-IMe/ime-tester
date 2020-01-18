@@ -18,7 +18,7 @@
  */
 void create_matrix( int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A)
 {
-	int i0=0, i1=1;
+	int i0=0;
     int info;
     int nprow, npcol, myrow, mycol;
     Cblacs_gridinfo( ctxt, &nprow, &npcol, &myrow, &mycol );

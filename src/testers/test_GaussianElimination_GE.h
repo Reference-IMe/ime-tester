@@ -1,3 +1,4 @@
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "GaussianElimination/GE.h"
 #include "GaussianElimination/BackSubst.h"
@@ -8,7 +9,7 @@ double test_GaussianElimination(const char* label, int verbosity, int rows, int 
 	double** A;
 	double** bb;
 	double** xx;
-	int i,j;
+
 	A=AllocateMatrix2D(rows,cols,CONTIGUOUS);
 	bb=AllocateMatrix2D(rows,nrhs,CONTIGUOUS);
 	xx=AllocateMatrix2D(rows,nrhs,CONTIGUOUS);

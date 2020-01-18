@@ -22,6 +22,9 @@ extern void pdgetrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, 
 extern void pdgetrs_( char *trans, int*n, int *nrhs, double *A, int *ia, int *ja, int *descA, int *ipiv, double *B, int *ib, int *jb, int *descB, int *info );
 extern void pdtran_( int *m, int *n, double *ALPHA, double *A, int *ia, int *ja, int *descA, double *BETA, double *B, int *ib, int *jb, int *descB);
 
+extern void pdgeqrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *tau, double *work, int *lwork, int *info );
+
+
 // ScaLAPACK modified
 extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *ipivcp, int *nipiv, int *cpfreq, int *jfault, int* ictxt, int *info );
 extern void pdgeqrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, double *tau, double *taucp, int* ltau, double *work, double *workcp, int *lwork, int *cpfreq, int *jfault, int* ictxt, int *info );

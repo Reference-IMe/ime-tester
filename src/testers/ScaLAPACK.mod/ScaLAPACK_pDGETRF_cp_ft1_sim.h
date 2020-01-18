@@ -14,14 +14,14 @@
 
 // TODO: checkpointing
 
-void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level, int checkpoint_freq)
+void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
 	/*
 	 * n = system rank (A_global n x n)
 	 */
 
 	// general
-	int i, j;				//iterators
+	int i;				//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
 	//int cpfreq = 2; 		// checkpointing frequency
@@ -32,12 +32,12 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	int context_distributed, context_source, context_cp, context_all;
 	int nprow, npcol, myrow, mycol;
 	int tmprow,tmpcol,tmpmyrow, tmpmycol;
-	int descA_source[9], descA[9], descA_cp[9], descIPIV[9], descIPIV_cp[9];
+	int descA_source[9], descA[9], descA_cp[9];
 	//int descB_global[9], descB[9];
-	char order = 'R', scope = 'A';
+	char order = 'R';
 	// MATRIX
-	int nb, nr, nc, ncrhs, lldA, lldA_source;
-	int nIPIV, nrIPIV, ncIPIV, lldIPIV;
+	int nr, nc, lldA;
+	int nIPIV;
 	double *A;
 	double *A_cp;
 	//double *B;
@@ -70,15 +70,17 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 
 	// context for checkpointing global matrix (A_cp)
 	Cblacs_get( ic, zero, &context_cp );
-	int map_cp[1][1];
-	map_cp[0][0]=cprocs;
+	//int map_cp[1][1];
+	int map_cp[1];
+	//map_cp[0][0]=cprocs;
+	map_cp[0]=cprocs;
 	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
 	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
 	//MPI_Barrier(MPI_COMM_WORLD);
 	//printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// Computation of local matrix size
-	nb = SCALAPACKNB;
+	//nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
@@ -86,8 +88,6 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	MPI_Allreduce( MPI_IN_PLACE, &lldA, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 	nIPIV = (lldA+nb);
-
-	lldA_source = n;
 
 	if (mpi_rank==0) // root node
 	{
@@ -126,7 +126,6 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		for (i=0; i<9; i++)
 		{
 			descA_cp[i]=0;
-			descIPIV_cp[i]=0;
 		}
 		descA_cp[1]=-1;
 		descA_cp[4]=nb; // *** important!
@@ -152,15 +151,12 @@ void ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 		for (i=0; i<9; i++)
 		{
 			descA[i]=0;
-			descIPIV[i]=0;
 		}
 		// all processes have to know something about descA (not only non-spare nodes)
 		// can't use descinint, due to illegal values of spare process not belonging to the right context
 		descA[1]=-1;
 		descA[4]=nb;
 		descA[5]=nb;
-
-		descIPIV[1]=-1;
 	}
 
 

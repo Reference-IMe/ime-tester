@@ -14,14 +14,14 @@
 
 // TODO: checkpointing
 
-void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level, int checkpoint_freq)
+void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
 	/*
 	 * n = system rank (A_global n x n)
 	 */
 
 	// general
-	int i, j;				//iterators
+	int i;				//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
 	//int cpfreq = 2; 		// checkpointing frequency
@@ -34,9 +34,9 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 	int tmprow,tmpcol,tmpmyrow, tmpmycol;
 	int descA_source[9], descA[9], descA_cp[9];
 
-	char order = 'R', scope = 'A';
+	char order = 'R';
 	// MATRIX
-	int nb, nr, nc, ncrhs, lldA, lldA_source;
+	int nr, nc, lldA;
 	double* A;
 	double* A_cp;
 	double* work;
@@ -71,22 +71,23 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int mpi_rank, int cpr
 
 	// context for checkpointing global matrix (A_cp)
 	Cblacs_get( ic, zero, &context_cp );
-	int map_cp[1][1];
-	map_cp[0][0]=cprocs;
+	//int map_cp[1][1];
+	int map_cp[1];
+	//map_cp[0][0]=cprocs;
+	map_cp[0]=cprocs;
 	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
 	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
 	//MPI_Barrier(MPI_COMM_WORLD);
 	//printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// Computation of local matrix size
-	nb = SCALAPACKNB;
+	//nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 
 	lldA = MAX( 1 , nr );
 	MPI_Allreduce( MPI_IN_PLACE, &lldA, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
-	lldA_source = n;
 	ltau = lldA;
 
 	if (mpi_rank==0) // root node

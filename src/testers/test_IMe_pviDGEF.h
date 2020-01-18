@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "../pviDGEF_WO.h"
 
@@ -11,7 +12,7 @@ double test_IMe_pviDGEF(const char* label, int verbosity, int rows, int cols, in
 	double** A2;
 	double** K;
 
-	MPI_Comm current_comm_world, comm_calc;
+	MPI_Comm comm_calc;
 
 	int i_calc; // participating in ime calc = 1, checksumming = 0
 

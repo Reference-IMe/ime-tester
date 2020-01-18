@@ -13,7 +13,7 @@
 #include "../../helpers/scalapack.h"
 
 
-void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs)
+void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
 {
 	/*
 	 * n = system rank (A_global n x n)
@@ -21,16 +21,16 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 	 */
 
 	// general
-	int i, j;						//iterators
+	int i;						//iterators
 	int zero = 0, one = 1;	//numbers
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
 	int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
 	int descA_global[9], descB_global[9], descA[9], descB[9];
-	char order = 'R', scope = 'A';
+	char order = 'R';
 	// MATRIX
-	int nb, nr, nc, ncrhs, lld, lld_global;
+	int nr, nc, ncrhs, lld, lld_global;
 	double *A, *B;
 	double *work;
 	int *ipiv;
@@ -48,7 +48,7 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 	if (mpi_rank < cprocs)
 	{
 		// Computation of local matrix size
-		nb = SCALAPACKNB;
+		//nb = SCALAPACKNB;
 		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 		ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );

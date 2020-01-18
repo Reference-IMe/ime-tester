@@ -6,10 +6,11 @@
  */
 
 #include <mpi.h>
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGESV_WO_cs.h"
 
-double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
+double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int sprocs)
 {
 	clock_t start, stop;
 	double span, maxspan;

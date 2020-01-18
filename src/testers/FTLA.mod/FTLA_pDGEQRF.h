@@ -22,18 +22,18 @@
 #include "commons.h"
 #include "create_matrix.h"
 
-extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
+//extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
 
 extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-int FTLA_ftdqr_calc(int rows, double* A_global, int mpi_rank, int cprocs, int sprocs)
+int FTLA_ftdqr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
 {
 	int i0=0, i1=1;
 	int i;
-    int NB=SCALAPACKNB;
-    int M, N, Nc, Nr, Ne, S=1;
+    //int NB=SCALAPACKNB;
+    int M, N, Nc, Ne;
     ftla_work_t ftwork;
 
 	// MPI
@@ -54,13 +54,13 @@ int FTLA_ftdqr_calc(int rows, double* A_global, int mpi_rank, int cprocs, int sp
 
     // BLACS
     int ictxt, ictxt_global, info;
-    int myrow, mycol, lld;
+    int myrow, mycol;
     // faults
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     int Fmin, Fmax;
     int Finc = 1;
     Fmin= Fmax = sprocs;
-    int err = 0;
+
     // matrices
     double* A=NULL;
     int descA[9], descA_global[9];
@@ -77,8 +77,8 @@ int FTLA_ftdqr_calc(int rows, double* A_global, int mpi_rank, int cprocs, int sp
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
 		Nc = numroc_( &N, &NB, &mycol, &i0, &Q ); //LOCc(N_A)
-		Nr = numroc_( &N, &NB, &myrow, &i0, &P ); //LOCr(N_A)
-		lld = MAX( 1 , Nr );
+		//Nr = numroc_( &N, &NB, &myrow, &i0, &P ); //LOCr(N_A)
+		//lld = MAX( 1 , Nr );
 		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS

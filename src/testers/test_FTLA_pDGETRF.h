@@ -6,10 +6,11 @@
  */
 
 #include <mpi.h>
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "FTLA.mod/FTLA_pDGETRF.h"
 
-double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs)
 {
 	clock_t start, stop;
 	double span, maxspan;
@@ -30,7 +31,7 @@ double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, i
 	//MPI_Barrier(MPI_COMM_WORLD);
 	start=clock();
 
-	FTLA_ftdtr_calc(rows, A, rank, cprocs, sprocs);
+	FTLA_ftdtr_calc(rows, A, nb, rank, cprocs, sprocs);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 	stop=clock();

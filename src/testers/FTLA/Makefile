@@ -1,7 +1,7 @@
 
 #FFLAGS +=  -fsecond-underscore
 #CFLAGS += -Wall 
-CFLAGS += -g -O0
+CFLAGS += -g -O3
 CFLAGS += -DINJECT
 #CFLAGS += -DUSE_CoF
 #CFLAGS += -DNO_CHECKPOINT

@@ -6,10 +6,11 @@
  */
 
 #include <mpi.h>
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGEF_WO_ft1.h"
 
-double test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+double test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int sprocs, int failing_rank, int failing_level)
 {
 	int r,c;
 	clock_t start, stop;

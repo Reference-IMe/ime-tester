@@ -22,18 +22,19 @@
 #include "commons.h"
 #include "create_matrix.h"
 
-extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
+//extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
 
 extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-int FTLA_ftdtr_calc(int rows, double* A_global, int mpi_rank, int cprocs, int sprocs)
+
+int FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
 {
 	int i0=0, i1=1;
 	int i;
-    int NB=SCALAPACKNB;
-    int M, N, Nc, Nr, Ne, S=1;
+    //int NB=SCALAPACKNB;
+    int M, N, Nc, Nr, Ne;
     ftla_work_t ftwork;
 
 	// MPI
@@ -61,7 +62,7 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int mpi_rank, int cprocs, int sp
     int Fmin, Fmax;
     int Finc = 1;
     Fmin= Fmax = sprocs;
-    int err = 0;
+
     // matrices
     double* A=NULL;
     int descA[9], descA_global[9];

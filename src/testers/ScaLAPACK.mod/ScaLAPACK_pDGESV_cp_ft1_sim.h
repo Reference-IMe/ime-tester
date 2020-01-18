@@ -16,15 +16,18 @@
 // to prepare for a checkpointing version
 // TODO: checkpointing
 
-void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int mpi_rank, int cprocs, int sprocs, int failing_rank, int failing_level)
+void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
 {
 	/*
 	 * n = system rank (A_global n x n)
 	 * m = num. of r.h.s (B_global n x m)
 	 */
 
+	// to avoid warnings, until checkpointing is implemented
+	failing_level = failing_level+0;
+
 	// general
-	int i, j;				//iterators
+	int i;				//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
 	// MPI
@@ -32,9 +35,9 @@ void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_globa
 	// BLACS/SCALAPACK
 	int nprow, npcol, info, ic = -1, context, context_global, context_all, myrow, mycol;
 	int descA_global[9], descB_global[9], descA[9], descB[9];
-	char order = 'R', scope = 'A';
+	char order = 'R';
 	// MATRIX
-	int nb, nr, nc, ncrhs, lld, lld_global;
+	int nr, nc, ncrhs, lld, lld_global;
 	double *A, *B;
 	double *work;
 	int *ipiv;
@@ -57,7 +60,7 @@ void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_globa
 		//printf("\nI %d have to",myrank);
 
 		// Computation of local matrix size
-		nb = SCALAPACKNB;
+		//nb = SCALAPACKNB;
 		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 		ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );

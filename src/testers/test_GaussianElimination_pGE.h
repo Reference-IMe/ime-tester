@@ -1,3 +1,4 @@
+#include <time.h>
 #include "../helpers/matrix.h"
 #include "GaussianElimination/pGE.h"
 #include "GaussianElimination/BackSubst.h"
