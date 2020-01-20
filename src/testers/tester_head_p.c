@@ -14,6 +14,7 @@
 
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
+#include "../helpers/scalapack.h"
 
 #define MAX_VERSIONS 30
 #define MAX_RUNS 10
