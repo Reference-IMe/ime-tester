@@ -29,6 +29,7 @@ ifeq ($(machine),$(filter $(machine),marconi galileo))
     MPIFC = mpiifort
     MACHINEFLAGS_ser = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
     MACHINEFLAGS = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
+    FTLAMAKEFILE = Makefile.cineca.mk
   else
     ifeq ($(mpi),ch)
       # marconi mpich
@@ -55,6 +56,7 @@ else
         MPIFC = mpiifort
         MACHINEFLAGS_ser= -I${MKLROOT}/include -L${MKLROOT}/lib -mkl -ldl -lm
         MACHINEFLAGS= -I${MKLROOT}/include -L${MKLROOT}/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
+        FTLAMAKEFILE = Makefile.enea.mk
       else # end cresco6 intel
         ifeq ($(mpi),ch) # cresco6 mpich
           # marconi mpich
@@ -93,7 +95,7 @@ $(BIN_DIR):
 #	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
 	
 $(TST_DIR)/FTLA/libftla.a:
-	cd $(TST_DIR)/FTLA && $(MAKE)
+	cd $(TST_DIR)/FTLA && $(MAKE) $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK.mod/%.o: $(TST_DIR)/ScaLAPACK.mod/%.f
 	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
