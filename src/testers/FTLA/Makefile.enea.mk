@@ -1,4 +1,3 @@
-
 #FFLAGS +=  -fsecond-underscore
 #CFLAGS += -Wall 
 CFLAGS += -g -O3
@@ -11,8 +10,9 @@ CFLAGS += -DINJECT
 #CFLAGS += -DTIMING
 #CFLAGS += -DPRINTMATRIX
 
-CFLAGS += -I${MKLROOT}/include -I$(MKL_INC) 
+CFLAGS += -I${MKLROOT}/include
 BLACSLIB = -L/opt/intel/compilers_and_libraries/linux/mkl/lib/intel64 -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_lapack95_lp64 -lmkl_core -mkl -lm -ldl
+
 CC = mpiicc
 FC = mpiifort
 
@@ -33,11 +33,10 @@ libftla.a: libftla.a($(SFTLA) $(DFTLA) $(CFTLA) $(ZFTLA) ftla_cof.o ftla_ftwork.
 helpersftla.a: helpersftla.a( $(HELPERS) $(dqr_ORIG) $(dtr_ORIG) )
 
 testing_ft%.x: $$($$*_ORIG) ft%_main.o libftla.a helpersftla.a
-	$(FC) $(CFLAGS) -nofor-main -o $@ $^  $(BLACSLIB)  
+	$(FC) $(CFLAGS) -nofor-main -o $@ $^  $(BLACSLIB)
 
 
 clean:
 	rm -f *.a *.o *.x
 
 #.PRECIOUS: %.o
-

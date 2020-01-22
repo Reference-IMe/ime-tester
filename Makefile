@@ -95,7 +95,7 @@ $(BIN_DIR):
 #	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
 	
 $(TST_DIR)/FTLA/libftla.a:
-	cd $(TST_DIR)/FTLA && $(MAKE) $(FTLAMAKEFILE)
+	cd $(TST_DIR)/FTLA && $(MAKE) -f $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK.mod/%.o: $(TST_DIR)/ScaLAPACK.mod/%.f
 	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
@@ -125,8 +125,8 @@ compare_all_p: $(TST_DIR)/compare_all_p.c \
 				$(TST_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				$(TST_DIR)/FTLA.mod/*.h \
-				$(TST_DIR)/FTLA/libftla.a \
-				| $(BIN_DIR)
+				| $(TST_DIR)/FTLA/libftla.a \
+				$(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_all_p $(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o $(TST_DIR)/FTLA/libftla.a $(TST_DIR)/FTLA/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(MACHINEFLAGS)
 
 compare_checkpointing: $(TST_DIR)/compare_checkpointing.c \
