@@ -80,10 +80,10 @@ endif # end marconi (and all)
 
 SEQ_EXE = compare_solve
 PAR_EXE = compare_all_p compare_checkpointing compare_svxk compare_solve_p compare_pviDGEF compare_pviDGESV
-EXE = $(SEQ_EXE) $(PAR_EXE)
+EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
-PAR_STD_DEP = $(SRC_DIR)/*.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
-SEQ_STD_DEP = $(SRC_DIR)/*.h $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
+PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
+SEQ_STD_DEP = $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
 
 all: $(TST_DIR)/FTLA/libftla.a $(EXE) | $(BIN_DIR)
 .PHONY: all
@@ -97,18 +97,20 @@ $(BIN_DIR):
 $(TST_DIR)/FTLA/libftla.a:
 	cd $(TST_DIR)/FTLA && $(MAKE) -f $(FTLAMAKEFILE)
 
+
 $(TST_DIR)/ScaLAPACK.mod/%.o: $(TST_DIR)/ScaLAPACK.mod/%.f
 	$(MPIFC) $(FFLAGS) -c $< -o $@ $(MACHINEFLAGS)
 	
-compare_solve : $(TST_DIR)/compare_solve.c \
+$(BIN_DIR)/compare_solve: $(TST_DIR)/compare_solve.c \
 				$(TST_DIR)/test_IMe_DGESV.h \
 				$(TST_DIR)/test_GaussianElimination_GE.h \
 				$(TST_DIR)/test_LAPACK_DGESV.h \
 				| $(BIN_DIR)
 	$(CC) $(CFLAGS) $(TST_DIR)/compare_solve.c -o $(BIN_DIR)/compare_solve $(MACHINEFLAGS_ser)
 
-compare_solve_p: $(TST_DIR)/compare_solve_p.c \
+$(BIN_DIR)/compare_solve_p: $(TST_DIR)/compare_solve_p.c \
 				$(PAR_STD_DEP) \
+				$(SRC_DIR)/pviDGESV*.h \
 				$(SRC_DIR)/ft-simulated/*.h \
 				$(TST_DIR)/ScaLAPACK.mod/*.h \
 				$(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o \
@@ -117,8 +119,10 @@ compare_solve_p: $(TST_DIR)/compare_solve_p.c \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_solve_p $(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o -L$(TST_DIR)/ScaLAPACK $(MACHINEFLAGS)
 
-compare_all_p: $(TST_DIR)/compare_all_p.c \
+$(BIN_DIR)/compare_all_p: $(TST_DIR)/compare_all_p.c \
 				$(PAR_STD_DEP) \
+				$(SRC_DIR)/pviDGESV*.h \
+				$(SRC_DIR)/pviDGEF*.h \
 				$(SRC_DIR)/ft-simulated/*.h \
 				$(TST_DIR)/ScaLAPACK.mod/*.h \
 				$(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o \
@@ -129,8 +133,9 @@ compare_all_p: $(TST_DIR)/compare_all_p.c \
 				$(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_all_p $(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o $(TST_DIR)/FTLA/libftla.a $(TST_DIR)/FTLA/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(MACHINEFLAGS)
 
-compare_checkpointing: $(TST_DIR)/compare_checkpointing.c \
+$(BIN_DIR)/compare_checkpointing: $(TST_DIR)/compare_checkpointing.c \
 				$(PAR_STD_DEP) \
+				$(SRC_DIR)/pviDGEF_WO.h \
 				$(TST_DIR)/ScaLAPACK.mod/*.h \
 				$(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o \
 				$(TST_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o \
@@ -138,24 +143,27 @@ compare_checkpointing: $(TST_DIR)/compare_checkpointing.c \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_checkpointing $(TST_DIR)/ScaLAPACK.mod/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK.mod/pdgeqrf_cp.o -L$(TST_DIR)/ScaLAPACK $(MACHINEFLAGS)
 
-compare_svxk: $(TST_DIR)/compare_svxk.c \
+$(BIN_DIR)/compare_svxk: $(TST_DIR)/compare_svxk.c \
 				$(PAR_STD_DEP) \
+				$(SRC_DIR)/pviDGEF_WO.h \
 				$(TST_DIR)/../*.h \
 				$(TST_DIR)/*.h \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_svxk -L$(TST_DIR)/ScaLAPACK $(MACHINEFLAGS)
 
-compare_pviDGEF: $(TST_DIR)/compare_pviDGEF.c \
+$(BIN_DIR)/compare_pviDGEF: $(TST_DIR)/compare_pviDGEF.c \
 				$(PAR_STD_DEP) \
+				$(SRC_DIR)/pviDGEF*.h \
 				$(TST_DIR)/../*.h \
 				$(TST_DIR)/*.h \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_pviDGEF -L$(TST_DIR)/ScaLAPACK $(MACHINEFLAGS)
 
-compare_pviDGESV: $(TST_DIR)/compare_pviDGESV.c \
+$(BIN_DIR)/compare_pviDGESV: $(TST_DIR)/compare_pviDGESV.c \
 				$(PAR_STD_DEP) \
+				$(SRC_DIR)/pviDGESV*.h \
 				$(TST_DIR)/../*.h \
 				$(TST_DIR)/*.h \
 				$(TST_DIR)/ScaLAPACK/*.h \
@@ -166,6 +174,6 @@ compare_pviDGESV: $(TST_DIR)/compare_pviDGESV.c \
 #	$(MPICC) $(CFLAGS)  -lifcore $< -o $@ $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(MACHINEFLAGS)
 
 clean:
-	cd $(BIN_DIR) && rm -f $(EXE)
+	rm -f $(EXE)
 	cd $(TST_DIR)/ScaLAPACK.mod && rm -f *.o
 	cd $(TST_DIR)/FTLA && $(MAKE) clean
