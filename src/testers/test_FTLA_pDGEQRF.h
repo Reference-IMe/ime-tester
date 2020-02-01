@@ -8,7 +8,7 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/matrix.h"
-#include "FTLA.mod/FTLA_pDGEQRF.h"
+#include "FTLA/FTLA_pDGEQRF.h"
 
 double test_FTLA_pDGEQRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs)
 {

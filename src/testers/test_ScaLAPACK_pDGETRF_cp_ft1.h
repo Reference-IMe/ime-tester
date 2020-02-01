@@ -8,7 +8,7 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/matrix.h"
-#include "ScaLAPACK.mod/ScaLAPACK_pDGETRF_cp_ft1_sim.h"
+#include "ScaLAPACK/ScaLAPACK_pDGETRF_cp_ft1_sim.h"
 
 double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
