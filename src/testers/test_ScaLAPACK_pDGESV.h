@@ -21,7 +21,7 @@ double test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int col
 	{
 		A=AllocateMatrix1D(rows, cols);
 		bb=AllocateMatrix1D(rows, nrhs);
-		FillMatrixT1D(A, rows, cols);
+		FillMatrix1D(A, rows, cols);
 		OneMatrix1D(bb, rows, nrhs);
 
 		if (verbosity>2)
@@ -49,7 +49,7 @@ double test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int col
 		if (verbosity>1)
 		{
 			printf("\nThe %s solution is:\n",label);
-			PrintMatrix1D(bb, nrhs, rows);
+			PrintMatrix1D(bb, rows, nrhs);
 		}
 		DeallocateMatrix1D(A);
 		DeallocateMatrix1D(bb);
