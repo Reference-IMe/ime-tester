@@ -1,7 +1,7 @@
 
 MACHINELIST = cineca|enea|ubuntu
 MPIFLAVOURS = intel|ch|open
-LIBTYPE  = intel|source
+LIBTYPE  = mkl|src|sys
 
 PROJECT_DIR = $(CURDIR)
 BIN_DIR = $(PROJECT_DIR)/bin
@@ -63,32 +63,32 @@ endif
 ## how to make a smart switch: https://stackoverflow.com/questions/200205/good-way-to-do-a-switch-in-a-makefile
 
 # marconi|galileo -> cineca
-ifeq ($(library),intel)
-  SEQ_MFLAGS_cineca_intel = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
-  PAR_MFLAGS_cineca_intel = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
-else
-  SEQ_MFLAGS_cineca_intel = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
-  PAR_MFLAGS_cineca_intel = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
-endif
-PAR_MFLAGS_cineca_ch    = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lm
-PAR_MFLAGS_cineca_open  = -L$(SCALAPACK_LIB) -lscalapack -L$(LAPACK_LIB) -llapack -L$(BLAS_LIB) -lblas -lifcore -lm
+SEQ_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
+PAR_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
+
+SEQ_MFLAGS_cineca_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
+PAR_MFLAGS_cineca_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
+
+PAR_MFLAGS_cineca_ch_mkl    = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lm
+PAR_MFLAGS_cineca_open_sys  = -L$(SCALAPACK_LIB) -lscalapack -L$(LAPACK_LIB) -llapack -L$(BLAS_LIB) -lblas -lifcore -lm
 FTLAMAKEFILE_cineca_intel = Makefile.cineca.mk
 
 # cresco6/cresco4 -> enea
-PAR_MFLAGS_enea_intel= -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
-SEQ_MFLAGS_enea_intel= -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -ldl -lm
+PAR_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
+SEQ_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -ldl -lm
 FTLAMAKEFILE_enea_intel = Makefile.enea.mk
 
 # ubuntu
   # TODO
 
-PAR_MACHINEFLAGS = $(PAR_MFLAGS_$(machine)_$(mpi))
-SEQ_MACHINEFLAGS = $(SEQ_MFLAGS_$(machine)_$(mpi))
+PAR_MACHINEFLAGS = $(PAR_MFLAGS_$(machine)_$(mpi)_$(library))
+SEQ_MACHINEFLAGS = $(SEQ_MFLAGS_$(machine)_$(mpi)_$(library))
 FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
 SEQ_EXE = compare_solve
-PAR_EXE = compare_all_p compare_checkpointing compare_svxk compare_solve_p compare_pviDGEF compare_pviDGESV
+PAR_EXE = compare_all_p compare_checkpointing compare_svxk compare_solve_p compare_pviDGEF compare_pviDGESV \
+			run_IMe-SV run_SPK-SV_mkl run_SPK-SV_src
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -123,13 +123,31 @@ $(FTLA_LIB_DIR)/libftla.a:
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
-	
+
+$(BIN_DIR)/run_IMe-SV: $(TST_DIR)/run_IMe-SV.c \
+				$(TST_DIR)/test_IMe_DGESV.h \
+				$(SRC_DIR)/pviDGESV_WO.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
+
+$(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
+				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
+				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl $(TST_DIR)/run_SPK-SV.c $(PAR_MFLAGS_$(machine)_$(mpi)_mkl)
+
+$(BIN_DIR)/run_SPK-SV_src: $(TST_DIR)/run_SPK-SV.c \
+				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
+				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-SV_src $(TST_DIR)/run_SPK-SV.c $(PAR_MFLAGS_$(machine)_$(mpi)_src)
+
 $(BIN_DIR)/compare_solve: $(TST_DIR)/compare_solve.c \
 				$(TST_DIR)/test_IMe_DGESV.h \
 				$(TST_DIR)/test_GaussianElimination_GE.h \
 				$(TST_DIR)/test_LAPACK_DGESV.h \
 				| $(BIN_DIR)
-	$(CC) $(CFLAGS) -lifcore -o $(BIN_DIR)/compare_solve $(TST_DIR)/compare_solve.c $(SEQ_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/compare_solve $(TST_DIR)/compare_solve.c $(SEQ_MACHINEFLAGS)
 
 $(BIN_DIR)/compare_solve_p: $(TST_DIR)/compare_solve_p.c \
 				$(PAR_STD_DEP) \

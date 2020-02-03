@@ -32,7 +32,7 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 	// MATRIX
 	int nr, nc, ncrhs, lld, lld_global;
 	double *A, *B;
-	double *work;
+	//double *work;
 	int *ipiv;
 
 	// Initialize a default BLACS context and the processes grid
@@ -55,7 +55,8 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 		lld = MAX( 1 , nr );
 		A = malloc(nr*nc*sizeof(double));
 		B = malloc(nr*ncrhs*sizeof(double));
-		work = malloc(nb*sizeof(double));
+		//work = malloc(nb*sizeof(double));
+		//work = malloc(n*sizeof(double));
 		ipiv = malloc((lld+nb)*sizeof(int));
 
 		// Descriptors (local)
@@ -93,7 +94,7 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 		free(A);
 		free(B);
 		free(ipiv);
-		free(work);
+		//free(work);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
