@@ -42,6 +42,16 @@
 			}
 		}
 		printf("\n");
+		for (i=0; i<versions; i++)
+		{
+			printf("\n%s    Median  run time: %10.0f clk", versionname[i], dmedian( versionrun[i], repetitions) );
+
+			if (file_name_len>0)
+			{
+				fprintf(fp,"data,%s,%d,%.0f\n",versionname[i],-1, dmedian( versionrun[i], repetitions));
+			}
+		}
+		printf("\n");
 	}
 
 

@@ -22,6 +22,33 @@
 /*
  * header code for verbatim inclusion to create a code tester for some parallel versions
  */
+
+void dsort(double* number, int n)
+{
+    /* Sort the given array number, of length n */
+    int j, i;
+    double temp;
+
+    for (i = 1; i < n; i++)
+    {
+        for (j = 0; j < n - i; j++)
+        {
+            if (number[j] > number[j + 1])
+            {
+                temp = number[j];
+                number[j] = number[j + 1];
+                number[j + 1] = temp;
+            }
+        }
+    }
+}
+
+double dmedian(double* number, int n)
+{
+	dsort(number, n);
+	return number[n/2];
+}
+
 int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
