@@ -7,13 +7,16 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
 
-double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs)
+duration_t test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs)
 {
-	clock_t start, stop;
-	double span, maxspan;
+	duration_t timing, timing_max;
+	result_info info;
+
 	double* A;
 
 	if (rank==0)
@@ -28,16 +31,7 @@ double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int co
 		}
 	}
 
-	//MPI_Barrier(MPI_COMM_WORLD);
-	start=clock();
-
-	ScaLAPACK_pDGEQRF_calc(rows, A, nb, rank, cprocs);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
-	stop=clock();
-
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+	info = ScaLAPACK_pDGEQRF_calc(rows, A, nb, rank, cprocs);
 
 	if (rank==0)
 	{
@@ -49,6 +43,5 @@ double test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, int rows, int co
 		DeallocateMatrix1D(A);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

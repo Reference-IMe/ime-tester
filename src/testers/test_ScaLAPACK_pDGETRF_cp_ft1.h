@@ -7,13 +7,16 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF_cp_ft1_sim.h"
 
-double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+duration_t test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
-	clock_t start, stop;
-	double span, maxspan;
+	duration_t timing, timing_max;
+	result_info info;
+
 	double* A;
 	//double* bb;
 
@@ -33,16 +36,7 @@ double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int r
 		}
 	}
 
-	//MPI_Barrier(MPI_COMM_WORLD);
-	start=clock();
-
-	ScaLAPACK_pDGETRF_cp_ft1_sim(rows, A, nb, rank, cprocs, sprocs, failing_level, checkpoint_freq);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
-	stop=clock();
-
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+	info = ScaLAPACK_pDGETRF_cp_ft1_sim(rows, A, nb, rank, cprocs, sprocs, failing_level, checkpoint_freq);
 
 	if (rank==0)
 	{
@@ -55,6 +49,5 @@ double test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int r
 		//DeallocateMatrix1D(bb);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

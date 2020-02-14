@@ -7,13 +7,16 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "FTLA/FTLA_pDGETRF.h"
 
-double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs)
+duration_t test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs)
 {
-	clock_t start, stop;
-	double span, maxspan;
+	duration_t timing, timing_max;
+	result_info info;
+
 	double* A;
 
 	if (rank==0)
@@ -28,16 +31,7 @@ double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, i
 		}
 	}
 
-	//MPI_Barrier(MPI_COMM_WORLD);
-	start=clock();
-
-	FTLA_ftdtr_calc(rows, A, nb, rank, cprocs, sprocs);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
-	stop=clock();
-
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+	info = FTLA_ftdtr_calc(rows, A, nb, rank, cprocs, sprocs);
 
 	if (rank==0)
 	{
@@ -49,6 +43,5 @@ double test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, i
 		DeallocateMatrix1D(A);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

@@ -7,13 +7,16 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGESV_WO_cs.h"
 
-double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int sprocs)
+duration_t test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int sprocs)
 {
-	clock_t start, stop;
-	double span, maxspan;
+	duration_t timing, timing_max;
+	result_info info;
+
 	double** A2;
 	double** bb;
 	double** xx;
@@ -42,16 +45,7 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 		A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
 	}
 
-	//MPI_Barrier(MPI_COMM_WORLD);
-	start = clock();
-
-	pviDGESV_WO_cs(rows, A2, nrhs, bb, xx, MPI_COMM_WORLD, sprocs);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
-	stop = clock();
-
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+	info = pviDGESV_WO_cs(rows, A2, nrhs, bb, xx, MPI_COMM_WORLD, sprocs);
 
 	if (rank==0 && verbosity>1)
 	{
@@ -70,6 +64,5 @@ double test_IMe_pviDGESV_cs(const char* label, int verbosity, int rows, int cols
 		DeallocateMatrix2D(A2, 0, CONTIGUOUS);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

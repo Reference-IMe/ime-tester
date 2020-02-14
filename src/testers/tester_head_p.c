@@ -12,6 +12,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "../helpers/info.h"
 #include "../helpers/matrix.h"
 #include "../helpers/vector.h"
 #include "../helpers/scalapack.h"
@@ -23,31 +24,35 @@
  * header code for verbatim inclusion to create a code tester for some parallel versions
  */
 
-void dsort(double* number, int n)
+
+void dsort(duration_t* duration, int n)
 {
     /* Sort the given array number, of length n */
     int j, i;
-    double temp;
+    duration_t temp;
 
     for (i = 1; i < n; i++)
     {
         for (j = 0; j < n - i; j++)
         {
-            if (number[j] > number[j + 1])
+            if (duration[j].total > duration[j + 1].total )
             {
-                temp = number[j];
-                number[j] = number[j + 1];
-                number[j + 1] = temp;
+                temp = duration[j];
+                duration[j] = duration[j + 1];
+                duration[j + 1] = temp;
             }
         }
     }
 }
 
-double dmedian(double* number, int n)
+duration_t dmedian(duration_t* duration, int n)
 {
-	dsort(number, n);
-	return number[n/2];
+	dsort(duration, n);
+	return duration[n/2];
 }
+
+duration_t not_run={-1, -1};
+duration_t not_implemented={-99,-99};
 
 int main(int argc, char **argv)
 {
@@ -58,10 +63,10 @@ int main(int argc, char **argv)
 
     int i,rep;
 
-    double versionrun[MAX_VERSIONS][MAX_RUNS];
-    const char* versionname[MAX_VERSIONS];
-    double versiontot[MAX_VERSIONS];
 	int versions;
+    const char* versionname[MAX_VERSIONS];
+    duration_t versionrun[MAX_VERSIONS][MAX_RUNS];
+    duration_t versiontot[MAX_VERSIONS];
 
     int n;		// matrix size
     int file_name_len;
@@ -234,7 +239,11 @@ int main(int argc, char **argv)
     }
 
 #define fpinfo(string_label,integer_info) if (fp!=NULL && main_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info);}
-#define fpdata(track_num) if (fp!=NULL && main_rank==0) {fprintf(fp,"data,%s,%d,%.0f\n",versionname[track_num],rep+1,versionrun[ track_num][rep]);}
+#define fpdata(track_num) if (fp!=NULL && main_rank==0) { \
+	fprintf(fp,"data,%s,%d,%.0f\n",versionname[track_num],rep+1,versionrun[ track_num][rep].total); \
+	fprintf(fp,"data,%s%s,%d,%.0f\n",versionname[track_num],"(core)",rep+1,versionrun[ track_num][rep].core); \
+	}
+
 
 	time_t rawtime;
 	struct tm *readtime;

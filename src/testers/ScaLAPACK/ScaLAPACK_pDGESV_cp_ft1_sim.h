@@ -6,6 +6,8 @@
  */
 
 #include <mpi.h>
+#include <time.h>
+#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
@@ -16,8 +18,12 @@
 // to prepare for a checkpointing version
 // TODO: checkpointing
 
-void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
+result_info ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
 {
+	result_info wall_clock;
+
+	wall_clock.total_start_time = time(NULL);
+
 	/*
 	 * n = system rank (A_global n x n)
 	 * m = num. of r.h.s (B_global n x m)
@@ -100,8 +106,10 @@ void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_globa
 		// Linear system equations solver
 		// pdgesv_(  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info );
 		// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
+		wall_clock.core_start_time = time(NULL);
 		pdgetrf_(      &n, &n, A, &one, &one, descA, ipiv, &info );
 		pdgetrs_("N",  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info  );
+	    wall_clock.core_end_time = time(NULL);
 
 		pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 
@@ -119,4 +127,8 @@ void ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_globa
 		//Cblacs_exit( one );				// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
 											// error, if main function called more tha once, why?
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	wall_clock.total_end_time = time(NULL);
+
+	return wall_clock;
 }

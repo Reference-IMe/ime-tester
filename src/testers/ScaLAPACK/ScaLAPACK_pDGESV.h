@@ -6,6 +6,8 @@
  */
 
 #include <mpi.h>
+#include <time.h>
+#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
@@ -13,8 +15,12 @@
 #include "../../helpers/scalapack.h"
 
 
-void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
+result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
 {
+	result_info wall_clock;
+
+	wall_clock.total_start_time = time(NULL);
+
 	/*
 	 * n = system rank (A_global n x n)
 	 * m = num. of r.h.s (B_global n x m)
@@ -100,7 +106,9 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 		pdtran_(&n, &n, &done, A, &one, &one, descA, &dzero, At, &one, &one, descAt);
 
 		// linear system equations solver
+		wall_clock.core_start_time = time(NULL);
 		pdgesv_(  &n, &m, At, &one, &one, descAt, ipiv, B, &one, &one, descB, &info );
+		wall_clock.core_end_time = time(NULL);
 
 		// re-transpose result
 		pdtran_(&m, &n, &done, B, &one, &one, descB, &dzero, Bt, &one, &one, descBt);
@@ -123,4 +131,8 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	wall_clock.total_end_time = time(NULL);
+
+	return wall_clock;
 }

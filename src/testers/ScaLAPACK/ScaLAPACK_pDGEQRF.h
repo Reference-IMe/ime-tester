@@ -6,6 +6,8 @@
  */
 
 #include <mpi.h>
+#include <time.h>
+#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
@@ -13,8 +15,12 @@
 #include "../../helpers/scalapack.h"
 
 
-void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
+result_info ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
+	result_info wall_clock;
+
+	wall_clock.total_start_time = time(NULL);
+
 	/*
 	 * n = system rank (A_global n x n)
 	 */
@@ -84,7 +90,9 @@ void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int c
 		work = malloc( lwork*sizeof(double) );
 
 		// QR factorization
+		wall_clock.core_start_time = time(NULL);
 		pdgeqrf_(  &n, &n, A, &one, &one, descA, tau, work, &lwork, &info );
+	    wall_clock.core_end_time = time(NULL);
 
 		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
 
@@ -95,4 +103,8 @@ void ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int c
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	wall_clock.total_end_time = time(NULL);
+
+	return wall_clock;
 }

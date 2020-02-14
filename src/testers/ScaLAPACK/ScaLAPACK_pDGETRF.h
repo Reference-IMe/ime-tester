@@ -6,6 +6,8 @@
  */
 
 #include <mpi.h>
+#include <time.h>
+#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
@@ -13,8 +15,12 @@
 #include "../../helpers/scalapack.h"
 
 
-void ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
+result_info ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
+	result_info wall_clock;
+
+	wall_clock.total_start_time = time(NULL);
+
 	/*
 	 * n = system rank (A_global n x n)
 	 */
@@ -79,7 +85,10 @@ void ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int c
 		pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context);
 
 		// LU factorization
+		wall_clock.core_start_time = time(NULL);
 		pdgetrf_(      &n, &n, A, &one, &one, descA, ipiv, &info );
+		wall_clock.core_end_time = time(NULL);
+
 		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
 
 		// cleanup
@@ -95,4 +104,8 @@ void ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int c
 		//Cblacs_exit( one );				// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
 											// error, if main function called more tha once, why?
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	wall_clock.total_end_time = time(NULL);
+
+	return wall_clock;
 }

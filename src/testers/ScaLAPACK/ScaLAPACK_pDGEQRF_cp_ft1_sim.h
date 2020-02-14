@@ -6,6 +6,8 @@
  */
 
 #include <mpi.h>
+#include <time.h>
+#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
@@ -14,8 +16,12 @@
 
 // TODO: checkpointing
 
-void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+result_info ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
+	result_info wall_clock;
+
+	wall_clock.total_start_time = time(NULL);
+
 	/*
 	 * n = system rank (A_global n x n)
 	 */
@@ -144,7 +150,7 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank,
 		// Descriptors
 		A_cp = malloc(n*n*sizeof(double));
 		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
-		OneMatrix1D(A_cp, n, n);
+		//OneMatrix1D(A_cp, n, n);
 
 		work_cp=malloc(lwork*nprocs*sizeof(double)); // with cprocs instead of nprocs is not good because MPI_GATHER wants a buffer for everyone!
 		tau_cp=malloc(ltau*nprocs*sizeof(double));
@@ -173,7 +179,9 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank,
 	}
 
 	// QR factorization
+	wall_clock.core_start_time = time(NULL);
 	pdgeqrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &context_all, &info );
+    wall_clock.core_end_time = time(NULL);
 
 	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
 
@@ -192,4 +200,8 @@ void ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank,
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
+
+	wall_clock.total_end_time = time(NULL);
+
+	return wall_clock;
 }

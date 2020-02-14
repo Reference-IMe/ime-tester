@@ -23,11 +23,11 @@ double test_IMe_DGESV(const char* label, int verbosity, int rows, int cols, int 
 		PrintMatrix2D(bb, rows, nrhs);
 	}
 
-	start = clock();
+	start = time(NULL);
 
 	DGESV_WO(rows, A, nrhs, bb, xx);
 
-	stop = clock();
+	stop = time(NULL);
 
 	if (verbosity>1)
 	{

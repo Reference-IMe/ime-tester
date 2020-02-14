@@ -34,12 +34,12 @@ double test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int col
 	}
 
 	//MPI_Barrier(MPI_COMM_WORLD);
-	start=clock();
+	start=time(NULL);
 
 	ScaLAPACK_pDGESV_calc(rows, A, nrhs, bb, nb, rank, cprocs);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
-	stop=clock();
+	stop=time(NULL);
 
 	span=(double)(stop - start);
     MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );

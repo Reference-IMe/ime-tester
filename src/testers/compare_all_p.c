@@ -86,10 +86,10 @@
     	}
     	else
     	{
-    		versionrun[ 6][rep]=-1; // don't run IMe single FT solve with 1 rhs
+    		versionrun[ 6][rep]=not_run; // don't run IMe single FT solve with 1 rhs
      		fpdata(6);
 
-    		versionrun[ 7][rep]=-1; // don't run IMe single FT solve with 10 rhs
+    		versionrun[ 7][rep]=not_run; // don't run IMe single FT solve with 10 rhs
      		fpdata(7);
     	}
 
@@ -101,18 +101,18 @@
 
     	if (sprocs>0)
     	{
-    		versionrun[10][rep]=-99; // not yet SPKmod single FT solve with 1 rhs
+    		versionrun[10][rep]=not_implemented; // not yet SPKmod single FT solve with 1 rhs
      		fpdata(10);
 
-    		versionrun[11][rep]=-99; // not yet SPKmod single FT solve with 10 rhs
+    		versionrun[11][rep]=not_implemented; // not yet SPKmod single FT solve with 10 rhs
      		fpdata(11);
     	}
     	else
     	{
-    		versionrun[10][rep]=-1; // don't run SPKmod single FT solve with 1 rhs
+    		versionrun[10][rep]=not_run; // don't run SPKmod single FT solve with 1 rhs
      		fpdata(10);
 
-    		versionrun[11][rep]=-1; // don't run SPKmod single FT solve with 10 rhs
+    		versionrun[11][rep]=not_run; // don't run SPKmod single FT solve with 10 rhs
      		fpdata(11);
     	}
      	versionrun[12][rep]=test_IMe_pviDGEF(versionname[12], verbose, rows, cols, main_rank, cprocs, sprocs); // IMe factorization only
@@ -128,7 +128,7 @@
     	}
     	else
     	{
-    		versionrun[14][rep]=-1; // don't run IMe factorization only
+    		versionrun[14][rep]=not_run; // don't run IMe factorization only
     		fpdata(14);
     	}
 
@@ -151,16 +151,16 @@
     	}
     	else
     	{
-    		versionrun[16][rep]=-1;	// don't run SPKmod LU factorization single FT and 0 faults
+    		versionrun[16][rep]=not_run;	// don't run SPKmod LU factorization single FT and 0 faults
     		fpdata(16);
 
-    		versionrun[17][rep]=-1;	// don't run SPKmod LU factorization single FT and 1 fault
+    		versionrun[17][rep]=not_run;	// don't run SPKmod LU factorization single FT and 1 fault
     		fpdata(17);
 
-    		versionrun[18][rep]=-1;	// don't run FTLA LU with 0 faults
+    		versionrun[18][rep]=not_run;	// don't run FTLA LU with 0 faults
     		fpdata(18);
 
-    		versionrun[19][rep]=-1;	// don't run FTLA LU with 1 fault
+    		versionrun[19][rep]=not_run;	// don't run FTLA LU with 1 fault
         	fpdata(19);
     	}
 
@@ -183,16 +183,16 @@
     	}
     	else
     	{
-    		versionrun[21][rep]=-1;	// don't run SPKmod QR factorization single FT and 0 faults
+    		versionrun[21][rep]=not_run;	// don't run SPKmod QR factorization single FT and 0 faults
         	fpdata(21);
 
-    		versionrun[22][rep]=-1;	// don't run SPKmod QR factorization single FT and 1 fault
+    		versionrun[22][rep]=not_run;	// don't run SPKmod QR factorization single FT and 1 fault
         	fpdata(22);
 
-        	versionrun[23][rep]=-1;	// don't run FTLA QR with 0 faults
+        	versionrun[23][rep]=not_run;	// don't run FTLA QR with 0 faults
         	fpdata(23);
 
-        	versionrun[24][rep]=-1;	// don't run FTLA QR with 1 fault
+        	versionrun[24][rep]=not_run;	// don't run FTLA QR with 1 fault
         	fpdata(24);
     	}
 

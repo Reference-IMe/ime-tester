@@ -1,14 +1,17 @@
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../pviDGEF_WO.gather.h"
 
 
-double test_IMe_pviDGEF_gather(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
+duration_t test_IMe_pviDGEF_gather(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
+	duration_t timing, timing_max;
+	result_info info;
+
 	int r,c;
-	clock_t start, stop;
-	double span, maxspan;
 	double** A2;
 	double** K;
 
@@ -48,13 +51,7 @@ double test_IMe_pviDGEF_gather(const char* label, int verbosity, int rows, int c
 			K=AllocateMatrix2D(0, 0, CONTIGUOUS);
 		}
 
-		//MPI_Barrier(MPI_COMM_WORLD);
-		start = clock();
-
-		pviDGEF_WO_allgather(rows, A2, K, comm_calc);
-
-		//MPI_Barrier(MPI_COMM_WORLD);
-		stop = clock();
+		info = pviDGEF_WO_allgather(rows, A2, K, comm_calc);
 
 		// clean K for output
 		if (rank==0)
@@ -89,7 +86,8 @@ double test_IMe_pviDGEF_gather(const char* label, int verbosity, int rows, int c
 	}
 	else
 	{
-		start=stop=0;
+		timing.total=0;
+		timing.core=0;
 	}
 
 	if (sprocs>0)
@@ -100,9 +98,5 @@ double test_IMe_pviDGEF_gather(const char* label, int verbosity, int rows, int c
 		}
 	}
 
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
-
-    MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

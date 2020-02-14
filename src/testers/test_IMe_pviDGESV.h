@@ -1,13 +1,16 @@
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../pviDGESV_WO.h"
 
 
-double test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
+duration_t test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
 {
-	clock_t start, stop;
-	double span, maxspan;
+	duration_t timing, timing_max;
+	result_info info;
+
 	double** A2;
 	double** bb;
 	double** xx;
@@ -52,13 +55,7 @@ double test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, i
 			A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
 		}
 
-		//MPI_Barrier(MPI_COMM_WORLD);
-		start = clock();
-
-		pviDGESV_WO(rows, A2, nrhs, bb, xx, comm_calc);
-
-		//MPI_Barrier(MPI_COMM_WORLD);
-		stop = clock();
+		info = pviDGESV_WO(rows, A2, nrhs, bb, xx, comm_calc);
 
 		if (rank==0 && verbosity>1)
 		{
@@ -79,7 +76,8 @@ double test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, i
 	}
 	else
 	{
-		start=stop=0;
+		timing.total=0;
+		timing.core=0;
 	}
 
 	if (sprocs>0)
@@ -90,9 +88,5 @@ double test_IMe_pviDGESV(const char* label, int verbosity, int rows, int cols, i
 		}
 	}
 
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
-
-    MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

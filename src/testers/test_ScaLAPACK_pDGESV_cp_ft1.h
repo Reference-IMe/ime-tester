@@ -7,13 +7,16 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV_cp_ft1_sim.h"
 
-double test_ScaLAPACK_pDGESV_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nb, int nrhs, int rank, int cprocs, int sprocs, int failing_level)
+duration_t test_ScaLAPACK_pDGESV_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nb, int nrhs, int rank, int cprocs, int sprocs, int failing_level)
 {
-	clock_t start, stop;
-	double span, maxspan;
+	duration_t timing, timing_max;
+	result_info info;
+
 	double* A;
 	double* bb;
 
@@ -33,16 +36,7 @@ double test_ScaLAPACK_pDGESV_cp_ft1_sim(const char* label, int verbosity, int ro
 		}
 	}
 
-	//MPI_Barrier(MPI_COMM_WORLD);
-	start=clock();
-
-	ScaLAPACK_pDGESV_cp_ft1_sim(rows, A, nrhs, bb, nb, rank, cprocs, sprocs, failing_level);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
-	stop=clock();
-
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+	info = ScaLAPACK_pDGESV_cp_ft1_sim(rows, A, nrhs, bb, nb, rank, cprocs, sprocs, failing_level);
 
 	if (rank==0)
 	{
@@ -56,6 +50,5 @@ double test_ScaLAPACK_pDGESV_cp_ft1_sim(const char* label, int verbosity, int ro
 		DeallocateMatrix1D(bb);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

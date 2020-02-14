@@ -58,10 +58,10 @@
     	}
     	else
     	{
-    		versionrun[ 6][rep]=-1; // don't run IMe single FT solve with 1 rhs
+    		versionrun[ 6][rep]=not_run; // don't run IMe single FT solve with 1 rhs
      		fpdata(6);
 
-    		versionrun[ 7][rep]=-1; // don't run IMe single FT solve with 10 rhs
+    		versionrun[ 7][rep]=not_run; // don't run IMe single FT solve with 10 rhs
      		fpdata(7);
     	}
 
@@ -73,18 +73,18 @@
 
     	if (sprocs>0)
     	{
-    		versionrun[10][rep]=-99; // not yet SPKmod single FT solve with 1 rhs
+    		versionrun[10][rep]=not_implemented; // not yet SPKmod single FT solve with 1 rhs
      		fpdata(10);
 
-    		versionrun[11][rep]=-99; // not yet SPKmod single FT solve with 10 rhs
+    		versionrun[11][rep]=not_implemented; // not yet SPKmod single FT solve with 10 rhs
      		fpdata(11);
     	}
     	else
     	{
-    		versionrun[10][rep]=-1; // don't run SPKmod single FT solve with 1 rhs
+    		versionrun[10][rep]=not_run; // don't run SPKmod single FT solve with 1 rhs
      		fpdata(10);
 
-    		versionrun[11][rep]=-1; // don't run SPKmod single FT solve with 10 rhs
+    		versionrun[11][rep]=not_run; // don't run SPKmod single FT solve with 10 rhs
      		fpdata(11);
     	}
 

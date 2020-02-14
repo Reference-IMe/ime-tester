@@ -7,14 +7,17 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../helpers/info.h"
+#include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGEF_WO_ft1.h"
 
-double test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int sprocs, int failing_rank, int failing_level)
+duration_t test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int sprocs, int failing_rank, int failing_level)
 {
+	duration_t timing, timing_max;
+	result_info info;
+
 	int r,c;
-	clock_t start, stop;
-	double span, maxspan;
 	double** A2;
 	double** K;
 
@@ -37,16 +40,7 @@ double test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int 
 		K=AllocateMatrix2D(0, 0, CONTIGUOUS);
 	}
 
-	//MPI_Barrier(MPI_COMM_WORLD);
-	start = clock();
-
-	pviDGEF_WO_ft1_sim(rows, A2, K, MPI_COMM_WORLD, sprocs, failing_rank, failing_level);
-
-	//MPI_Barrier(MPI_COMM_WORLD);
-	stop = clock();
-
-	span=(double)(stop - start);
-    MPI_Reduce( &span, &maxspan, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+	info = pviDGEF_WO_ft1_sim(rows, A2, K, MPI_COMM_WORLD, sprocs, failing_rank, failing_level);
 
 	// clean K for output
 	if (rank==0)
@@ -79,6 +73,5 @@ double test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int 
 		DeallocateMatrix2D(K, 0, CONTIGUOUS);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	return maxspan;
+	TEST_END(info, timing, timing_max);
 }

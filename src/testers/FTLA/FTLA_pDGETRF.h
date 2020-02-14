@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <time.h>
+#include "../../helpers/info.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
 #include "commons.h"
@@ -29,8 +30,12 @@ extern int *errors;
 extern MPI_Comm ftla_current_comm;
 
 
-int FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
+result_info FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
 {
+	result_info wall_clock;
+
+	wall_clock.total_start_time = time(NULL);
+
 	int i0=0, i1=1;
 	int i;
     //int NB=SCALAPACKNB;
@@ -135,6 +140,8 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs
 		int err=0;
 		int* ipiv = (int*)malloc(Ne*sizeof(int) );
 
+		wall_clock.core_start_time = time(NULL);
+
 #ifdef INJECT
 		for( F = Fmin; F<=Fmax; F+=Finc )
 		{
@@ -157,6 +164,8 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs
 
 			} while(err);
 
+			wall_clock.core_end_time = time(NULL);
+
 			// collect matrices
 			pdgemr2d_ (&N, &N, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ictxt);
 
@@ -173,7 +182,9 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs
 	}
 	else
 	{
+		wall_clock.core_start_time = time(NULL);
 		Cftla_work_construct( 0, descA, 0, Ne-N, &ftwork );
+		wall_clock.core_end_time = time(NULL);
 	}
 
 	if (mpi_rank < cprocs)
@@ -187,6 +198,9 @@ int FTLA_ftdtr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs
     fflush( stdout );
 
 	MPI_Barrier(MPI_COMM_WORLD);
-    return 0;
+
+	wall_clock.total_end_time = time(NULL);
+
+	return wall_clock;
 }
 

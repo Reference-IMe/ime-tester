@@ -23,11 +23,11 @@ double test_Lapack_DGESV(const char* label, int verbosity, int rows, int cols, i
 		PrintMatrix1D(bb, rows, nrhs);
 	}
 
-	start=clock();
+	start=time(NULL);
 
 	Lapack_DGESV(rows, A, nrhs, bb);
 
-	stop=clock();
+	stop=time(NULL);
 
 	if (verbosity>1)
 	{

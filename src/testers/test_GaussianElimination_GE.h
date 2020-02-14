@@ -25,12 +25,12 @@ double test_GaussianElimination(const char* label, int verbosity, int rows, int 
 		PrintMatrix2D(bb, rows, nrhs);
 	}
 
-	start =clock();
+	start =time(NULL);
 
 	GaussianElimination(rows, A, nrhs, bb);
 	BackSubstitution(rows, A, nrhs, bb, xx);
 
-	stop = clock();
+	stop = time(NULL);
 
 	if (verbosity>1)
 	{

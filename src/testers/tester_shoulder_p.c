@@ -11,7 +11,8 @@
 
 for (i=0; i<versions; i++)
 	{
-		versiontot[i] = 0;
+		versiontot[i].total = 0;
+		versiontot[i].core = 0;
 	}
 
 
