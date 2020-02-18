@@ -74,8 +74,11 @@ PAR_MFLAGS_cineca_open_sys  = -L$(SCALAPACK_LIB) -lscalapack -L$(LAPACK_LIB) -ll
 FTLAMAKEFILE_cineca_intel = Makefile.cineca.mk
 
 # cresco6/cresco4 -> enea
-PAR_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
 SEQ_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -ldl -lm
+PAR_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
+
+SEQ_MFLAGS_enea_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
+PAR_MFLAGS_enea_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
 FTLAMAKEFILE_enea_intel = Makefile.enea.mk
 
 # ubuntu
@@ -112,7 +115,7 @@ $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 	cd $(LAPACK_LIB_DIR) && $(MAKE) lapacklib
 
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
-	cd $(SCALAPACK_LIB_DIR) && $(MAKE) LAPACK_DIR=$(LAPACK_LIB_DIR)
+	cd $(SCALAPACK_LIB_DIR) && $(MAKE) LAPACK_DIR=$(LAPACK_LIB_DIR) scalapacklib
 	
 #$(SRC_DIR)/FTLA/pdmatgen.o: $(SRC_DIR)/FTLA/pdmatgen.f
 #	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
@@ -230,4 +233,4 @@ clean_lapack:
 clean_scalapack:
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) clean
 
-	clean_all: clean clean_ftla clean_lapack clean_scalapack
+clean_all: clean clean_ftla clean_lapack clean_scalapack
