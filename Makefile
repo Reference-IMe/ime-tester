@@ -115,7 +115,7 @@ $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 	cd $(LAPACK_LIB_DIR) && $(MAKE) lapacklib
 
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
-	cd $(SCALAPACK_LIB_DIR) && $(MAKE) LAPACK_DIR=$(LAPACK_LIB_DIR) scalapacklib
+	cd $(SCALAPACK_LIB_DIR) && $(MAKE) LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
 #$(SRC_DIR)/FTLA/pdmatgen.o: $(SRC_DIR)/FTLA/pdmatgen.f
 #	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
