@@ -1,6 +1,6 @@
 
-MACHINELIST = cineca|enea|ubuntu
-MPIFLAVOURS = intel|ch|open
+MACHINETYPE = cineca|enea|ubuntu
+MPIFLAVOUR = intel|ch|open
 LIBTYPE  = mkl|src|sys
 
 PROJECT_DIR = $(CURDIR)
@@ -8,22 +8,22 @@ BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
 LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/lapack-3.9.0
-SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-2.1.0
+SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-2.1.0.mod
 FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
 
-
-DEBUG = -g -O3
+OPTIMIZATION = -O3
+DEBUG = -g
 NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
-CFLAGS = $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259 # $(NO_WARN_UNUSED)
-FFLAGS = $(DEBUG)
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259 # $(NO_WARN_UNUSED)
+FFLAGS = $(OPTIMIZATION) $(DEBUG)
 
 
-## check machine/platform, libraries type and mpi flavour
+## check machine/platform, library type and mpi flavour
 ifeq ($(machine),)
-  $(error Unspecified machine, please specify 'machine = $(MACHINELIST)')
+  $(error Unspecified machine, please specify 'machine = $(MACHINETYPE)')
 else
-  ifneq ($(machine),$(filter $(machine),$(subst |, ,$(MACHINELIST))))
-    $(error Unknown machine '$(machine)', please specify 'machine = $(MACHINELIST)')
+  ifneq ($(machine),$(filter $(machine),$(subst |, ,$(MACHINETYPE))))
+    $(error Unknown machine '$(machine)', please specify 'machine = $(MACHINETYPE)')
   endif
 endif
 
@@ -36,10 +36,10 @@ else
 endif
 
 ifeq ($(mpi),)
-  $(error Unspecified mpi flavour, please specify 'mpi = $(MPIFLAVOURS)')
+  $(error Unspecified mpi flavour, please specify 'mpi = $(MPIFLAVOUR)')
 else
-  ifneq ($(mpi),$(filter $(mpi),$(subst |, ,$(MPIFLAVOURS))))
-    $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = $(MPIFLAVOURS)')
+  ifneq ($(mpi),$(filter $(mpi),$(subst |, ,$(MPIFLAVOUR))))
+    $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = $(MPIFLAVOUR)')
   endif
 endif
 
@@ -114,6 +114,8 @@ $(LAPACK_LIB_DIR)/librefblas.a:
 $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 	cd $(LAPACK_LIB_DIR) && $(MAKE) lapacklib
 
+# do not use "-j" flag: compilation inconsistency!
+# ScaLAPACK's makefile has been modified to accept variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
