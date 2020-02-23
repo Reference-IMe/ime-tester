@@ -90,8 +90,8 @@ FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
 SEQ_EXE = compare_solve
-PAR_EXE = compare_all_p compare_checkpointing compare_svxk compare_solve_p compare_pviDGEF compare_pviDGESV \
-			run_IMe-SV run_IMe-SV-early run_SPK-SV_mkl run_SPK-SV_src
+PAR_EXE = compare_all_p compare_checkpointing compare_solve_p compare_pviDGESV \
+			run_IMe-SV run_IMe-SV-early run_IMe-SV-early2 run_SPK-SV_mkl run_SPK-SV_src # compare_pviDGEF compare_svxk
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -140,6 +140,12 @@ $(BIN_DIR)/run_IMe-SV-early: $(TST_DIR)/run_IMe-SV-early.c \
 				$(SRC_DIR)/pviDGESV_WO.early.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV-early $(TST_DIR)/run_IMe-SV-early.c $(PAR_MACHINEFLAGS)
+
+$(BIN_DIR)/run_IMe-SV-early2: $(TST_DIR)/run_IMe-SV-early2.c \
+				$(TST_DIR)/test_IMe_pviDGESV.early2.h \
+				$(SRC_DIR)/pviDGESV_WO.early.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV-early2 $(TST_DIR)/run_IMe-SV-early2.c $(PAR_MACHINEFLAGS)
 
 $(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
 				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
@@ -192,23 +198,23 @@ $(BIN_DIR)/compare_checkpointing: $(TST_DIR)/compare_checkpointing.c \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_checkpointing $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
-$(BIN_DIR)/compare_svxk: $(TST_DIR)/compare_svxk.c \
+#$(BIN_DIR)/compare_svxk: $(TST_DIR)/compare_svxk.c \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/pviDGEF_WO.h \
 				$(TST_DIR)/../*.h \
 				$(TST_DIR)/*.h \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				| $(BIN_DIR)
-	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_svxk -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+#	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_svxk -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
-$(BIN_DIR)/compare_pviDGEF: $(TST_DIR)/compare_pviDGEF.c \
+#$(BIN_DIR)/compare_pviDGEF: $(TST_DIR)/compare_pviDGEF.c \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/pviDGEF*.h \
 				$(TST_DIR)/../*.h \
 				$(TST_DIR)/*.h \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				| $(BIN_DIR)
-	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_pviDGEF -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+#	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/compare_pviDGEF -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
 $(BIN_DIR)/compare_pviDGESV: $(TST_DIR)/compare_pviDGESV.c \
 				$(PAR_STD_DEP) \
