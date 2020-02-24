@@ -56,8 +56,11 @@ duration_t not_implemented={-99,-99};
 
 int main(int argc, char **argv)
 {
-    MPI_Init(&argc, &argv);
-    int main_rank, totprocs; //
+    int main_rank, totprocs, mpisupport; //
+
+    //MPI_Init(&argc, &argv);
+    MPI_Init_thread(&argc ,&argv, MPI_THREAD_FUNNELED, &mpisupport);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &main_rank);	//get current process id
     MPI_Comm_size(MPI_COMM_WORLD, &totprocs);	// get number of processes
 
