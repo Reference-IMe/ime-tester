@@ -90,7 +90,8 @@ FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
 SEQ_EXE = compare_solve
-PAR_EXE = compare_all_p compare_checkpointing compare_solve_p run_IMe-SV run_SPK-SV_mkl run_SPK-SV_src 
+PAR_EXE = compare_all_p compare_checkpointing compare_solve_p \
+			run_IMe-SV run_IMe-SV-omp run_SPK-SV_mkl run_SPK-SV_src # compare_pviDGEF compare_svxk
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -133,6 +134,24 @@ $(BIN_DIR)/run_IMe-SV: $(TST_DIR)/run_IMe-SV.c \
 				$(SRC_DIR)/pviDGESV_WO.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
+
+$(BIN_DIR)/run_IMe-SV-early: $(TST_DIR)/run_IMe-SV-early.c \
+				$(TST_DIR)/test_IMe_pviDGESV.early.h \
+				$(SRC_DIR)/pviDGESV_WO.early.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV-early $(TST_DIR)/run_IMe-SV-early.c $(PAR_MACHINEFLAGS)
+
+$(BIN_DIR)/run_IMe-SV-early2: $(TST_DIR)/run_IMe-SV-early2.c \
+				$(TST_DIR)/test_IMe_pviDGESV.early2.h \
+				$(SRC_DIR)/pviDGESV_WO.early.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV-early2 $(TST_DIR)/run_IMe-SV-early2.c $(PAR_MACHINEFLAGS)
+
+$(BIN_DIR)/run_IMe-SV-omp: $(TST_DIR)/run_IMe-SV-omp.c \
+				$(TST_DIR)/test_IMe_pviDGESV.omp.h \
+				$(SRC_DIR)/pviDGESV_WO.omp.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -qopenmp -lifcore -o $(BIN_DIR)/run_IMe-SV-omp $(TST_DIR)/run_IMe-SV-omp.c $(PAR_MACHINEFLAGS)
 
 $(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
 				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
