@@ -14,7 +14,7 @@ FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
 OPTIMIZATION = -O3
 DEBUG = -g
 NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259 -qopenmp # $(NO_WARN_UNUSED)
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259 # -qopenmp # $(NO_WARN_UNUSED)
 FFLAGS = $(OPTIMIZATION) $(DEBUG)
 
 
@@ -138,7 +138,7 @@ $(BIN_DIR)/run_IMe-SV-omp: $(TST_DIR)/run_IMe-SV-omp.c \
 				$(TST_DIR)/test_IMe_pviDGESV.omp.h \
 				$(SRC_DIR)/pviDGESV_WO.omp.h \
 				| $(BIN_DIR)
-	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV-omp $(TST_DIR)/run_IMe-SV-omp.c $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) -qopenmp -lifcore -o $(BIN_DIR)/run_IMe-SV-omp $(TST_DIR)/run_IMe-SV-omp.c $(PAR_MACHINEFLAGS)
 	
 $(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
 				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
