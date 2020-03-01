@@ -89,8 +89,8 @@ SEQ_MACHINEFLAGS = $(SEQ_MFLAGS_$(machine)_$(mpi)_$(library))
 FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
-SEQ_EXE = compare_solve
-PAR_EXE = compare_all_p compare_checkpointing compare_solve_p run_IMe-SV run_SPK-SV_mkl run_SPK-SV_src 
+SEQ_EXE = # compare_solve
+PAR_EXE = run_IMe-SV run_SPK-SV_mkl run_SPK-SV_src # compare_all_p compare_checkpointing compare_solve_p
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -131,6 +131,7 @@ $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 $(BIN_DIR)/run_IMe-SV: $(TST_DIR)/run_IMe-SV.c \
 				$(TST_DIR)/test_IMe_pviDGESV.h \
 				$(SRC_DIR)/pviDGESV_WO.h \
+				$(SRC_DIR)/pDGEIT_WX.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
 

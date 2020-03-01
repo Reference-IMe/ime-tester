@@ -39,6 +39,7 @@ duration_t test_IMe_pviDGESV(const char* label, int verbosity, int rows, int col
 		{
 			A2=AllocateMatrix2D(rows, cols, CONTIGUOUS);
 			FillMatrix2D(A2, rows, cols);
+			//ReferenceMatrix2D(A2, rows, cols);;
 
 			OneMatrix2D(bb, rows, nrhs);
 
