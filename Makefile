@@ -132,6 +132,8 @@ $(BIN_DIR)/run_IMe-SV: $(TST_DIR)/run_IMe-SV.c \
 				$(TST_DIR)/test_IMe_pviDGESV.h \
 				$(SRC_DIR)/pviDGESV_WO.h \
 				$(SRC_DIR)/pDGEIT_WX.h \
+				$(SRC_DIR)/pviDGESV_WO_1D.h \
+				$(SRC_DIR)/pDGEIT_WX_1D.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
 
