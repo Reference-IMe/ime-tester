@@ -10,7 +10,7 @@
 
     	//////////////////////////////////////////////////////////////////////////////////
 
-		versionrun[0][rep]=test_ScaLAPACK_pDGESV(versionname[0], verbose, rows, cols, 1, nb, main_rank, cprocs);
+		versionrun[0][rep]=test_ScaLAPACK_pDGESV(versionname[0], verbose, rows, cols, 1, scalapack_nb, main_rank, cprocs);
 		fpdata(0);
 
     	//////////////////////////////////////////////////////////////////////////////////

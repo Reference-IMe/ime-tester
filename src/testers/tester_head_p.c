@@ -76,7 +76,8 @@ int main(int argc, char **argv)
     char* file_name;
     int rows;
     int cols;
-    int nb;		// (scalapack) blocking factor
+    int scalapack_nb;		// (scalapack) blocking factor
+    int ime_nb;
 
     //TODO
     //int cnd;	// condition number
@@ -105,7 +106,8 @@ int main(int argc, char **argv)
     failing_rank=2;		// process 2 will fail
     checkpoint_skip_interval=-1; // -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
     //cleanup_interval=3;
-    nb=SCALAPACKNB;
+    scalapack_nb=SCALAPACKNB;
+    ime_nb=1;
     //TODO
     //cnd=1;
     //seed=1;
@@ -149,8 +151,12 @@ int main(int argc, char **argv)
 			checkpoint_skip_interval = atoi(argv[i+1]);
 			i++;
 		}
-		if( strcmp( argv[i], "-nb" ) == 0 ) {
-			nb = atoi(argv[i+1]);
+		if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
+			scalapack_nb = atoi(argv[i+1]);
+			i++;
+		}
+		if( strcmp( argv[i], "-ime-nb" ) == 0 ) {
+			ime_nb = atoi(argv[i+1]);
 			i++;
 		}
 		//TODO
@@ -169,7 +175,7 @@ int main(int argc, char **argv)
 	rows=n;
     cols=n;
     cprocs=totprocs-sprocs;		// number of processes for real IMe calc
-    scalapack_iter=(int)ceil(rows/nb);
+    scalapack_iter=(int)ceil(rows/scalapack_nb);
     failing_level=n/2;
 
     if (main_rank==0 && verbose>0)
@@ -179,8 +185,9 @@ int main(int argc, char **argv)
 		//printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
 		printf("     IMe iterations:                %d\n",rows);
+		printf("     IMe blocking factor:           %d\n",ime_nb);
 		printf("     SPK-like iterations:           %d\n",scalapack_iter);
-		printf("     SPK-like blocking factor:      %d\n",nb);
+		printf("     SPK-like blocking factor:      %d\n",scalapack_nb);
 
 		printf("     Fault tolerance:               ");
 		if (sprocs>0)
@@ -189,7 +196,7 @@ int main(int argc, char **argv)
 			printf("     IMe failing rank:              %d\n",failing_rank);
 			printf("     IMe failing level:             %d\n",failing_level);
 			printf("     SPK-like failing level:        %d\n",n-failing_level);
-			printf("     SPK-like failing iteration:    %d\n",(int)ceil((n-failing_level)/nb));
+			printf("     SPK-like failing iteration:    %d\n",(int)ceil((n-failing_level)/scalapack_nb));
 			printf("     Checkpoint skip interval:      %d\n",checkpoint_skip_interval);
 
 			printf("     Checkpoint freq.:              ");
@@ -225,7 +232,7 @@ int main(int argc, char **argv)
 			printf("WRN: No output to file\n");
 		}
 
-		if (n/cprocs < nb )
+		if (n/cprocs < scalapack_nb )
 		{
 			printf("WRN: Blocking factor probably too small\n");;
 		}
@@ -271,10 +278,10 @@ int main(int argc, char **argv)
 		//fpinfo("seed",seed);
 		//fpinfo("condition number",cnd);
 		fpinfo("matrix size",n);
-		fpinfo("blocking factor",nb);
+		fpinfo("blocking factor",scalapack_nb);
 		fpinfo("repetitions",repetitions);
 
-		fprintf(fp,"head,code name,run num. (0=avg),run time\n");
+		fprintf(fp,"head,code name,run num. (0=avg,-1=med),run time\n");
 	}
 	else
 	{

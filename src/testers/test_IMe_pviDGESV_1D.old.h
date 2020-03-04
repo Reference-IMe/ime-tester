@@ -6,7 +6,7 @@
 #include "../pviDGESV_WO_1D.h"
 
 
-duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int rows, int cols, int nrhs, int bf, int rank, int cprocs, int sprocs)
+duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int cprocs, int sprocs)
 {
 	duration_t timing, timing_max;
 	result_info info;
@@ -56,7 +56,7 @@ duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int rows, int 
 			A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
 		}
 
-		info = pviDGESV_WO_1D(bf, rows, A2, nrhs, bb, xx, comm_calc);
+		info = pviDGESV_WO_1D(2, rows, A2, nrhs, bb, xx, comm_calc);
 
 		if (rank==0 && verbosity>1)
 		{
