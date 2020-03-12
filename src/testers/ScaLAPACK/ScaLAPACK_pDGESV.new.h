@@ -110,10 +110,6 @@ result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_glob
 		pdgesv_(  &n, &m, At, &one, &one, descAt, ipiv, B, &one, &one, descB, &info );
 		wall_clock.core_end_time = time(NULL);
 
-		if (mpi_rank==0)
-		{
-			printf("\n** err: %d\n",info);
-		}
 		// re-transpose result
 		pdtran_(&m, &n, &done, B, &one, &one, descB, &dzero, Bt, &one, &one, descBt);
 

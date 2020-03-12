@@ -10,6 +10,7 @@
 #include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
+#include "../helpers/matrix_advanced.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
 duration_t test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int cols, int nrhs, int nb, int rank, int cprocs)
@@ -24,7 +25,9 @@ duration_t test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int
 	{
 		A=AllocateMatrix1D(rows, cols);
 		bb=AllocateMatrix1D(rows, nrhs);
-		FillMatrix1D(A, rows, cols);
+		//FillMatrix1D(A, rows, cols);
+		//ReferenceMatrix1D(A, rows, cols);
+		RandomMatrix1D(A, rows, cols, 1);
 		OneMatrix1D(bb, rows, nrhs);
 
 		if (verbosity>2)
@@ -34,6 +37,12 @@ duration_t test_ScaLAPACK_pDGESV(const char* label, int verbosity, int rows, int
 			printf("\n Vector b:\n");
 			PrintMatrix1D(bb, rows, nrhs);
 		}
+
+		//OrthogonalizeMatrix1D(A, rows, cols);
+		RandomSquareMatrix1D_cnd(A, rows, 1, 10);
+		printf("\n\n GOOD-Matrix A:\n");
+		PrintMatrix1D(A, rows, cols);
+		printf("\n\n CND A: %g\n",ConditionNumber1D( A, rows, cols));
 	}
 
 	info = ScaLAPACK_pDGESV_calc(rows, A, nrhs, bb, nb, rank, cprocs);

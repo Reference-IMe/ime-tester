@@ -90,6 +90,10 @@ void ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int
 		pdgesv_(  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info );
 		pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 
+		if (rank==0)
+		{
+			printf("\n***err: %d\n",info)
+		}
 		// cleanup
 		free(A);
 		free(B);
