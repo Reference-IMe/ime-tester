@@ -16,4 +16,6 @@ extern void dgemm_(char* transA, char* transB, int* m, int* n, int* k, double* a
 extern void dgesvd_( char* jobu, char* jobvt, int* m, int* n, double* a,
                 int* lda, double* s, double* u, int* ldu, double* vt, int* ldvt,
                 double* work, int* lwork, int* info );
+extern double dlange_(char *norm, int* m, int* n, double* a, int* lda, double* work);
+
 #endif /* __LAPACK_H__ */

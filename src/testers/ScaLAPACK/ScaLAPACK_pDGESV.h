@@ -17,9 +17,9 @@
 
 result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
 {
-	result_info wall_clock;
+	result_info result;
 
-	wall_clock.total_start_time = time(NULL);
+	result.total_start_time = time(NULL);
 
 	/*
 	 * n = system rank (A_global n x n)
@@ -106,14 +106,11 @@ result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_glob
 		pdtran_(&n, &n, &done, A, &one, &one, descA, &dzero, At, &one, &one, descAt);
 
 		// linear system equations solver
-		wall_clock.core_start_time = time(NULL);
+		result.core_start_time = time(NULL);
 		pdgesv_(  &n, &m, At, &one, &one, descAt, ipiv, B, &one, &one, descB, &info );
-		wall_clock.core_end_time = time(NULL);
+		result.core_end_time = time(NULL);
+		result.exit_code = info;
 
-		if (mpi_rank==0)
-		{
-			printf("\n** err: %d\n",info);
-		}
 		// re-transpose result
 		pdtran_(&m, &n, &done, B, &one, &one, descB, &dzero, Bt, &one, &one, descBt);
 
@@ -136,7 +133,7 @@ result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_glob
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	wall_clock.total_end_time = time(NULL);
+	result.total_end_time = time(NULL);
 
-	return wall_clock;
+	return result;
 }

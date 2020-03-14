@@ -116,4 +116,30 @@ double ConditionNumber1D(double* mat, int rows, int cols)
 	return cnd;
 }
 
+double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
+{
+	// errors clearly explained: https://www.cs.cornell.edu/~bindel/class/cs6210-f16/lec/2016-09-02.pdf
+	// in LAPACK: https://www.netlib.org/lapack/lug/node78.html
+	int i,j;
+	double nre;
+	double* diffmat;
+			diffmat = AllocateMatrix1D(rows, cols);
+	double* work;
+			work = AllocateVector(rows);
+	char norm = 'I';
+	for (i=0;i<rows;i++)
+	{
+		for (j=0;j<cols;j++)
+		{
+			diffmat[i*cols+j] = mat[i*cols+j] - refmat[i*cols+j];
+		}
+	}
+	nre = dlange_(&norm, &rows, &cols, diffmat, &rows, work) / dlange_(&norm, &rows, &cols, refmat, &rows, work);
+
+	DeallocateMatrix1D(diffmat);
+	DeallocateVector(work);
+
+	return nre;
+}
+
 #endif /* SRC_HELPERS_MATRIX_ADVANCED_H_ */

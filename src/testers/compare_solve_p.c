@@ -65,10 +65,10 @@
      		fpdata(7);
     	}
 
-    	versionrun[ 8][rep]=test_ScaLAPACK_pDGESV(versionname[8], verbose, rows, cols, 1, nb, main_rank, cprocs);		// SPK solve with 1 rhs
+    	versionrun[ 8][rep]=test_ScaLAPACK_pDGESV(versionname[8], verbose, A_init, rows, cols, 1, nb, main_rank, cprocs);		// SPK solve with 1 rhs
  		fpdata(8);
 
-    	versionrun[ 9][rep]=test_ScaLAPACK_pDGESV(versionname[9], verbose, rows, cols, nRHS, nb, main_rank, cprocs);	// SPK solve with 10 rhs
+    	versionrun[ 9][rep]=test_ScaLAPACK_pDGESV(versionname[9], verbose, A_init, rows, cols, nRHS, nb, main_rank, cprocs);	// SPK solve with 10 rhs
  		fpdata(9);
 
     	if (sprocs>0)

@@ -64,9 +64,15 @@
 	//MPI_Barrier(MPI_COMM_WORLD);
 	//printf("Done %d.\n",main_rank);
 
-	if (file_name_len>0 && main_rank==0)
+	if (main_rank==0)
 	{
-		fclose(fp);
+		if (file_name_len>0)
+		{
+			fclose(fp);
+		}
+		DeallocateMatrix1D(A_ref);
+		DeallocateVector(b_ref);
+		DeallocateVector(x_ref);
 	}
 
 	MPI_Finalize();

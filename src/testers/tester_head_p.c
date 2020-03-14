@@ -14,7 +14,9 @@
 
 #include "../helpers/info.h"
 #include "../helpers/matrix.h"
+#include "../helpers/matrix_advanced.h"
 #include "../helpers/vector.h"
+#include "../helpers/lapack.h"
 #include "../helpers/scalapack.h"
 
 #define MAX_VERSIONS 30
@@ -24,6 +26,31 @@
  * header code for verbatim inclusion to create a code tester for some parallel versions
  */
 
+char* faketrim(char* str)
+{
+	// credits to https://codeforwin.org/2016/04/c-program-to-trim-trailing-white-space-characters-in-string.html
+
+	int index, i;
+
+	/* Set default index */
+	index = -1;
+
+	/* Find last index of non-white space character */
+	i = 0;
+	while(str[i] != '\0')
+	{
+		if(str[i] != ' ' && str[i] != '\t' && str[i] != '\n')
+		{
+			index= i;
+		}
+
+		i++;
+	}
+
+	/* Mark next character to last non-white space character as NULL */
+	str[index + 1] = '\0';
+	return str;
+}
 
 void dsort(duration_t* duration, int n)
 {
@@ -67,7 +94,7 @@ int main(int argc, char **argv)
     int i,rep;
 
 	int versions;
-    const char* versionname[MAX_VERSIONS];
+    char* versionname[MAX_VERSIONS];
     duration_t versionrun[MAX_VERSIONS][MAX_RUNS];
     duration_t versiontot[MAX_VERSIONS];
 
@@ -79,9 +106,8 @@ int main(int argc, char **argv)
     int scalapack_nb;		// (scalapack) blocking factor
     int ime_nb;
 
-    //TODO
-    //int cnd;	// condition number
-    //int seed;	// seed for random matrix generation
+    int cnd;	// condition number
+    int seed;	// seed for random matrix generation
 
     int sprocs;		// number of processes to allocate for summing (0 = no fault tolerance)
     int cprocs;		// number of processes for real IMe calc
@@ -99,18 +125,16 @@ int main(int argc, char **argv)
      * default values
      */
     n=8;
-    verbose=1;			// minimum verbosity
-    repetitions=1;
-    sprocs=0;			// no fault tolerance enabled
-    file_name_len=0;	// no output to file
-    failing_rank=2;		// process 2 will fail
-    checkpoint_skip_interval=-1; // -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
-    //cleanup_interval=3;
-    scalapack_nb=SCALAPACKNB;
-    ime_nb=1;
-    //TODO
-    //cnd=1;
-    //seed=1;
+    verbose=1;					// minimum output verbosity (0 = none)
+    repetitions=1;				// how many calls for each routine
+    sprocs=0;					// no fault tolerance enabled
+    file_name_len=0;			// no output to file
+    failing_rank=2;				// process 2 will fail
+    checkpoint_skip_interval=-1;// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
+    scalapack_nb=SCALAPACKNB;	// scalapack blocking factor, default defined in header
+    ime_nb=1;					// ime blocking factor
+    cnd=1;						// condition number for randomly generated matrices
+    seed=1;						// seed for random generation
 
     /*
      * read command line parameters
@@ -159,9 +183,7 @@ int main(int argc, char **argv)
 			ime_nb = atoi(argv[i+1]);
 			i++;
 		}
-		//TODO
-		/*
-			if( strcmp( argv[i], "-cnd" ) == 0 ) {
+		if( strcmp( argv[i], "-cnd" ) == 0 ) {
 			cnd = atoi(argv[i+1]);
 			i++;
 		}
@@ -169,20 +191,24 @@ int main(int argc, char **argv)
 			seed = atoi(argv[i+1]);
 			i++;
 		}
-		*/
 	}
 
+	/*
+	 * other default values, depending on inputs
+	 */
 	rows=n;
     cols=n;
     cprocs=totprocs-sprocs;		// number of processes for real IMe calc
     scalapack_iter=(int)ceil(rows/scalapack_nb);
     failing_level=n/2;
 
+    /*
+     * print summary to video
+     */
     if (main_rank==0 && verbose>0)
     {
-		//TODO
-    	//printf("     Matrix condition number:       %d\n",cnd);
-		//printf("     Matrix random generation seed: %d\n",seed);
+    	printf("     Matrix condition number:       %d\n",cnd);
+		printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
 		printf("     IMe iterations:                %d\n",rows);
 		printf("     IMe blocking factor:           %d\n",ime_nb);
@@ -248,12 +274,40 @@ int main(int argc, char **argv)
         return(1);
     }
 
-#define fpinfo(string_label,integer_info) if (fp!=NULL && main_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info);}
-#define fpdata(track_num) if (fp!=NULL && main_rank==0) { \
-	fprintf(fp,"data,%s,%d,%.0f\n",versionname[track_num],rep+1,versionrun[ track_num][rep].total); \
-	fprintf(fp,"data,%s%s,%d,%.0f\n",versionname[track_num],"(core)",rep+1,versionrun[ track_num][rep].core); \
+	/*
+	 * prepare input matrices
+	 */
+	int read_cnd;
+	double* A_ref;
+	double* x_ref;
+	double* b_ref;
+	char transA = 'T', transx = 'N';
+	double one = 1.0, zero = 0.0;
+	int m=1;
+	if (main_rank==0)
+	{
+		A_ref = AllocateMatrix1D(n, n);
+		x_ref = AllocateVector(n);
+		b_ref = AllocateVector(n);
+		RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
+		read_cnd = (int)ConditionNumber1D(A_ref, n, n);
+		if (read_cnd!=cnd && verbose>0)
+		{
+			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
+		}
+		FillVector(x_ref, n, 1);
+		dgemm_(&transA, &transx, &n, &m, &n, &one, A_ref, &n, x_ref, &n, &zero, b_ref, &n);
 	}
 
+	/*
+	 * print summary to file
+	 */
+	#define fpinfo(string_label,integer_info) if (fp!=NULL && main_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
+	}
+	#define fpdata(track_num) if (fp!=NULL && main_rank==0) { \
+		fprintf(fp,"data,%s,%d,%.0f\n",versionname[track_num],rep+1,versionrun[ track_num][rep].total); \
+		fprintf(fp,"data,%s%s,%d,%.0f\n",versionname[track_num],"(core)",rep+1,versionrun[ track_num][rep].core); \
+	}
 
 	time_t rawtime;
 	struct tm *readtime;
@@ -263,6 +317,14 @@ int main(int argc, char **argv)
 	if (file_name_len>0 && main_rank==0)
 	{
 		fp=fopen(file_name,"w");
+
+		fprintf(fp,"info,command,");
+		for (i=0;i<argc;i++)
+		{
+			fprintf(fp,"%s ",argv[i]);
+		}
+		fprintf(fp,"\n");
+
 		fpinfo("year",readtime->tm_year+1900);
 		fpinfo("month",readtime->tm_mon+1);
 		fpinfo("day",readtime->tm_mday);
@@ -274,16 +336,22 @@ int main(int argc, char **argv)
 		fpinfo("failing rank",failing_rank);
 		fpinfo("failing level",failing_level);
 		fpinfo("checkpoint skip interval",checkpoint_skip_interval);
-		//TODO
-		//fpinfo("seed",seed);
-		//fpinfo("condition number",cnd);
+		fpinfo("seed",seed);
+		fpinfo("condition number",read_cnd);
 		fpinfo("matrix size",n);
-		fpinfo("blocking factor",scalapack_nb);
+		fpinfo("scalapack blocking factor",scalapack_nb);
+		fpinfo("ime blocking factor",ime_nb);
 		fpinfo("repetitions",repetitions);
 
-		fprintf(fp,"head,code name,run num. (0=avg,-1=med),run time\n");
+		fprintf(fp,"head,code name,run num. (0=avg,-1=mdn),run time\n");
 	}
 	else
 	{
 		fp=NULL;
 	}
+	;
+
+
+
+
+
