@@ -14,7 +14,7 @@
 
     	versionrun[0][rep]=test_IMe_pviDGESV(versionname[0], verbose, n, A_ref, x_ref, b_ref, 1, main_rank, cprocs, sprocs);
  		fpdata(0);
- 		versionrun[1][rep]=test_IMe_pviDGESV_1D(versionname[1], verbose, rows, cols, 1, ime_nb, main_rank, cprocs, sprocs);
+ 		versionrun[1][rep]=test_IMe_pviDGESV_1D(versionname[1], verbose, n, A_ref, x_ref, b_ref, 1, ime_nb, main_rank, cprocs, sprocs);
  		fpdata(1);
     	//////////////////////////////////////////////////////////////////////////////////
 

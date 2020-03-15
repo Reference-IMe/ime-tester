@@ -3,17 +3,22 @@
 #include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
+#include "../helpers/matrix_advanced.h"
 #include "../pviDGESV_WO_1D.h"
 
 
-duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int rows, int cols, int nrhs, int bf, int rank, int cprocs, int sprocs)
+duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int n, double* A_ref, double* x_ref, double* b_ref, int nrhs, int bf, int rank, int cprocs, int sprocs)
 {
 	duration_t timing, timing_max;
 	result_info info;
 
+	int i,j;
+
 	double** A2;
+	double* A2_1D;
 	double** bb;
 	double** xx;
+	double* xx_ref;
 
 	MPI_Comm comm_calc;
 
@@ -32,23 +37,31 @@ duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int rows, int 
 
 	if (i_calc)
 	{
-		xx=AllocateMatrix2D(rows, nrhs, CONTIGUOUS);
-		bb=AllocateMatrix2D(rows, nrhs, CONTIGUOUS);
+		xx=AllocateMatrix2D(n, nrhs, CONTIGUOUS);
+		bb=AllocateMatrix2D(n, nrhs, CONTIGUOUS);
 
 		if (rank==0)
 		{
-			A2=AllocateMatrix2D(rows, cols, CONTIGUOUS);
-			//FillMatrix2D(A2, rows, cols);
-			ReferenceMatrix2D(A2, rows, cols);;
+			xx_ref=AllocateMatrix1D(n, nrhs);
+			A2=AllocateMatrix2D(n, n, CONTIGUOUS);
+			A2_1D=&A2[0][0];
+			CopyMatrix1D(A_ref, A2_1D, n, n);
 
-			OneMatrix2D(bb, rows, nrhs);
+			for (i=0;i<n;i++)
+			{
+				for (j=0;j<nrhs;j++)
+				{
+					bb[i][j] = b_ref[i];
+					xx_ref[i*nrhs+j] = x_ref[i];
+				}
+			}
 
 			if (verbosity>2)
 			{
 				printf("\n\n Matrix A:\n");
-				PrintMatrix2D(A2, rows, cols);
+				PrintMatrix2D(A2, n, n);
 				printf("\n Vector b:\n");
-				PrintMatrix2D(bb, rows, nrhs);
+				PrintMatrix2D(bb, n, nrhs);
 			}
 		}
 		else
@@ -56,19 +69,32 @@ duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int rows, int 
 			A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
 		}
 
-		info = pviDGESV_WO_1D(bf, rows, A2, nrhs, bb, xx, comm_calc);
+		info = pviDGESV_WO_1D(bf, n, A2, nrhs, bb, xx, comm_calc);
 
-		if (rank==0 && verbosity>1)
-		{
-			printf("\nThe %s solution is:\n",label);
-			PrintMatrix2D(xx, rows, nrhs);
-		}
-
-		DeallocateMatrix2D(xx, rows, CONTIGUOUS);
-		DeallocateMatrix2D(bb, rows, CONTIGUOUS);
 		if (rank==0)
 		{
-			DeallocateMatrix2D(A2, rows, CONTIGUOUS);
+			// check exit condition
+			if (info.exit_code!=0)
+			{
+				printf("\n** Dangerous exit code.. (%d)**\n",info.exit_code);
+			}
+			// calc error
+			info.norm_rel_err = NormwiseRelativeError1D(&xx[0][0], xx_ref, n, nrhs);
+
+			if (verbosity>1)
+			{
+				printf("\nThe %s solution is:\n",label);
+				PrintMatrix2D(xx, n, nrhs);
+				printf("\n with exit code     %d\n",info.exit_code);
+				printf("      norm.rel.err. %f\n",info.norm_rel_err);
+			}
+		}
+
+		DeallocateMatrix2D(xx, n, CONTIGUOUS);
+		DeallocateMatrix2D(bb, n, CONTIGUOUS);
+		if (rank==0)
+		{
+			DeallocateMatrix2D(A2, n, CONTIGUOUS);
 		}
 		else
 		{
