@@ -290,7 +290,7 @@ int main(int argc, char **argv)
 		x_ref = AllocateVector(n);
 		b_ref = AllocateVector(n);
 		RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
-		read_cnd = (int)ConditionNumber1D(A_ref, n, n);
+		read_cnd = round(ConditionNumber1D(A_ref, n, n));
 		if (read_cnd!=cnd && verbose>0)
 		{
 			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
@@ -337,7 +337,8 @@ int main(int argc, char **argv)
 		fpinfo("failing level",failing_level);
 		fpinfo("checkpoint skip interval",checkpoint_skip_interval);
 		fpinfo("seed",seed);
-		fpinfo("condition number",read_cnd);
+		fpinfo("condition number set",cnd);
+		fpinfo("condition number got",read_cnd);
 		fpinfo("matrix size",n);
 		fpinfo("scalapack blocking factor",scalapack_nb);
 		fpinfo("ime blocking factor",ime_nb);
