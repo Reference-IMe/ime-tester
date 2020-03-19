@@ -7,9 +7,9 @@
 #include "../pviDGESV_WO_1D.h"
 
 
-duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int n, double* A_ref, double* x_ref, double* b_ref, int nrhs, int bf, int rank, int cprocs, int sprocs)
+run_info test_IMe_pviDGESV_1D(const char* label, int verbosity, int n, double* A_ref, double* x_ref, double* b_ref, int nrhs, int bf, int rank, int cprocs, int sprocs)
 {
-	duration_t timing, timing_max;
+	run_info process_info, team_info;
 	result_info info;
 
 	int i,j;
@@ -103,8 +103,8 @@ duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int n, double*
 	}
 	else
 	{
-		timing.total=0;
-		timing.core=0;
+		process_info.total_time=0;
+		process_info.core_time=0;
 	}
 
 	if (sprocs>0)
@@ -115,5 +115,5 @@ duration_t test_IMe_pviDGESV_1D(const char* label, int verbosity, int n, double*
 		}
 	}
 
-	TEST_END(info, timing, timing_max);
+	TEST_END(info, process_info, team_info);
 }

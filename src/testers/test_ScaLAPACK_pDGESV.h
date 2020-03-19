@@ -13,9 +13,9 @@
 #include "../helpers/matrix_advanced.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
-duration_t test_ScaLAPACK_pDGESV(const char* label, int verbosity, int n, double* A_ref, double* x_ref, double* b_ref, int nrhs, int nb, int rank, int cprocs)
+run_info test_ScaLAPACK_pDGESV(const char* label, int verbosity, int n, double* A_ref, double* x_ref, double* b_ref, int nrhs, int nb, int rank, int cprocs)
 {
-	duration_t timing, timing_max;
+	run_info process_info, team_info;
 	result_info info;
 
 	int i,j;
@@ -74,5 +74,5 @@ duration_t test_ScaLAPACK_pDGESV(const char* label, int verbosity, int n, double
 		DeallocateMatrix1D(xx_ref);
 	}
 
-	TEST_END(info, timing, timing_max);
+	TEST_END(info, process_info, team_info);
 }

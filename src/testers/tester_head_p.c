@@ -52,34 +52,34 @@ char* faketrim(char* str)
 	return str;
 }
 
-void dsort(duration_t* duration, int n)
+void dsort(run_info* run, int n)
 {
     /* Sort the given array number, of length n */
     int j, i;
-    duration_t temp;
+    run_info temp;
 
     for (i = 1; i < n; i++)
     {
         for (j = 0; j < n - i; j++)
         {
-            if (duration[j].total > duration[j + 1].total )
+            if (run[j].total_time > run[j + 1].total_time )
             {
-                temp = duration[j];
-                duration[j] = duration[j + 1];
-                duration[j + 1] = temp;
+                temp = run[j];
+                run[j] = run[j + 1];
+                run[j + 1] = temp;
             }
         }
     }
 }
 
-duration_t dmedian(duration_t* duration, int n)
+run_info dmedian(run_info* run, int n)
 {
-	dsort(duration, n);
-	return duration[n/2];
+	dsort(run, n);
+	return run[n/2];
 }
 
-duration_t not_run={-1, -1};
-duration_t not_implemented={-99,-99};
+run_info not_run={-1, -1, -1, -1};
+run_info not_implemented={-99,-99, -1, -1};
 
 int main(int argc, char **argv)
 {
@@ -95,8 +95,8 @@ int main(int argc, char **argv)
 
 	int versions;
     char* versionname[MAX_VERSIONS];
-    duration_t versionrun[MAX_VERSIONS][MAX_RUNS];
-    duration_t versiontot[MAX_VERSIONS];
+    run_info versionrun[MAX_VERSIONS][MAX_RUNS];
+    run_info versiontot[MAX_VERSIONS];
 
     int n;		// matrix size
     int file_name_len;
@@ -305,8 +305,12 @@ int main(int argc, char **argv)
 	#define fpinfo(string_label,integer_info) if (fp!=NULL && main_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
 	}
 	#define fpdata(track_num) if (fp!=NULL && main_rank==0) { \
-		fprintf(fp,"data,%s,%d,%.0f\n",versionname[track_num],rep+1,versionrun[ track_num][rep].total); \
-		fprintf(fp,"data,%s%s,%d,%.0f\n",versionname[track_num],"(core)",rep+1,versionrun[ track_num][rep].core); \
+		fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",versionname[track_num], rep+1,	versionrun[track_num][rep].exit_code,     \
+																			versionrun[track_num][rep].total_time,    \
+																			versionrun[track_num][rep].norm_rel_err); \
+		fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",versionname[track_num],"(core)", rep+1,	versionrun[track_num][rep].exit_code,     \
+																						versionrun[track_num][rep].core_time,    \
+																						versionrun[track_num][rep].norm_rel_err); \
 	}
 
 	time_t rawtime;
@@ -344,7 +348,7 @@ int main(int argc, char **argv)
 		fpinfo("ime blocking factor",ime_nb);
 		fpinfo("repetitions",repetitions);
 
-		fprintf(fp,"head,code name,run num. (0=avg,-1=mdn),run time\n");
+		fprintf(fp,"head,code name,run num. (0=avg,-1=mdn),exit code (0=ok),run time,rel.err.\n");
 	}
 	else
 	{
