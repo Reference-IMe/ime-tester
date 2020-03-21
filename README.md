@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # IMePACK
 
 Inhibition Method PACKage
@@ -36,4 +35,4 @@ These distributions are comprised in this repository, slightly modified in the m
 `src` is the *current* source folder
 
 `src-vX.Y` is the version *X.Y* source folder
->>>>>>> refs/remotes/eclipse_auto/master
+
