@@ -126,7 +126,7 @@ double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 			diffmat = AllocateMatrix1D(rows, cols);
 	double* work;
 			work = AllocateVector(rows);
-	char norm = 'I';
+	char norm = 'F';
 	for (i=0;i<rows;i++)
 	{
 		for (j=0;j<cols;j++)
