@@ -14,7 +14,7 @@ FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
 OPTIMIZATION = -O3
 DEBUG = -g
 NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259 # $(NO_WARN_UNUSED)
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259
 FFLAGS = $(OPTIMIZATION) $(DEBUG)
 
 
@@ -90,7 +90,7 @@ FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
 SEQ_EXE = # compare_solve
-PAR_EXE = run_IMe-SV run_SPK-SV_mkl run_SPK-SV_src # compare_all_p compare_checkpointing compare_solve_p
+PAR_EXE = run_IMe-SV run_IMe-SV_omp run_SPK-SV_mkl run_SPK-SV_src # compare_all_p compare_checkpointing compare_solve_p
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -135,8 +135,17 @@ $(BIN_DIR)/run_IMe-SV: $(TST_DIR)/run_IMe-SV.c \
 				$(SRC_DIR)/pviDGESV_WO_1D.h \
 				$(SRC_DIR)/pDGEIT_WX_1D.h \
 				| $(BIN_DIR)
-	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_IMe-SV $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) -wd3180 -lifcore -o $(BIN_DIR)/run_IMe-SV $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
 
+$(BIN_DIR)/run_IMe-SV_omp: $(TST_DIR)/run_IMe-SV.c \
+				$(TST_DIR)/test_IMe_pviDGESV.h \
+				$(SRC_DIR)/pviDGESV_WO.h \
+				$(SRC_DIR)/pDGEIT_WX.h \
+				$(SRC_DIR)/pviDGESV_WO_1D.h \
+				$(SRC_DIR)/pDGEIT_WX_1D.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -qopenmp -lifcore -o $(BIN_DIR)/run_IMe-SV_omp $(TST_DIR)/run_IMe-SV.c $(PAR_MACHINEFLAGS)
+	
 $(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
 				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
 				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \

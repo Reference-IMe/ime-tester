@@ -6,6 +6,7 @@
  */
 
 #include <mpi.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -205,8 +206,26 @@ int main(int argc, char **argv)
     /*
      * print summary to video
      */
+
+    int ont;					// number of OpenMP threads set with OMP_NUM_THREADS
+	int np;						// number of total processes
+
+	if (getenv("OMP_NUM_THREADS")==NULL)
+	{
+		ont=1;
+	}
+	else
+	{
+		ont=atoi(getenv("OMP_NUM_THREADS"));
+	}
+	np=totprocs*ont;
+
+    
     if (main_rank==0 && verbose>0)
     {
+		printf("     Total processes:               %d\n",np);
+		printf("     OMP threads:                   %d\n",ont);
+		printf("     MPI ranks:                     %d\n",totprocs);
     	printf("     Matrix condition number:       %d\n",cnd);
 		printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
@@ -335,7 +354,9 @@ int main(int argc, char **argv)
 		fpinfo("hour",readtime->tm_hour);
 		fpinfo("minute",readtime->tm_min);
 		fpinfo("second",readtime->tm_sec);
-		fpinfo("number of processes",totprocs);
+		fpinfo("number of MPI ranks",cprocs);
+		fpinfo("number of OMP threads",ont);
+		fpinfo("number of processes",np);
 		fpinfo("fault tolerance",sprocs);
 		fpinfo("failing rank",failing_rank);
 		fpinfo("failing level",failing_level);
