@@ -64,7 +64,7 @@ endif
 
 # marconi|galileo -> cineca
 SEQ_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
-PAR_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lmkl_gf_lp64 -lm
+PAR_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_gf_lp64 -lmkl_core -lmkl_sequential -lm
 
 SEQ_MFLAGS_cineca_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
 PAR_MFLAGS_cineca_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
@@ -90,7 +90,7 @@ FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
 SEQ_EXE = # compare_solve
-PAR_EXE = run_IMe-SV run_IMe-SV_omp run_SPK-SV_mkl run_SPK-SV_src # compare_all_p compare_checkpointing compare_solve_p
+PAR_EXE = run_IMe-SV run_IMe-SV_omp run_SPK-SV_mkl run_SPK-SV_src run_SPK-SV_mkl_stat # compare_all_p compare_checkpointing compare_solve_p
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -151,6 +151,19 @@ $(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
 				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl $(TST_DIR)/run_SPK-SV.c $(PAR_MFLAGS_$(machine)_$(mpi)_mkl)
+
+#$(BIN_DIR)/run_SPK-SV_mkl_stat: $(TST_DIR)/run_SPK-SV.c \
+				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
+				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
+				| $(BIN_DIR)
+#	$(MPICC) $(CFLAGS)  -DMKL_ILP64 -I${MKLROOT}/include -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl_stat $(TST_DIR)/run_SPK-SV.c $(PAR_MFLAGS_$(machine)_$(mpi)_mkl) ${MKLROOT}/lib/intel64/libmkl_scalapack_ilp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_blacs_intelmpi_ilp64.a -Wl,--end-group -lpthread -lm -ldl
+
+# https://software.intel.com/en-us/mkl-linux-developer-guide-linking-with-intel-mkl-cluster-software
+$(BIN_DIR)/run_SPK-SV_mkl_stat: $(TST_DIR)/run_SPK-SV.c \
+				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
+				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl_stat $(TST_DIR)/run_SPK-SV.c -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.a ${MKLROOT}/lib/intel64/libmkl_blacs_intelmpi_lp64.a ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -static_mpi -Wl,--end-group -lpthread -lm
 
 $(BIN_DIR)/run_SPK-SV_src: $(TST_DIR)/run_SPK-SV.c \
 				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
