@@ -90,7 +90,7 @@ FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
 
 ## set targets
 SEQ_EXE = # compare_solve
-PAR_EXE = run_IMe-SV run_IMe-SV_omp run_SPK-SV_mkl run_SPK-SV_src run_SPK-SV_mkl_stat # compare_all_p compare_checkpointing compare_solve_p
+PAR_EXE = run_IMe-SV run_IMe-SV_omp run_SPK-SV_mkl run_SPK-SV_src run_SPK-TRF_cp# run_SPK-SV_mkl_stat # compare_all_p compare_checkpointing compare_solve_p
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
 PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(TST_DIR)/tester_head_p.c $(TST_DIR)/tester_shoulder_p.c $(TST_DIR)/tester_tail_p.c $(SRC_DIR)/helpers/*.h
@@ -148,6 +148,14 @@ $(BIN_DIR)/run_SPK-SV_mkl: $(TST_DIR)/run_SPK-SV.c \
 				| $(BIN_DIR)
 	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl $(TST_DIR)/run_SPK-SV.c $(PAR_MFLAGS_$(machine)_$(mpi)_mkl)
 
+
+$(BIN_DIR)/run_SPK-TRF_cp: $(TST_DIR)/run_SPK-TRF_cp.c \
+				$(TST_DIR)/test_ScaLAPACK_pDGETRF_cp_ft1.h \
+				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGETRF_cp_ft1_sim.h \
+				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
+				| $(BIN_DIR)
+	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-TRF_cp $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/run_SPK-TRF_cp.c $(PAR_MFLAGS_$(machine)_$(mpi)_mkl)
+	
 # static linking experiment
 #
 #$(BIN_DIR)/run_SPK-SV_mkl_stat: $(TST_DIR)/run_SPK-SV.c \

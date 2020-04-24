@@ -17,9 +17,9 @@
 
 result_info ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
-	result_info wall_clock;
+	result_info result = {0, 0, 0, 0, 0, 0};
 
-	wall_clock.total_start_time = time(NULL);
+	result.total_start_time = time(NULL);
 
 	/*
 	 * n = system rank (A_global n x n)
@@ -90,9 +90,10 @@ result_info ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank
 		work = malloc( lwork*sizeof(double) );
 
 		// QR factorization
-		wall_clock.core_start_time = time(NULL);
+		result.core_start_time = time(NULL);
 		pdgeqrf_(  &n, &n, A, &one, &one, descA, tau, work, &lwork, &info );
-	    wall_clock.core_end_time = time(NULL);
+	    result.core_end_time = time(NULL);
+		result.exit_code = info;
 
 		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
 
@@ -104,7 +105,7 @@ result_info ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	wall_clock.total_end_time = time(NULL);
+	result.total_end_time = time(NULL);
 
-	return wall_clock;
+	return result;
 }

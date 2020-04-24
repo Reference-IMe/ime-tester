@@ -17,7 +17,7 @@
 
 result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
 {
-	result_info result;
+	result_info result = {0, 0, 0, 0, 0, 0};
 
 	result.total_start_time = time(NULL);
 
@@ -129,6 +129,12 @@ result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_glob
 		free(B);
 		free(Bt);
 		free(ipiv);
+	}
+	else
+	{
+		result.core_start_time = time(NULL);
+		result.core_end_time = time(NULL);
+		result.exit_code = 0;
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);

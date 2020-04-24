@@ -136,6 +136,7 @@ double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 	}
 	nre = dlange_(&norm, &rows, &cols, diffmat, &rows, work) / dlange_(&norm, &rows, &cols, refmat, &rows, work);
 
+
 	DeallocateMatrix1D(diffmat);
 	DeallocateVector(work);
 

@@ -20,9 +20,9 @@
 
 result_info ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
 {
-	result_info result = {0, 0, 0, 0, 0, 0};
+	result_info wall_clock;
 
-	result.total_start_time = time(NULL);
+	wall_clock.total_start_time = time(NULL);
 
 	/*
 	 * n = system rank (A_global n x n)
@@ -106,11 +106,10 @@ result_info ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* 
 		// Linear system equations solver
 		// pdgesv_(  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info );
 		// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
-		result.core_start_time = time(NULL);
+		wall_clock.core_start_time = time(NULL);
 		pdgetrf_(      &n, &n, A, &one, &one, descA, ipiv, &info );
 		pdgetrs_("N",  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info  );
-	    result.core_end_time = time(NULL);
-		result.exit_code = info;
+	    wall_clock.core_end_time = time(NULL);
 
 		pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
 
@@ -129,7 +128,7 @@ result_info ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* 
 											// error, if main function called more tha once, why?
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	result.total_end_time = time(NULL);
+	wall_clock.total_end_time = time(NULL);
 
-	return result;
+	return wall_clock;
 }

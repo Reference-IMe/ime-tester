@@ -15,8 +15,9 @@
 
 run_info test_ScaLAPACK_pDGESV(const char* label, int verbosity, int n, double* A_ref, double* x_ref, double* b_ref, int nrhs, int nb, int rank, int cprocs)
 {
-	run_info process_info, team_info;
-	result_info info;
+	run_info process_info = {0, 0, 0, 0};
+	run_info team_info = {0, 0, 0, 0};
+	result_info info = {0, 0, 0, 0, 0, 0};
 
 	int i,j;
 

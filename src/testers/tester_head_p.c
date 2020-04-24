@@ -116,6 +116,7 @@ int main(int argc, char **argv)
     int verbose;
     int failing_rank;
     int failing_level;
+    int failing_level_override;
     int checkpoint_skip_interval;
 
     int scalapack_iter;
@@ -131,6 +132,7 @@ int main(int argc, char **argv)
     sprocs=0;					// no fault tolerance enabled
     file_name_len=0;			// no output to file
     failing_rank=2;				// process 2 will fail
+    failing_level_override=-1;
     checkpoint_skip_interval=-1;// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
     scalapack_nb=SCALAPACKNB;	// scalapack blocking factor, default defined in header
     ime_nb=1;					// ime blocking factor
@@ -170,6 +172,7 @@ int main(int argc, char **argv)
 		}
 		if( strcmp( argv[i], "-fl" ) == 0 ) {
 			failing_level = atoi(argv[i+1]);
+			failing_level_override = 1;
 			i++;
 		}
 		if( strcmp( argv[i], "-cp" ) == 0 ) {
@@ -201,7 +204,11 @@ int main(int argc, char **argv)
     cols=n;
     cprocs=totprocs-sprocs;		// number of processes for real IMe calc
     scalapack_iter=(int)ceil(rows/scalapack_nb);
-    failing_level=n/2;
+
+    if (failing_level_override<0) // if faulty level NOT set on command line
+    {
+        failing_level=n/2;			// faulty level/iteration, -1=none
+    }
 
     /*
      * print summary to video
