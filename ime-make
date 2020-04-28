@@ -1,0 +1,4 @@
+#!/bin/bash
+
+make machine=enea mpi=intel library=mkl $1
+

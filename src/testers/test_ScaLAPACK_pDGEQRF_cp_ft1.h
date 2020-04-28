@@ -15,7 +15,7 @@
 duration_t test_ScaLAPACK_pDGEQRF_cp_ft1_sim(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
 	duration_t timing, timing_max;
-	result_info info;
+	test_output info;
 
 	double* A;
 	//double* bb;

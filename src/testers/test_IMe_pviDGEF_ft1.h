@@ -15,7 +15,7 @@
 duration_t test_IMe_pviDGEF_ft1_sim(const char* label, int verbosity, int rows, int cols, int rank, int sprocs, int failing_rank, int failing_level)
 {
 	duration_t timing, timing_max;
-	result_info info;
+	test_output info;
 
 	int r,c;
 	double** A2;

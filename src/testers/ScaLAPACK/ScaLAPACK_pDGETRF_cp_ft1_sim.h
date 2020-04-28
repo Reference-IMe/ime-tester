@@ -16,9 +16,9 @@
 
 // TODO: checkpointing
 
-result_info ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+test_output ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
-	result_info result = {0, 0, 0, 0, 0, 0};
+	test_output result = {0, 0, 0, 0, 0, 0};
 
 	result.total_start_time = time(NULL);
 

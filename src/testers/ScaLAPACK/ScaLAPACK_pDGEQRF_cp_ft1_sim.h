@@ -16,9 +16,9 @@
 
 // TODO: checkpointing
 
-result_info ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+test_output ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
-	result_info wall_clock;
+	test_output wall_clock;
 
 	wall_clock.total_start_time = time(NULL);
 

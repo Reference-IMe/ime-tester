@@ -29,9 +29,9 @@ extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-result_info FTLA_ftdqr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
+test_output FTLA_ftdqr_calc(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
 {
-	result_info wall_clock;
+	test_output wall_clock;
 
 	wall_clock.total_start_time = time(NULL);
 

@@ -9,7 +9,7 @@
 duration_t test_IMe_pviDGEF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)
 {
 	duration_t timing, timing_max;
-	result_info info;
+	test_output info;
 
 	int r,c;
 	double** A2;

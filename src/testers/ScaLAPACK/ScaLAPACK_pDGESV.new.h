@@ -15,9 +15,9 @@
 #include "../../helpers/scalapack.h"
 
 
-result_info ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
+test_output ScaLAPACK_pDGESV_calc(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
 {
-	result_info wall_clock;
+	test_output wall_clock;
 
 	wall_clock.total_start_time = time(NULL);
 

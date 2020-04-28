@@ -15,9 +15,9 @@
 #include "../../helpers/scalapack.h"
 
 
-result_info ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
+test_output ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
-	result_info result = {0, 0, 0, 0, 0, 0};
+	test_output result = {0, 0, 0, 0, 0, 0};
 
 	result.total_start_time = time(NULL);
 

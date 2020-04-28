@@ -15,7 +15,7 @@
 duration_t test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs)
 {
 	duration_t timing, timing_max;
-	result_info info;
+	test_output info;
 
 	double* A;
 

@@ -18,9 +18,9 @@
 // to prepare for a checkpointing version
 // TODO: checkpointing
 
-result_info ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
+test_output ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
 {
-	result_info result = {0, 0, 0, 0, 0, 0};
+	test_output result = {0, 0, 0, 0, 0, 0};
 
 	result.total_start_time = time(NULL);
 

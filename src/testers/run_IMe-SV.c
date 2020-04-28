@@ -1,6 +1,6 @@
 
 #include "test_IMe_pviDGESV.h"
-#include "test_IMe_pviDGESV_1D.h"
+#include "test_IMe_pviDGESV.h"
 #include "tester_head_p.c"
 
 	versionname[0]= "IMe-SV-1D  ";
