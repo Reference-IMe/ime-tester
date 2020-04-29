@@ -7,9 +7,9 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
+#include "../helpers/tester_structures.h"
 #include "FTLA/FTLA_pDGETRF.h"
 
 duration_t test_FTLA_pDGETRF(const char* label, int verbosity, int rows, int cols, int nb, int rank, int cprocs, int sprocs)

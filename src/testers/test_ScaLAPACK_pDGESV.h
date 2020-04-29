@@ -7,17 +7,17 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "tester_structures.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
 test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, test_input input, int rank)
 {
-	test_result rank_result = {0, 0, 0, 0};
-	test_result team_result = {0, 0, 0, 0};
-	test_output output = {0, 0, 0, 0, 0, 0};
+	test_result rank_result = TEST_NOT_RUN;
+	test_result team_result = TEST_NOT_RUN;
+	test_output output = EMPTY_OUTPUT;
 
 	int i,j;
 
@@ -51,7 +51,7 @@ test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, test_input i
 		}
 	}
 
-	output = ScaLAPACK_pDGESV_calc(input.n, A, input.nrhs, bb, input.scalapack_bf, rank, input.calc_procs);
+	output = ScaLAPACK_pDGESV(input.n, A, input.nrhs, bb, input.scalapack_bf, rank, input.calc_procs);
 
 	if (rank==0)
 	{

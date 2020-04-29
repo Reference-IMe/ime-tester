@@ -7,10 +7,10 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../ft-simulated/pviDGESV_WO_ft1.h"
+#include "tester_structures.h"
 
 duration_t test_IMe_pviDGESV_ft1_sim(const char* label, int verbosity, int rows, int cols, int nrhs, int rank, int sprocs, int failing_rank, int failing_level)
 {

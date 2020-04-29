@@ -7,12 +7,12 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
+#include "../tester_structures.h"
 
 
 test_output ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)

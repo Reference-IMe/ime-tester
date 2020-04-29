@@ -1,9 +1,9 @@
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../pviDGEF_WO.h"
+#include "tester_structures.h"
 
 
 duration_t test_IMe_pviDGEF(const char* label, int verbosity, int rows, int cols, int rank, int cprocs, int sprocs)

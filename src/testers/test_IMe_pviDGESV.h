@@ -1,17 +1,18 @@
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "tester_structures.h"
 #include "../pviDGESV_WO.h"
+
 
 
 test_result test_IMe_pviDGESV(const char* label, int verbosity, test_input input, int rank)
 {
-	test_result rank_result = {0, 0, 0, 0};
-	test_result team_result = {0, 0, 0, 0};
-	test_output output = {0, 0, 0, 0, 0, 0};
+	test_result rank_result = TEST_NOT_RUN;
+	test_result team_result = TEST_NOT_RUN;
+	test_output output = EMPTY_OUTPUT;
 
 	int i,j;
 

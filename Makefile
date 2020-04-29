@@ -143,6 +143,7 @@ $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 
 
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
+				$(TST_DIR)/tester*.h \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/pviDGESV*.h \
 				$(SRC_DIR)/ft-simulated/*.h \

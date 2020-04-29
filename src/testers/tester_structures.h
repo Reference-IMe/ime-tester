@@ -1,5 +1,5 @@
 /*
- * timings.h
+ * tester_structures.h
  *
  *  Created on: Feb 13, 2020
  *      Author: marcello
@@ -9,8 +9,8 @@
 
 #include <time.h>
 
-#ifndef __INFO_H__
-#define __INFO_H__
+#ifndef __TESTER_STRUCTURES_H__
+#define __TESTER_STRUCTURES_H__
 
 typedef struct test_input
 {
@@ -43,5 +43,9 @@ typedef struct test_result
 	double norm_rel_err;
 } test_result;
 
+// as array/struct in #define are not allowed in assignment, a constant has to be defined
+const test_result TEST_NOT_IMPLEMENTED	= { -99, -99, -99, -99 };
+const test_result TEST_NOT_RUN			= { -1,  -1,  -1,  -1  };
+const test_output EMPTY_OUTPUT			= { -1,  -1,  -1,  -1,  -1,  -1};
 
 #endif

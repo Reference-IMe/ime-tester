@@ -7,15 +7,15 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../../helpers/info.h"
 #include "../../helpers/macros.h"
 #include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
+#include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGETRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
+test_output ScaLAPACK_pDGETRF(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
 	test_output result = {0, 0, 0, 0, 0, 0};
 

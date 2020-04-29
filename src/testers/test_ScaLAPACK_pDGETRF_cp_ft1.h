@@ -7,10 +7,10 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/info.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF_cp_ft1_sim.h"
+#include "tester_structures.h"
 
 test_result test_ScaLAPACK_pDGETRF_cp_ft1_sim(const char* label, int verbosity, int n, double* A_ref, int nb, int rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {

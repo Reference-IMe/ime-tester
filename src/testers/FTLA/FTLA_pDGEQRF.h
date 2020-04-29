@@ -12,9 +12,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../../helpers/info.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
+#include "../../helpers/tester_structures.h"
 #include "commons.h"
 #include "create_matrix.h"
 #include "ftla-rSC13.mod/ftla_cof.h"
