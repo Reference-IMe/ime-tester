@@ -23,6 +23,9 @@ typedef struct test_input
 	int spare_procs;
 	int ime_bf;
 	int scalapack_bf;
+	//int failing_rank;
+	//int failing_level;
+	//int checkpoint_skip_interval;
 } test_input;
 
 typedef struct test_output

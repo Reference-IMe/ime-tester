@@ -4,9 +4,9 @@
 
 #include "test_ScaLAPACK_pDGETRF.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
+#include "test_ScaLAPACK_pDGEQRF_ft1.h"
 
-#include "test_ScaLAPACK_pDGETRF_cp_ft1.h"
-#include "test_ScaLAPACK_pDGEQRF_cp_ft1.h"
+#include "test_ScaLAPACK_pDGETRF_ft1.h"
 
 #include "tester_head_p.c"
 

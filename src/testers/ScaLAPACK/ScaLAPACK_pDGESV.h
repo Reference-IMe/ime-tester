@@ -17,7 +17,7 @@
 
 test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
 {
-	test_output result = {0, 0, 0, 0, 0, 0};
+	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

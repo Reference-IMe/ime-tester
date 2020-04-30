@@ -14,10 +14,16 @@
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
+/*
+ * LU decomposition by ScaLAPACK
+ *
+ * WARNING: WITHOUT transposition of the input matrix A
+ *
+ */
 
 test_output ScaLAPACK_pDGETRF(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
-	test_output result = {0, 0, 0, 0, 0, 0};
+	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

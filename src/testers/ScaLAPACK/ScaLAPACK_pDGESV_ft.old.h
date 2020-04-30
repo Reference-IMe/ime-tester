@@ -12,15 +12,15 @@
 #include "../../helpers/vector.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
-#include "../../helpers/tester_structures.h"
+#include "../tester_structures.h"
 
 // solve with separate calls to factorization and solution
 // to prepare for a checkpointing version
 // TODO: checkpointing
 
-test_output ScaLAPACK_pDGESV_cp_ft1_sim(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
+test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level)
 {
-	test_output result = {0, 0, 0, 0, 0, 0};
+	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

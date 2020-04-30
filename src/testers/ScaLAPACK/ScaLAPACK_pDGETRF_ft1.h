@@ -1,5 +1,5 @@
 /*
- * ScaLAPACK_pDGETRF_cp_ft1_sim.h
+ * ScaLAPACK_pDGETRF_ft1.h
  *
  *  Created on: Dec 28, 2019
  *      Author: marcello
@@ -14,11 +14,16 @@
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
-// TODO: checkpointing
+/*
+ * LU decomposition by ScaLAPACK
+ *
+ * WARNING: WITHOUT transposition of the input matrix A
+ *
+ */
 
-test_output ScaLAPACK_pDGETRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+test_output ScaLAPACK_pDGETRF_ft1(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
-	test_output result = {0, 0, 0, 0, 0, 0};
+	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

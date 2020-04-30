@@ -4,8 +4,7 @@
 #include "test_IMe_pviDGESV_ft1.h"
 
 #include "test_ScaLAPACK_pDGESV.h"
-
-#include "test_ScaLAPACK_pDGESV_cp_ft1.h"
+#include "test_ScaLAPACK_pDGESV_ft1.h"
 
 #include "tester_head_p.c"
 

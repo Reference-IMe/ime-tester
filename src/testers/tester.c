@@ -178,14 +178,14 @@ int main(int argc, char **argv)
     // list of testable routines (see tester_labels.h)
     versions_all = 0;
 	versionname_all[versions_all++] = IME_SV;
-	versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
+	//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
 	versionname_all[versions_all++] = IME_SV_FAULT_0_TOLERANT_1;
 	versionname_all[versions_all++] = IME_SV_FAULT_1_TOLERANT_1;
-
+	/*
 	versionname_all[versions_all++] = IME_XK;
 	versionname_all[versions_all++] = IME_XK_FAULT_0_TOLERANT_1;
 	versionname_all[versions_all++] = IME_XK_FAULT_1_TOLERANT_1;
-
+	*/
 	versionname_all[versions_all++] = SPK_SV;
 	versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1;
 	versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1;
@@ -527,12 +527,12 @@ int main(int argc, char **argv)
 	// runs are repeated
 	for (rep=0; rep<repetitions; rep++)
 	{
-		if (rank==0 && verbose>0) {printf("\n Run #%d:",rep+1);}
+		if (rank==0 && verbose>0) {printf("\n Run #%d:\n",rep+1);}
 
 		// every run calls some selected routines
 		for (i=0; i<versions_selected; i++)
 		{
-			versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_input, rank);
+			versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_input, rank, failing_rank, failing_level, checkpoint_skip_interval);
 		}
 
 		if (rank==0)
@@ -545,7 +545,7 @@ int main(int argc, char **argv)
 				versiontot[i].norm_rel_err	+= versionrun[i][rep].norm_rel_err;
 				if (verbose>0)
 				{
-					printf("\n%-20s    call    run time: %10.0f (%.0f)\ts\t nre: %f",	versionname_selected[i],		\
+					printf("%-20s    call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
 																					versionrun[i][rep].total_time,	\
 																					versionrun[i][rep].core_time,	\
 																					versionrun[i][rep].norm_rel_err	\
@@ -560,12 +560,12 @@ int main(int argc, char **argv)
 	 */
 	if (rank==0)
 	{
-		printf("\n\n Summary:");
+		printf("\n Summary:\n");
 
 		// total
 		for (i=0; i<versions_selected; i++)
 		{
-			printf("\n%-20s    Total   run time: %10.0f (%.0f)\ts",	versionname_selected[i],	\
+			printf("%-20s    Total   run time: %10.0f (%.0f)\ts\n",	versionname_selected[i],	\
 																	versiontot[i].total_time,	\
 																	versiontot[i].core_time		\
 			);
@@ -575,7 +575,7 @@ int main(int argc, char **argv)
 		// average
 		for (i=0; i<versions_selected; i++)
 		{
-			printf("\n%-20s    Average run time: %10.0f (%.0f)\ts\t nre: %f",	versionname_selected[i],				\
+			printf("%-20s    Average run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],				\
 																				versiontot[i].total_time/repetitions,	\
 																				versiontot[i].core_time/repetitions,	\
 																				versiontot[i].norm_rel_err/repetitions	\
@@ -600,7 +600,7 @@ int main(int argc, char **argv)
 		for (i=0; i<versions_selected; i++)
 		{
 			dmedian( versionrun[i], repetitions);
-			printf("\n%-20s    Median  run time: %10.0f (%.0f)\ts\t nre: %f",	versionname_selected[i],					\
+			printf("%-20s    Median  run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],					\
 																				versionrun[i][repetitions/2].total_time,	\
 																				versionrun[i][repetitions/2].core_time,		\
 																				versionrun[i][repetitions/2].norm_rel_err	\

@@ -1,7 +1,7 @@
 /*
- * ScaLAPACK_pDGEQRF_cp_ft1_sim.h
+ * ScaLAPACK_pDGETRF_ft1.h
  *
- *  Created on: Jan 8, 2020
+ *  Created on: Dec 28, 2019
  *      Author: marcello
  */
 
@@ -12,15 +12,20 @@
 #include "../../helpers/vector.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
-#include "../../helpers/tester_structures.h"
+#include "../tester_structures.h"
 
-// TODO: checkpointing
+/*
+ * LU decomposition by ScaLAPACK
+ *
+ * WARNING: WITHOUT transposition of the input matrix A
+ *
+ */
 
-test_output ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+test_output ScaLAPACK_pDGESV_ft1(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
-	test_output wall_clock;
+	test_output result = EMPTY_OUTPUT;
 
-	wall_clock.total_start_time = time(NULL);
+	result.total_start_time = time(NULL);
 
 	/*
 	 * n = system rank (A_global n x n)
@@ -39,18 +44,17 @@ test_output ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mp
 	int nprow, npcol, myrow, mycol;
 	int tmprow,tmpcol,tmpmyrow, tmpmycol;
 	int descA_source[9], descA[9], descA_cp[9];
-
+	//int descB_global[9], descB[9];
 	char order = 'R';
 	// MATRIX
 	int nr, nc, lldA;
-	double* A;
-	double* A_cp;
-	double* work;
-	double* work_cp;
-	double* tau;
-	double* tau_cp;
-	int lwork=-1, ltau;
-	double lazywork;
+	int nIPIV;
+	double *A;
+	double *A_cp;
+	//double *B;
+	//double *work, alpha;
+	int *IPIV;
+	int *IPIV_cp;
 
 	// Initialize a default BLACS context and the processes grid
 	MPI_Dims_create(cprocs, ndims, dims);
@@ -90,16 +94,17 @@ test_output ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mp
 	//nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
-
+	//ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
 	lldA = MAX( 1 , nr );
 	MPI_Allreduce( MPI_IN_PLACE, &lldA, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
-	ltau = lldA;
+	nIPIV = (lldA+nb);
 
 	if (mpi_rank==0) // root node
 	{
 		// Descriptors (global)
 		descinit_( descA_source, &n, &n, &one, &one, &zero, &zero, &context_source, &n, &info );
+		//descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context_global, &lldA_source, &info );
 	}
 	else
 	{
@@ -108,25 +113,52 @@ test_output ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mp
 		for (i=0; i<9; i++)
 		{
 			descA_source[i]=0;
+			//descB_global[i]=0;
 		}
 		descA_source[1]=-1;
+		//descB_global[1]=-1;
+	}
+
+	if (mpi_rank==cprocs) // spare (checkpointing) node
+	{
+		// Descriptors
+		A_cp = malloc(n*n*sizeof(double));
+		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
+		//OneMatrix1D(A_cp, n, n);
+
+		//IPIV_cp=malloc(nIPIV*cprocs*sizeof(int)); // with cprocs is not good because MPI_GATHER wants a buffer for everyone
+		IPIV_cp=malloc(nIPIV*nprocs*sizeof(int));
+	}
+	else
+	{
+		// Descriptors (global, for non-spare nodes)
+		A_cp=NULL;
+		IPIV_cp=NULL;
+		for (i=0; i<9; i++)
+		{
+			descA_cp[i]=0;
+		}
+		descA_cp[1]=-1;
+		descA_cp[4]=nb; // *** important!
+		descA_cp[5]=nb; // ***
 	}
 
 	if (mpi_rank < cprocs) // non-spare nodes
 	{
 		A = malloc(nr*nc*sizeof(double));
+		IPIV = malloc(nIPIV*sizeof(int));
+		//work = malloc(nb*sizeof(double));
+		//B = malloc(nr*ncrhs*sizeof(double));
 
 		// Descriptors (local)
 		// all processes have to know descA (not only non-spare nodes)
 		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lldA, &info );
-
-		// init work space
-		pdgeqrf_(  &n, &n, A, &one, &one, descA, NULL, &lazywork, &lwork, &info );
-		lwork = (int)lazywork;
 	}
 	else
 	{
 		A=NULL;
+		//IPIV=NULL;
+		IPIV = malloc(nIPIV*sizeof(int)); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
 		for (i=0; i<9; i++)
 		{
 			descA[i]=0;
@@ -138,70 +170,49 @@ test_output ScaLAPACK_pDGEQRF_cp_ft1_sim(int n, double* A_source, int nb, int mp
 		descA[5]=nb;
 	}
 
-	MPI_Allreduce( MPI_IN_PLACE, &lwork, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
-	//if (mpi_rank < cprocs)
-	{
-		work = malloc( lwork*sizeof(double) ); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
-		tau = malloc( ltau*sizeof(double) );
-	}
 
-	if (mpi_rank==cprocs) // spare (checkpointing) node
-	{
-		// Descriptors
-		A_cp = malloc(n*n*sizeof(double));
-		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
-		//OneMatrix1D(A_cp, n, n);
+		// spread matrices
+		pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
+		//if (mpi_rank < cprocs) pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_distributed);
 
-		work_cp=malloc(lwork*nprocs*sizeof(double)); // with cprocs instead of nprocs is not good because MPI_GATHER wants a buffer for everyone!
-		tau_cp=malloc(ltau*nprocs*sizeof(double));
-	}
-	else
-	{
-		// Descriptors (global, for non-spare nodes)
-		A_cp=NULL;
-		work_cp=NULL;
-		tau_cp=NULL;
-		for (i=0; i<9; i++)
+		if (failing_level>=0)
 		{
-			descA_cp[i]=0;
+			failing_level=n-failing_level;
 		}
-		descA_cp[1]=-1;
-		descA_cp[4]=nb; // *** important!
-		descA_cp[5]=nb; // ***
-	}
 
-	// spread matrices
-	pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
+		// LU factorization
+		result.core_start_time = time(NULL);
+		pdgetrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, IPIV, IPIV_cp, &nIPIV, &checkpoint_freq, &failing_level, &context_all, &info );
+		result.core_end_time = time(NULL);
+		result.exit_code = info;
 
-	if (failing_level>=0)
-	{
-		failing_level=n-failing_level;
-	}
+		// check factorization
+		/*
+		pdgetrs_("N",  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info  );
+		pdgemr2d_(&n, &m, B, &one, &one, descB, B_global, &one, &one, descB_global, &context);
+		*/
 
-	// QR factorization
-	wall_clock.core_start_time = time(NULL);
-	pdgeqrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &context_all, &info );
-    wall_clock.core_end_time = time(NULL);
-
-	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
+		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
+		//if (mpi_rank < cprocs) pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_distributed);
 
 	if (mpi_rank < cprocs)
 	{
 		// cleanup
 		free(A);
-		free(work);
-		free(tau);
+		//free(B);
+		free(IPIV);
+		//free(work);
 	}
 	else
 	{
 		free(A_cp);
-		free(work_cp);
-		free(tau_cp);
+		free(IPIV_cp);
+		free(IPIV);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	wall_clock.total_end_time = time(NULL);
+	result.total_end_time = time(NULL);
 
-	return wall_clock;
+	return result;
 }

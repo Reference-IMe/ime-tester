@@ -1,7 +1,7 @@
 /*
- * test_ScaLAPACK_pDGEQRF.h
+ * test_ScaLAPACK_pDGETRF_cp_ft1.h
  *
- *  Created on: Dec 5, 2019
+ *  Created on: Dec 27, 2019
  *      Author: marcello
  */
 
@@ -10,30 +10,35 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "tester_structures.h"
-#include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
+#include "ScaLAPACK/ScaLAPACK_pDGETRF_ft1.h"
 
-test_result test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, test_input input, int rank)
+test_result test_ScaLAPACK_pDGETRF_ft1(const char* label, int verbosity, test_input input, int rank, int failing_level, int checkpoint_freq)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output = EMPTY_OUTPUT;
 
 	double* A;
+	//double* bb;
 
 	if (rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
-
+		//bb=AllocateMatrix1D(rows, nrhs);
+		//FillMatrixT1D(A, rows, cols);
+		//OneMatrix1D(bb, rows, nrhs);
 		CopyMatrix1D(input.A_ref, A, input.n, input.n);
 
 		if (verbosity>2)
 		{
 			printf("\n\n Matrix A:\n");
 			PrintMatrix1D(A, input.n, input.n);
+			//printf("\n Vector b:\n");
+			//PrintMatrix1D(bb, rows, nrhs);
 		}
 	}
 
-	output = ScaLAPACK_pDGEQRF(input.n, A, input.scalapack_bf, rank, input.calc_procs);
+	output = ScaLAPACK_pDGETRF_ft1(input.n, A, input.scalapack_bf, rank, input.calc_procs, input.spare_procs, failing_level, checkpoint_freq);
 
 	if (rank==0)
 	{

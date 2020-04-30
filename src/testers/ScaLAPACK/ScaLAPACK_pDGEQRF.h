@@ -14,10 +14,16 @@
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
+/*
+ * QR decomposition by ScaLAPACK
+ *
+ * WARNING: WITHOUT transposition of the input matrix A
+ *
+ */
 
-test_output ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank, int cprocs)
+test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, int mpi_rank, int cprocs)
 {
-	test_output result = {0, 0, 0, 0, 0, 0};
+	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 
@@ -92,7 +98,7 @@ test_output ScaLAPACK_pDGEQRF_calc(int n, double* A_global, int nb, int mpi_rank
 		// QR factorization
 		result.core_start_time = time(NULL);
 		pdgeqrf_(  &n, &n, A, &one, &one, descA, tau, work, &lwork, &info );
-	    result.core_end_time = time(NULL);
+		result.core_end_time = time(NULL);
 		result.exit_code = info;
 
 		pdgemr2d_ (&n, &n, A, &one, &one, descA, A_global, &one, &one, descA_global, &context);
