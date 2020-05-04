@@ -9,6 +9,7 @@
 #include <time.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
+//#include "ScaLAPACK/ScaLAPACK_pDGESV_ft1.nocp.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ft1.h"
 #include "tester_structures.h"
 
@@ -49,7 +50,7 @@ test_result test_ScaLAPACK_pDGESV_ft1(const char* label, int verbosity, test_inp
 		}
 	}
 
-	output = ScaLAPACK_pDGESV_ft1(input.n, A, input.scalapack_bf, rank, input.calc_procs, input.spare_procs, failing_level, checkpoint_freq);
+	output = ScaLAPACK_pDGESV_ft1(input.n, A, input.nrhs, bb, input.scalapack_bf, rank, input.calc_procs, input.spare_procs, failing_level, checkpoint_freq);
 
 	if (rank==0)
 	{

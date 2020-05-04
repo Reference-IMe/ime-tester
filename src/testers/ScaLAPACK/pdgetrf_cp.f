@@ -235,6 +235,7 @@
                    PRINT*, "## pgetrf_cp: ..unrecoverable! exiting.."
                  ELSE
                    PRINT*, "## pgetrf_cp: recovering.."
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                    CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
                    CALL MPI_SCATTER(IPIVCP, MIPIV, MPI_INTEGER, IPIV,
@@ -413,6 +414,7 @@
 *                   PRINT*, "..unrecoverable! exiting.."
                  ELSE
 *                   PRINT*, "recovering.."
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                    CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
                    CALL MPI_SCATTER(IPIVCP, MIPIV, MPI_INTEGER, IPIV,

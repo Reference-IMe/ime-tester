@@ -32,10 +32,10 @@ test_output ScaLAPACK_pDGETRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	 */
 
 	// general
-	int i;				//iterators
+	int i;					//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
-	//int cpfreq = 2; 		// checkpointing frequency
+
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
