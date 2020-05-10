@@ -1,5 +1,5 @@
 /*
- * ScaLAPACK_pDGESV_cp_ft1_sim.h
+ * ScaLAPACK_pDGESV_ft1.h
  *
  *  Created on: Dec 28, 2019
  *      Author: marcello
@@ -14,9 +14,6 @@
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
-// solve with separate calls to factorization and solution
-// to prepare for a checkpointing version
-// TODO: checkpointing
 
 test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
@@ -30,7 +27,7 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	 */
 
 	// general
-	int i;				//iterators
+	int i;					//iterators
 	int zero = 0, one = 1;	//numbers
 	double dzero = 0.0, done = 1.0;
 	int nprocs = cprocs + sprocs;
@@ -41,7 +38,7 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	int descA_global[9], descB_global[9], descA[9], descAt[9], descB[9], descBt[9];
 	int context_cp;
 	int descA_cp[9];
-	char order = 'R', order_all ='A';
+	char order = 'R'; //, order_all ='A';
 	// MATRIX
 	int nr, nc, ncrhs, nrrhs, lld, lld_global, lldt;
 	int ncrhst, nrrhst;
@@ -55,7 +52,6 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	MPI_Dims_create(cprocs, ndims, dims);
 	nprow = dims[0];
 	npcol = dims[1];
-
 
 	// context for checkpointing global matrix (A_cp)
 	Cblacs_get( ic, zero, &context_cp );
@@ -72,7 +68,6 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
 
 	// Computation of local matrix size
-	//nb = SCALAPACKNB;
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	lld = MAX( 1 , nr );
@@ -89,6 +84,7 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	lldt = MAX( 1 , nrrhst );
 	MPI_Allreduce( MPI_IN_PLACE, &lldt, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
+	// global matrices
 	if (mpi_rank==0)
 	{
 		// Descriptors (global)
@@ -108,19 +104,23 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 		descB_global[1]=-1;
 	}
 
+	// checkpointing matrices
 	if (mpi_rank==cprocs) // spare (checkpointing) node
 	{
-		// Descriptors
+		// Allocation
 		A_cp = malloc(n*n*sizeof(double));
 		ipiv_cp=malloc(nipiv*nprocs*sizeof(int)); //ipiv_cp=malloc(nIPIV*cprocs*sizeof(int)); // with cprocs is not good because MPI_GATHER wants a buffer for everyone
 
+		// Descriptors
 		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
 	}
-	else
+	else				// non-spare nodes
 	{
-		// Descriptors (global, for non-spare nodes)
+		// Allocation not needed
 		A_cp=NULL;
 		ipiv_cp=NULL;
+
+		// Descriptors
 		for (i=0; i<9; i++)
 		{
 			descA_cp[i]=0;
@@ -130,8 +130,10 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 		descA_cp[5]=nb; // ***
 	}
 
-	if (mpi_rank < cprocs)
+	// locally distributed matrices
+	if (mpi_rank < cprocs)				// non-spare nodes
 	{
+		// Allocation
 		A = malloc(nr*nc*sizeof(double));
 		At = malloc(nr*nc*sizeof(double));
 		B = malloc(nrrhs*ncrhs*sizeof(double));
@@ -143,12 +145,15 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 		descinit_( descB, &n, &m, &nb, &nb, &zero, &zero, &context, &lld, &info );
 		descinit_( descBt, &m, &n, &nb, &nb, &zero, &zero, &context, &lldt, &info );
 	}
-	else
+	else								// spare node
 	{
+		// Allocation not needed
 		A=NULL;
 		B=NULL;
 		At=NULL;
 		Bt=NULL;
+
+		// Descriptors
 		for (i=0; i<9; i++)
 		{
 			descA[i]=0;
@@ -156,17 +161,20 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 			descAt[i]=0;
 			descBt[i]=0;
 		}
-		// all processes have to know something about descA (not only non-spare nodes)
-		// can't use descinint, due to illegal values of spare process not belonging to the right context
+							// all processes have to know something about locally distributed matrices (not only non-spare nodes)
+							// can't use descinint, due to illegal values of spare process not belonging to the right context
 		descA[1]=-1;
 		descA[4]=nb;
 		descA[5]=nb;
+
 		descB[1]=-1;
 		descB[4]=nb;
 		descB[5]=nb;
+
 		descAt[1]=-1;
 		descAt[4]=nb;
 		descAt[5]=nb;
+
 		descBt[1]=-1;
 		descBt[4]=nb;
 		descBt[5]=nb;
@@ -176,31 +184,24 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context_all);
 	pdgemr2d_(&n, &m, B_global, &one, &one, descB_global, B, &one, &one, descB, &context_all);
 
-	printf("%d qua\n",mpi_rank);
 	// transpose system matrix
 	if (mpi_rank<cprocs) pdtran_(&n, &n, &done, A, &one, &one, descA, &dzero, At, &one, &one, descAt);
 
 	result.core_start_time = time(NULL);
 
 	// Linear system equations solver
-	// pdgesv_(  &n, &m, A, &one, &one, descA, ipiv, B, &one, &one, descB, &info );
-	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
 
 	if (failing_level>=0)
 	{
 		failing_level=n-failing_level;
 	}
-	printf("%d qui\n",mpi_rank);
-	//if (mpi_rank < cprocs) pdgetrf_(      &n, &n, At, &one, &one, descAt, ipiv, &info );
-	pdgetrf_cp_  (&n, &n, At, &one, &one, descAt, A_cp, &one, &one, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
-	// double barrier: blacs needed
-	//Cblacs_barrier( context_all, &order_all);
-	//MPI_Barrier(MPI_COMM_WORLD);
-	printf("%d:%d\n",mpi_rank,info);
 
+	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
+	// checkpointed factorization called by everyone
+	pdgetrf_cp_  (&n, &n, At, &one, &one, descAt, A_cp, &one, &one, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
+	// solve called by non-spare nodes only
 	if (mpi_rank < cprocs)
 	{
-
 		pdgetrs_("N",  &n, &m, At, &one, &one, descAt, ipiv, B, &one, &one, descB, &info  );
 	    result.core_end_time = time(NULL);
 		result.exit_code = info;
@@ -211,11 +212,13 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 		// collect result
 		if (mpi_rank==0)
 		{
-			// Descriptors (global)
+			// Adapt descriptor for B to accept transposed matrix
 			descinit_( descB_global, &m, &n, &one, &one, &zero, &zero, &context_global, &m, &info );
 		}
+		// get matrix back
 		pdgemr2d_(&m, &n, Bt, &one, &one, descBt, B_global, &one, &one, descB_global, &context);
 
+		// cleanup
 		free(A);
 		free(At);
 		free(B);
@@ -236,7 +239,7 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 		//Cblacs_gridexit( context_global );// not needed if calling blacs_exit
 		//Cblacs_exit( one );				// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
 											// error, if main function called more tha once, why?
-	Cblacs_barrier( context_all, &order_all);
+	//Cblacs_barrier( context_all, &order_all);
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	result.total_end_time = time(NULL);

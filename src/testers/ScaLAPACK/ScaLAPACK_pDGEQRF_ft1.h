@@ -35,7 +35,6 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	int i;				//iterators
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
-	//int cpfreq = 2; 		// checkpointing frequency
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
@@ -70,29 +69,20 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	Cblacs_get( ic, zero, &context_distributed );
 	Cblacs_gridinit( &context_distributed, &order, nprow, npcol );
 	Cblacs_gridinfo( context_distributed, &nprow, &npcol, &myrow, &mycol );
-	//MPI_Barrier(MPI_COMM_WORLD);
-	//printf("context_distributed: %d in %dx%d id %d,%d\n",mpi_rank,nprow,npcol,myrow,mycol);
 
 	// context for source global matrix A (A_source)
 	Cblacs_get( ic, zero, &context_source );
 	Cblacs_gridinit( &context_source, &order, one, one );
 	Cblacs_gridinfo( context_source, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	//MPI_Barrier(MPI_COMM_WORLD);
-	//printf("context_source: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// context for checkpointing global matrix (A_cp)
 	Cblacs_get( ic, zero, &context_cp );
-	//int map_cp[1][1];
 	int map_cp[1];
-	//map_cp[0][0]=cprocs;
 	map_cp[0]=cprocs;
 	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
 	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	//MPI_Barrier(MPI_COMM_WORLD);
-	//printf("context_cp: %d in %dx%d id %d,%d\n",mpi_rank,tmprow,tmpcol,tmpmyrow,tmpmycol);
 
 	// Computation of local matrix size
-	//nb = SCALAPACKNB;
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 
@@ -101,9 +91,10 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 
 	ltau = lldA;
 
-	if (mpi_rank==0) // root node
+	// global matrices
+	if (mpi_rank==0)
 	{
-		// Descriptors (global)
+		// Descriptors (global, for root node)
 		descinit_( descA_source, &n, &n, &one, &one, &zero, &zero, &context_source, &n, &info );
 	}
 	else
@@ -117,8 +108,10 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 		descA_source[1]=-1;
 	}
 
-	if (mpi_rank < cprocs) // non-spare nodes
+	// locally distributed matrices
+	if (mpi_rank < cprocs)				// non-spare nodes
 	{
+		// Allocation
 		A = malloc(nr*nc*sizeof(double));
 
 		// Descriptors (local)
@@ -129,9 +122,12 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 		pdgeqrf_(  &n, &n, A, &one, &one, descA, NULL, &lazywork, &lwork, &info );
 		lwork = (int)lazywork;
 	}
-	else
+	else								// spare node
 	{
+		// Allocation not needed
 		A=NULL;
+
+		// Descriptors
 		for (i=0; i<9; i++)
 		{
 			descA[i]=0;
@@ -143,29 +139,30 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 		descA[5]=nb;
 	}
 
+	// workspace
 	MPI_Allreduce( MPI_IN_PLACE, &lwork, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
-	//if (mpi_rank < cprocs)
-	{
-		work = malloc( lwork*sizeof(double) ); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
-		tau = malloc( ltau*sizeof(double) );
-	}
+	work = malloc( lwork*sizeof(double) ); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
+	tau = malloc( ltau*sizeof(double) );
 
-	if (mpi_rank==cprocs) // spare (checkpointing) node
+	// checkpointing matrices
+	if (mpi_rank==cprocs)	// spare (checkpointing) node
 	{
-		// Descriptors
+		// Allocation
 		A_cp = malloc(n*n*sizeof(double));
-		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
-		//OneMatrix1D(A_cp, n, n);
-
 		work_cp=malloc(lwork*nprocs*sizeof(double)); // with cprocs instead of nprocs is not good because MPI_GATHER wants a buffer for everyone!
 		tau_cp=malloc(ltau*nprocs*sizeof(double));
+
+		// Descriptors
+		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
 	}
-	else
+	else					// non-spare nodes
 	{
-		// Descriptors (global, for non-spare nodes)
+		// Allocation not needed
 		A_cp=NULL;
 		work_cp=NULL;
 		tau_cp=NULL;
+
+		// Descriptors (global, for non-spare nodes)
 		for (i=0; i<9; i++)
 		{
 			descA_cp[i]=0;
@@ -189,6 +186,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	result.core_end_time = time(NULL);
 	result.exit_code = info;
 
+	// get matrix back
 	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
 
 	if (mpi_rank < cprocs)

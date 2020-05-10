@@ -59,7 +59,6 @@ test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, int mpi_rank, int
 	if (mpi_rank < cprocs)
 	{
 		// Computation of local matrix size
-		//nb = SCALAPACKNB;
 		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 		lld = MAX( 1 , nr );
@@ -71,7 +70,7 @@ test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, int mpi_rank, int
 
 		if (mpi_rank==0)
 		{
-			// Descriptors (global)
+			// Descriptors (global, for root node)
 			lld_global = n;
 			descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
 		}

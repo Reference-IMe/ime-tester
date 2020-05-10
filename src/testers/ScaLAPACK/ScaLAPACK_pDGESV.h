@@ -55,7 +55,6 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 	if (mpi_rank < cprocs)
 	{
 		// Computation of local matrix size
-		//nb = SCALAPACKNB;
 		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 		lld = MAX( 1 , nr );

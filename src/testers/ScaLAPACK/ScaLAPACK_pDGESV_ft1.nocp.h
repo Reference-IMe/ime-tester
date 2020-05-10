@@ -1,5 +1,5 @@
 /*
- * ScaLAPACK_pDGESV_cp_ft1_sim.h
+ * ScaLAPACK_pDGESV_ft1.nocp.h
  *
  *  Created on: Dec 28, 2019
  *      Author: marcello
@@ -16,7 +16,7 @@
 
 // solve with separate calls to factorization and solution
 // to prepare for a checkpointing version
-// TODO: checkpointing
+// checkpointing NOT implemented => old, unmaintained version
 
 test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {

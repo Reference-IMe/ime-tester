@@ -32,9 +32,8 @@ test_output ScaLAPACK_pDGETRF(int n, double* A_global, int nb, int mpi_rank, int
 	 */
 
 	// general
-	int i;				//iterators
+	int i;					//iterators
 	int zero = 0, one = 1;	//numbers
-	//int nprocs = cprocs + sprocs;
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
@@ -54,14 +53,11 @@ test_output ScaLAPACK_pDGETRF(int n, double* A_global, int nb, int mpi_rank, int
 	Cblacs_gridinit( &context, &order, nprow, npcol );
 	Cblacs_get( ic, zero, &context_global );
 	Cblacs_gridinit( &context_global, &order, one, one );
-	//Cblacs_get( ic, zero, &context_all );
-	//Cblacs_gridinit( &context_all, &order, one, nprocs );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
 
 	if (mpi_rank < cprocs)
 	{
 		// Computation of local matrix size
-		//nb = SCALAPACKNB;
 		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
 		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
 		lld = MAX( 1 , nr );
