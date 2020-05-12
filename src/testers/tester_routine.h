@@ -65,11 +65,11 @@ test_result tester_routine(const char* routine_name, int verbosity, parallel_env
 	else if	( strcmp( routine_name, SPK_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGEQRF_ft1(routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
 	else if	( strcmp( routine_name, SPK_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGEQRF_ft1(routine_name, verbosity, routine_env, routine_input, failing_level, checkpoint_skip_interval);
 
-	else if	( strcmp( routine_name, FTLA_LU_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(routine_name, verbosity, routine_input, rank, 0);
-	else if	( strcmp( routine_name, FTLA_LU_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(routine_name, verbosity, routine_input, rank, 1);
+	else if	( strcmp( routine_name, FTLA_LU_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(routine_name, verbosity, routine_env, routine_input, 0);
+	else if	( strcmp( routine_name, FTLA_LU_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(routine_name, verbosity, routine_env, routine_input, 1);
 
-	else if	( strcmp( routine_name, FTLA_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(routine_name, verbosity, routine_input, rank, 0);
-	else if	( strcmp( routine_name, FTLA_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(routine_name, verbosity, routine_input, rank, 1);
+	else if	( strcmp( routine_name, FTLA_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(routine_name, verbosity, routine_env, routine_input, 0);
+	else if	( strcmp( routine_name, FTLA_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(routine_name, verbosity, routine_env, routine_input, 1);
 
 	else info = TEST_NOT_IMPLEMENTED;
 

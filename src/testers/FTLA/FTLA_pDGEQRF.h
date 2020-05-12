@@ -29,7 +29,10 @@ extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-test_output FTLA_ftdqr(int rows, double* A_global, int NB, int mpi_rank, int cprocs, int sprocs)
+test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
+						int mpi_rank, int cprocs, int sprocs, \
+						int P, int Q, int myrow, int mycol, \
+						int ictxt, int ictxt_global)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -41,12 +44,14 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, int mpi_rank, int cpr
     int M, N, Nc, Ne;
     ftla_work_t ftwork;
 
+    /*
 	// MPI
 	int ndims = 2, dims[2] = {0,0};
 	int P, Q;
 	MPI_Dims_create(cprocs, ndims, dims);
 	P = dims[0];
 	Q = dims[1];
+	*/
 
 	if (mpi_rank>=cprocs)
 	{
@@ -58,8 +63,9 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, int mpi_rank, int cpr
 	}
 
     // BLACS
-    int ictxt, ictxt_global, info;
-    int myrow, mycol;
+    //int ictxt, ictxt_global, info;
+	int info;
+    //int myrow, mycol;
     // faults
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     int Fmin, Fmax;
@@ -70,13 +76,15 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, int mpi_rank, int cpr
     double* A=NULL;
     int descA[9], descA_global[9];
 
-    {/* init BLACS */
+    /*
+    {// init BLACS
         Cblacs_get( -1, 0, &ictxt );
         Cblacs_gridinit( &ictxt, "Row", P, Q );
         Cblacs_gridinfo( ictxt, &P, &Q, &myrow, &mycol );
         Cblacs_get( -1, 0, &ictxt_global );
         Cblacs_gridinit( &ictxt_global, "Row", i1, i1 );
     }
+	*/
 
 	{/* allocate matrices */
 		/* determine checksum size, generate A matrix */

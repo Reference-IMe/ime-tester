@@ -12,7 +12,7 @@
 #include "tester_structures.h"
 #include "FTLA/FTLA_pDGEQRF.h"
 
-test_result test_FTLA_pDGEQRF(const char* label, int verbosity, test_input input, int rank, int faults)
+test_result test_FTLA_pDGEQRF(const char* label, int verbosity, parallel_env env, test_input input, int faults)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -20,7 +20,7 @@ test_result test_FTLA_pDGEQRF(const char* label, int verbosity, test_input input
 
 	double* A;
 
-	if (rank==0)
+	if (env.mpi_rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
 
@@ -33,9 +33,12 @@ test_result test_FTLA_pDGEQRF(const char* label, int verbosity, test_input input
 		}
 	}
 
-	output = FTLA_ftdqr(input.n, A, input.scalapack_bf, rank, input.calc_procs, faults);
+	output = FTLA_ftdqr(input.n, A, input.scalapack_bf, env.mpi_rank, input.calc_procs, \
+							faults, \
+							env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col, \
+							env.blacs_ctxt_grid, env.blacs_ctxt_root);
 
-	if (rank==0)
+	if (env.mpi_rank==0)
 	{
 		// check exit condition
 		if (output.exit_code!=0)
