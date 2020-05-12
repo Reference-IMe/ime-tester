@@ -13,7 +13,7 @@
 #include "tester_structures.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
-test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, test_input input, int rank)
+test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, parallel_env env, test_input input)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -25,7 +25,7 @@ test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, test_input i
 	double* bb;
 	double* xx_ref;
 
-	if (rank==0)
+	if (env.mpi_rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
 		bb=AllocateMatrix1D(input.n, input.nrhs);
@@ -51,9 +51,11 @@ test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, test_input i
 		}
 	}
 
-	output = ScaLAPACK_pDGESV(input.n, A, input.nrhs, bb, input.scalapack_bf, rank, input.calc_procs);
+	output = ScaLAPACK_pDGESV(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, \
+								env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col, \
+								env.blacs_ctxt_grid, env.blacs_ctxt_root);
 
-	if (rank==0)
+	if (env.mpi_rank==0)
 	{
 		// check exit condition
 		if (output.exit_code!=0)

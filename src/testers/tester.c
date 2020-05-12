@@ -19,6 +19,8 @@
 #include "../helpers/vector.h"
 #include "../helpers/lapack.h"
 #include "../helpers/scalapack.h"
+#include "../helpers/Cblacs.h"
+
 #include "tester_labels.h"
 #include "tester_routine.h"
 #include "tester_structures.h"
@@ -92,35 +94,37 @@ test_result dmedian(test_result* run, int n)
 	return run[n/2];
 }
 
-test_result not_run={-1, -1, -1, -1};
-test_result not_implemented={-99,-99, -1, -1};
+//test_result not_run={-1, -1, -1, -1};
+//test_result not_implemented={-99,-99, -1, -1};
 
 int main(int argc, char **argv)
 {
 	/*
-	 * parallel environment setup
+	 * parallel environment setup part 1 (MPI+OpenMP)
 	 */
-	int rank;			// mpi rank
-	int totprocs;		// total num. of mpi ranks
-	int thread_support; // level of provided thread support
+		// MPI
+		int mpi_rank;			// mpi rank
+		int mpi_procs;		// total num. of mpi ranks
+		int mpi_thread_support; // level of provided thread support
+		//MPI_Init(&argc, &argv);												// NOT working with OpenMP
+		MPI_Init_thread(&argc ,&argv, MPI_THREAD_FUNNELED, &mpi_thread_support);	// OK for OpenMP
+		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);									// get current process id
+		MPI_Comm_size(MPI_COMM_WORLD, &mpi_procs);								// get number of processes
 
-	//MPI_Init(&argc, &argv);												// NOT working with OpenMP
-	MPI_Init_thread(&argc ,&argv, MPI_THREAD_FUNNELED, &thread_support);	// OK for OpenMP
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);									// get current process id
-	MPI_Comm_size(MPI_COMM_WORLD, &totprocs);								// get number of processes
+		// OpenMP
+		int omp_threads;			// number of OpenMP threads set with OMP_NUM_THREADS
+		int np;				// number of total processes
 
-    int ont;			// number of OpenMP threads set with OMP_NUM_THREADS
-	int np;				// number of total processes
+		if (getenv("OMP_NUM_THREADS")==NULL)
+		{
+			omp_threads=1;
+		}
+		else
+		{
+			omp_threads=atoi(getenv("OMP_NUM_THREADS"));
+		}
 
-	if (getenv("OMP_NUM_THREADS")==NULL)
-	{
-		ont=1;
-	}
-	else
-	{
-		ont=atoi(getenv("OMP_NUM_THREADS"));
-	}
-	np=totprocs*ont;
+		np=mpi_procs*omp_threads;
 
 	/*
 	 * application variables
@@ -265,7 +269,7 @@ int main(int argc, char **argv)
 			i++;
 		}
 		if( strcmp( argv[i], "--help" ) == 0 ) {
-			if (rank==0)
+			if (mpi_rank==0)
 			{
 				printf("HELP\n");
 			}
@@ -285,7 +289,7 @@ int main(int argc, char **argv)
 		if( strcmp( argv[i], "--list" ) == 0 ) {
 			i++;
 			// print testable functions
-			if (rank==0)
+			if (mpi_rank==0)
 			{
 				printf("Testable routines:\n");
 				for( j = 0; j < versions_all; j++ )
@@ -303,22 +307,85 @@ int main(int argc, char **argv)
 	 */
 	rows=n;
     cols=n;
-    cprocs=totprocs-sprocs;		// number of processes for real IMe calc
+    cprocs=mpi_procs-sprocs;		// number of MPI processes for real IMe calc
     scalapack_iter=(int)ceil(rows/scalapack_nb);
 
-    if (failing_level_override<0) // if faulty level NOT set on command line
+    if (failing_level_override<0) 	// if faulty level NOT set on command line
     {
         failing_level=n/2;			// faulty level/iteration, -1=none
     }
 
 	/*
+	 * parallel environment setup part 2 (BLACS)
+	 */
+		// BLACS
+		int ndims = 2, dims[2] = {0,0};
+		MPI_Dims_create(cprocs, ndims, dims);
+
+		int blacs_nprow, blacs_npcol;
+		blacs_nprow = dims[0];
+		blacs_npcol = dims[1];
+
+		int i0 = 0;
+		int i1 = 1;
+		int ic = -1;
+		char order = 'R';
+
+		// general grid context
+		int blacs_ctxt;
+		Cblacs_get( ic, i0, &blacs_ctxt );
+		Cblacs_gridinit( &blacs_ctxt, &order, blacs_nprow, blacs_npcol );
+
+		// general single row context (1 x mpi_procs)
+		int blacs_ctxt_onerow;
+		Cblacs_get( ic, i0, &blacs_ctxt_onerow );
+		Cblacs_gridinit( &blacs_ctxt_onerow, &order, i1, mpi_procs );
+
+		// root node context (for holding global matrices) at {1,1}
+		int blacs_ctxt_root;
+		Cblacs_get( ic, i0, &blacs_ctxt_root );
+		Cblacs_gridinit( &blacs_ctxt_root, &order, i1, i1 );
+
+		int blacs_ctxt_cp;
+		int blacs_row;
+		int blacs_col;
+
+		if (sprocs>0) // fault tolerance enabled
+		{
+			// context for the checkpointing node
+			Cblacs_get( ic, i0, &blacs_ctxt_cp );
+			int map_cp[1];
+			map_cp[0]=cprocs;
+			Cblacs_gridmap( &blacs_ctxt_cp, map_cp, i1, i1, i1);
+		}
+		else
+		{
+			blacs_ctxt_cp = -1;
+		}
+
+		// get coords in general grid context
+		Cblacs_gridinfo( blacs_ctxt, &blacs_nprow, &blacs_npcol, &blacs_row, &blacs_col );
+
+		parallel_env routine_env = {
+			mpi_rank,
+			blacs_nprow,
+			blacs_npcol,
+			blacs_row,
+			blacs_col,
+			blacs_ctxt_onerow,
+			blacs_ctxt,
+			blacs_ctxt_root,
+			blacs_ctxt_cp
+		};
+
+	/*
 	 * print initial summary to video
 	 */
-	if (rank==0 && verbose>0)
+	if (mpi_rank==0 && verbose>0)
 	{
 		printf("     Total processes:               %d\n",np);
-		printf("     OMP threads:                   %d\n",ont);
-		printf("     MPI ranks:                     %d\n",totprocs);
+		printf("     OMP threads:                   %d\n",omp_threads);
+		printf("     MPI ranks:                     %d\n",mpi_procs);
 		printf("     Matrix condition number:       %d\n",cnd);
 		printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
@@ -385,7 +452,7 @@ int main(int argc, char **argv)
 	// check matrix size
     if ((n % cprocs) != 0)
     {
-    	if (rank==0)
+    	if (mpi_rank==0)
     	{
     		printf("ERR: The size of the matrix has to be a multiple of the number (%d) of calc. nodes\n",cprocs);
     	}
@@ -399,7 +466,7 @@ int main(int argc, char **argv)
 		versionnumber_selected[i]=versionnumber_in(versions_all, versionname_all, versionname_selected[i]);
 		if (versionnumber_selected[i]<0)
 		{
-	    	if (rank==0)
+	    	if (mpi_rank==0)
 	    	{
 	    		printf("ERR: Routine '%s' is unknown\n",versionname_selected[i]);
 	    	}
@@ -416,9 +483,10 @@ int main(int argc, char **argv)
 	double* x_ref;
 	double* b_ref;
 	char transA = 'T', transx = 'N';
-	double one = 1.0, zero = 0.0;
+	double d1 = 1.0;
+	double d0 = 0.0;
 	int m=1;
-	if (rank==0)
+	if (mpi_rank==0)
 	{
 		A_ref = AllocateMatrix1D(n, n);
 		x_ref = AllocateVector(n);
@@ -430,7 +498,7 @@ int main(int argc, char **argv)
 			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
 		}
 		FillVector(x_ref, n, 1);
-		dgemm_(&transA, &transx, &n, &m, &n, &one, A_ref, &n, x_ref, &n, &zero, b_ref, &n);
+		dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
 	}
 	else
 	{
@@ -450,9 +518,9 @@ int main(int argc, char **argv)
 	/*
 	 * print initial summary to file
 	 */
-	#define fpinfo(string_label,integer_info) if (fp!=NULL && rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
+	#define fpinfo(string_label,integer_info) if (fp!=NULL && mpi_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
 	}
-	#define fpdata(track_num) if (fp!=NULL && rank==0) {																			\
+	#define fpdata(track_num) if (fp!=NULL && mpi_rank==0) {																			\
 		fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",versionname_all[track_num], rep+1,	versionrun[track_num][rep].exit_code,				\
 																			versionrun[track_num][rep].total_time,					\
 																			versionrun[track_num][rep].norm_rel_err);				\
@@ -461,7 +529,7 @@ int main(int argc, char **argv)
 																						versionrun[track_num][rep].norm_rel_err);	\
 	}
 
-	if (file_name_len>0 && rank==0)
+	if (file_name_len>0 && mpi_rank==0)
 	{
 		fp=fopen(file_name,"w");
 
@@ -479,7 +547,7 @@ int main(int argc, char **argv)
 		fpinfo("minute",readtime->tm_min);
 		fpinfo("second",readtime->tm_sec);
 		fpinfo("number of MPI ranks",cprocs);
-		fpinfo("number of OMP threads",ont);
+		fpinfo("number of OMP threads",omp_threads);
 		fpinfo("number of processes",np);
 		fpinfo("fault tolerance",sprocs);
 		fpinfo("failing rank",failing_rank);
@@ -527,15 +595,15 @@ int main(int argc, char **argv)
 	// runs are repeated
 	for (rep=0; rep<repetitions; rep++)
 	{
-		if (rank==0 && verbose>0) {printf("\n Run #%d:\n",rep+1);}
+		if (mpi_rank==0 && verbose>0) {printf("\n Run #%d:\n",rep+1);}
 
 		// every run calls some selected routines
 		for (i=0; i<versions_selected; i++)
 		{
-			versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_input, rank, failing_rank, failing_level, checkpoint_skip_interval);
+			versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
 		}
 
-		if (rank==0)
+		if (mpi_rank==0)
 		{
 			// accumulation of totals
 			for (i=0; i<versions_selected; i++)
@@ -558,7 +626,7 @@ int main(int argc, char **argv)
 	/*
 	 * print final summary to video and to file
 	 */
-	if (rank==0)
+	if (mpi_rank==0)
 	{
 		printf("\n Summary:\n");
 
@@ -632,7 +700,7 @@ int main(int argc, char **argv)
 	/*
 	 * cleanup
 	 */
-	if (rank==0)
+	if (mpi_rank==0)
 	{
 		if (file_name_len>0)
 		{

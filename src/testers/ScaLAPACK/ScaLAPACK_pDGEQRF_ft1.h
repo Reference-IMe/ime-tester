@@ -21,7 +21,10 @@
  *
  */
 
-test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
+									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq, \
+									int nprow, int npcol, int myrow, int mycol, \
+									int context_distributed, int context_source, int context_all, int context_cp)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -36,15 +39,15 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	int zero = 0, one = 1;	//numbers
 	int nprocs = cprocs + sprocs;
 	// MPI
-	int ndims = 2, dims[2] = {0,0};
+	//int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
-	int ic = -1, info;
-	int context_distributed, context_source, context_cp, context_all;
-	int nprow, npcol, myrow, mycol;
-	int tmprow,tmpcol,tmpmyrow, tmpmycol;
+	int info;
+	//int ic = -1, context_distributed, context_source, context_cp, context_all;
+	//int nprow, npcol, myrow, mycol;
+	//int tmprow,tmpcol,tmpmyrow, tmpmycol;
 	int descA_source[9], descA[9], descA_cp[9];
 
-	char order = 'R';
+	//char order = 'R';
 	// MATRIX
 	int nr, nc, lldA;
 	double* A;
@@ -56,6 +59,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	int lwork=-1, ltau;
 	double lazywork;
 
+	/*
 	// Initialize a default BLACS context and the processes grid
 	MPI_Dims_create(cprocs, ndims, dims);
 	nprow = dims[0];
@@ -81,6 +85,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, int mpi_rank,
 	map_cp[0]=cprocs;
 	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
 	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
+	*/
 
 	// Computation of local matrix size
 	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );

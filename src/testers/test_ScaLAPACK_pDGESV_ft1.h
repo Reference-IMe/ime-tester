@@ -13,7 +13,7 @@
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ft1.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGESV_ft1(const char* label, int verbosity, test_input input, int rank, int failing_level, int checkpoint_freq)
+test_result test_ScaLAPACK_pDGESV_ft1(const char* label, int verbosity, parallel_env env, test_input input, int failing_level, int checkpoint_freq)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -25,7 +25,7 @@ test_result test_ScaLAPACK_pDGESV_ft1(const char* label, int verbosity, test_inp
 	double* bb;
 	double* xx_ref;
 
-	if (rank==0)
+	if (env.mpi_rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
 		bb=AllocateMatrix1D(input.n, input.nrhs);
@@ -50,9 +50,12 @@ test_result test_ScaLAPACK_pDGESV_ft1(const char* label, int verbosity, test_inp
 		}
 	}
 
-	output = ScaLAPACK_pDGESV_ft1(input.n, A, input.nrhs, bb, input.scalapack_bf, rank, input.calc_procs, input.spare_procs, failing_level, checkpoint_freq);
+	output = ScaLAPACK_pDGESV_ft1(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs, \
+									failing_level, checkpoint_freq, \
+									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col, \
+									env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare);
 
-	if (rank==0)
+	if (env.mpi_rank==0)
 	{
 		// check exit condition
 		if (output.exit_code!=0)

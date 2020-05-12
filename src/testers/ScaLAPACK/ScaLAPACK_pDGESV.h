@@ -15,7 +15,10 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs)
+test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb, \
+								int mpi_rank, int cprocs, \
+								int nprow, int npcol, int myrow, int mycol, \
+								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -31,17 +34,19 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 	int zero = 0, one = 1;	//numbers
 	double dzero = 0.0, done = 1.0;
 	// MPI
-	int ndims = 2, dims[2] = {0,0};
+	//int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
-	int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
+	//int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
+	int info;
 	int descA_global[9], descB_global[9], descA[9], descAt[9], descB[9], descBt[9];
-	char order = 'R';
+	// char order = 'R';
 	// MATRIX
 	int nr, nc, ncrhs, nrrhs, lld, lld_global, lldt;
 	int ncrhst, nrrhst;
 	double *A, *At, *B, *Bt;
 	int *ipiv;
 
+	/*
 	// Initialize a default BLACS context and the processes grid
 	MPI_Dims_create(cprocs, ndims, dims);
 	nprow = dims[0];
@@ -51,6 +56,7 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 	Cblacs_get( ic, zero, &context_global );
 	Cblacs_gridinit( &context_global, &order, one, one );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
+	*/
 	
 	if (mpi_rank < cprocs)
 	{

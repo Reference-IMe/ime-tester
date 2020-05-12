@@ -21,7 +21,10 @@
  *
  */
 
-test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, int mpi_rank, int cprocs)
+test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, \
+								int mpi_rank, int cprocs, \
+								int nprow, int npcol, int myrow, int mycol, \
+								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -35,17 +38,19 @@ test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, int mpi_rank, int
 	int i;						//iterators
 	int zero = 0, one = 1;			//numbers
 	// MPI
-	int ndims = 2, dims[2] = {0,0};
+	//int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
-	int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
+	//int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
+	int info;
 	int descA_global[9], descA[9];
-	char order = 'R';
+	//char order = 'R';
 	// MATRIX
 	int nr, nc, lld, lld_global;
 	double* A;
 	double* work;
 	double* tau;
 
+	/*
 	// Initialize a default BLACS context and the processes grid
 	MPI_Dims_create(cprocs, ndims, dims);
 	nprow = dims[0];
@@ -55,6 +60,7 @@ test_output ScaLAPACK_pDGEQRF(int n, double* A_global, int nb, int mpi_rank, int
 	Cblacs_get( ic, zero, &context_global );
 	Cblacs_gridinit( &context_global, &order, one, one );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
+	*/
 
 	if (mpi_rank < cprocs)
 	{

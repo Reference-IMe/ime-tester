@@ -15,7 +15,10 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, \
+									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq, \
+									int nprow, int npcol, int myrow, int mycol, \
+									int context, int context_global, int context_all, int context_cp)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -32,13 +35,14 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	double dzero = 0.0, done = 1.0;
 	int nprocs = cprocs + sprocs;
 	// MPI
-	int ndims = 2, dims[2] = {0,0};
+	// int ndims = 2, dims[2] = {0,0};
 	// BLACS/SCALAPACK
-	int nprow, npcol, info, ic = -1, context, context_global, context_all, myrow, mycol;
+	//int nprow, npcol, info, ic = -1, context, context_global, context_all, myrow, mycol;
+	int info;
 	int descA_global[9], descB_global[9], descA[9], descAt[9], descB[9], descBt[9];
-	int context_cp;
+	//int context_cp;
 	int descA_cp[9];
-	char order = 'R'; //, order_all ='A';
+	//char order = 'R'; //, order_all ='A';
 	// MATRIX
 	int nr, nc, ncrhs, nrrhs, lld, lld_global, lldt;
 	int ncrhst, nrrhst;
@@ -48,6 +52,8 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	int *ipiv_cp;
 	int nipiv;
 	
+
+	/*
 	// Initialize a default BLACS context and the processes grid
 	MPI_Dims_create(cprocs, ndims, dims);
 	nprow = dims[0];
@@ -66,6 +72,7 @@ test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_globa
 	Cblacs_get( ic, zero, &context_all );
 	Cblacs_gridinit( &context_all, &order, one, nprocs );
 	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
+	 */
 
 	// Computation of local matrix size
 	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );

@@ -12,6 +12,19 @@
 #ifndef __TESTER_STRUCTURES_H__
 #define __TESTER_STRUCTURES_H__
 
+typedef struct parallel_env
+{
+	int mpi_rank;
+	int blacs_nprow;
+	int blacs_npcol;
+	int blacs_row;
+	int blacs_col;
+	int blacs_ctxt_onerow;
+	int blacs_ctxt_grid;
+	int blacs_ctxt_root;
+	int blacs_ctxt_spare;
+} parallel_env;
+
 typedef struct test_input
 {
 	int n;
