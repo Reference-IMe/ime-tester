@@ -30,30 +30,22 @@ extern int *errors;
 extern MPI_Comm ftla_current_comm;
 
 
-test_output FTLA_ftdtr(int rows, double* A_global, int NB, \
-						int mpi_rank, int cprocs, int sprocs, \
-						int P, int Q, int myrow, int mycol, \
+test_output FTLA_ftdtr(int rows, double* A_global, int NB,		\
+						int mpi_rank, int cprocs, int sprocs,	\
+						int nprow, int npcol, int myrow, int mycol,		\
 						int ictxt, int ictxt_global)
 {
 	test_output result;
 
 	result.total_start_time = time(NULL);
 
-	int i0=0, i1=1;
 	int i;
-    //int NB=SCALAPACKNB;
+	int i0=0;
+	int i1=1;
     int M, N, Nc, Nr, Ne;
+	int info;
     ftla_work_t ftwork;
 
-    /*
-	// MPI
-	int ndims = 2, dims[2] = {0,0};
-	int P=-1;
-	int Q=-1;
-	MPI_Dims_create(cprocs, ndims, dims);
-	P = dims[0];
-	Q = dims[1];
-	*/
 
 	if (mpi_rank>=cprocs)
 	{
@@ -64,11 +56,6 @@ test_output FTLA_ftdtr(int rows, double* A_global, int NB, \
 		MPI_Comm_split(MPI_COMM_WORLD, 1, mpi_rank, &ftla_current_comm);
 	}
 
-    // BLACS
-    //int ictxt, ictxt_global, info;
-	int info;
-    //int myrow, mycol, lld;
-    int lld;
     // faults
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     int Fmin, Fmax;
@@ -78,27 +65,19 @@ test_output FTLA_ftdtr(int rows, double* A_global, int NB, \
     // matrices
     double* A=NULL;
     int descA[9], descA_global[9];
+    int lld;
 
-    /*
-    {// init BLACS
-        Cblacs_get( -1, 0, &ictxt );
-        Cblacs_gridinit( &ictxt, "Row", P, Q );
-        Cblacs_gridinfo( ictxt, &P, &Q, &myrow, &mycol );
-        Cblacs_get( -1, 0, &ictxt_global );
-        Cblacs_gridinit( &ictxt_global, "Row", i1, i1 );
-    }
-	*/
 
 	{/* allocate matrices */
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
-		Nc = numroc_( &N, &NB, &mycol, &i0, &Q ); //LOCc(N_A)
-		Nr = numroc_( &N, &NB, &myrow, &i0, &P ); //LOCr(N_A)
+		Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A)
+		Nr = numroc_( &N, &NB, &myrow, &i0, &nprow ); //LOCr(N_A)
 		lld = MAX( 1 , Nr );
 		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS
-		Ne = N + Nc*2;// + ((Nc/NB)%Q==0)*NB;
+		Ne = N + Nc*2;// + ((Nc/NB)%npcol==0)*NB;
 #else
 		Ne = N;
 #endif
@@ -136,8 +115,8 @@ test_output FTLA_ftdtr(int rows, double* A_global, int NB, \
 		{
 			create_matrix( ictxt, 0,   &A,  descA, M, Ne, NB, NULL, NULL );
 
-			/* allocate local buffer for the Q-wide local panel copy */
-			create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (Q+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
+			/* allocate local buffer for the npcol-wide local panel copy */
+			create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (npcol+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
 
 			// spread matrices
 			pdgemr2d_(&N, &N, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ictxt);

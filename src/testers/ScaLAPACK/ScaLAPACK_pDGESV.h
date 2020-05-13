@@ -15,9 +15,9 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb, \
-								int mpi_rank, int cprocs, \
-								int nprow, int npcol, int myrow, int mycol, \
+test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb,	\
+								int mpi_rank, int cprocs,								\
+								int nprow, int npcol, int myrow, int mycol,				\
 								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -30,66 +30,63 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 	 */
 
 	// general
-	int i;					//iterators
-	int zero = 0, one = 1;	//numbers
-	double dzero = 0.0, done = 1.0;
-	// MPI
-	//int ndims = 2, dims[2] = {0,0};
-	// BLACS/SCALAPACK
-	//int nprow, npcol, info, ic = -1, context, context_global, myrow, mycol;
+	int i;
+	int i0 = 0;
+	int i1 = 1;
+	double d0 = 0.0;
+	double d1 = 1.0;
 	int info;
-	int descA_global[9], descB_global[9], descA[9], descAt[9], descB[9], descBt[9];
-	// char order = 'R';
-	// MATRIX
-	int nr, nc, ncrhs, nrrhs, lld, lld_global, lldt;
-	int ncrhst, nrrhst;
-	double *A, *At, *B, *Bt;
 	int *ipiv;
 
-	/*
-	// Initialize a default BLACS context and the processes grid
-	MPI_Dims_create(cprocs, ndims, dims);
-	nprow = dims[0];
-	npcol = dims[1];
-	Cblacs_get( ic, zero, &context );
-	Cblacs_gridinit( &context, &order, nprow, npcol );
-	Cblacs_get( ic, zero, &context_global );
-	Cblacs_gridinit( &context_global, &order, one, one );
-	Cblacs_gridinfo( context, &nprow, &npcol, &myrow, &mycol );
-	*/
-	
+	// matrix
+	int nr, nc;
+	double *A;
+	double *At;
+	int ncrhs, nrrhs;
+	double *B;
+	int ncrhst, nrrhst;
+	double *Bt;
+	int descA_global[9];
+	int descB_global[9];
+	int descA[9];
+	int descAt[9];
+	int descB[9];
+	int descBt[9];
+	int lld, lld_global, lldt;
+
+
 	if (mpi_rank < cprocs)
 	{
 		// Computation of local matrix size
-		nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
-		nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
+		nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
+		nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
 		lld = MAX( 1 , nr );
 		A = malloc(nr*nc*sizeof(double));
 		At = malloc(nr*nc*sizeof(double));
 
-		ncrhs = numroc_( &m, &nb, &mycol, &zero, &npcol );
-		nrrhs = numroc_( &n, &nb, &myrow, &zero, &nprow );
+		ncrhs = numroc_( &m, &nb, &mycol, &i0, &npcol );
+		nrrhs = numroc_( &n, &nb, &myrow, &i0, &nprow );
 		B = malloc(nrrhs*ncrhs*sizeof(double));
 
-		ncrhst = numroc_( &n, &nb, &mycol, &zero, &npcol );
-		nrrhst = numroc_( &m, &nb, &myrow, &zero, &nprow );
+		ncrhst = numroc_( &n, &nb, &mycol, &i0, &npcol );
+		nrrhst = numroc_( &m, &nb, &myrow, &i0, &nprow );
 		lldt = MAX( 1 , nrrhst );
 		Bt = malloc(nrrhst*ncrhst*sizeof(double));
 
 		ipiv = malloc((lld+nb)*sizeof(int));
 
 		// Descriptors (local)
-		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context, &lld, &info );
-		descinit_( descAt, &n, &n, &nb, &nb, &zero, &zero, &context, &lld, &info );
-		descinit_( descB, &n, &m, &nb, &nb, &zero, &zero, &context, &lld, &info );
-		descinit_( descBt, &m, &n, &nb, &nb, &zero, &zero, &context, &lldt, &info );
+		descinit_( descA, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descAt, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descB, &n, &m, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descBt, &m, &n, &nb, &nb, &i0, &i0, &context, &lldt, &info );
 
 		if (mpi_rank==0)
 		{
 			// Descriptors (global)
 			lld_global = n;
-			descinit_( descA_global, &n, &n, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
-			descinit_( descB_global, &n, &m, &one, &one, &zero, &zero, &context_global, &lld_global, &info );
+			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
+			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
 		}
 		else
 		{
@@ -104,28 +101,28 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 		}
 
 		// spread matrices
-		pdgemr2d_(&n, &n, A_global, &one, &one, descA_global, A, &one, &one, descA, &context);
-		pdgemr2d_(&n, &m, B_global, &one, &one, descB_global, B, &one, &one, descB, &context);
+		pdgemr2d_(&n, &n, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &context);
+		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context);
 
 		// transpose system matrix
-		pdtran_(&n, &n, &done, A, &one, &one, descA, &dzero, At, &one, &one, descAt);
+		pdtran_(&n, &n, &d1, A, &i1, &i1, descA, &d0, At, &i1, &i1, descAt);
 
 		// linear system equations solver
 		result.core_start_time = time(NULL);
-		pdgesv_(  &n, &m, At, &one, &one, descAt, ipiv, B, &one, &one, descB, &info );
+		pdgesv_(  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info );
 		result.core_end_time = time(NULL);
 		result.exit_code = info;
 
 		// re-transpose result
-		pdtran_(&m, &n, &done, B, &one, &one, descB, &dzero, Bt, &one, &one, descBt);
+		pdtran_(&m, &n, &d1, B, &i1, &i1, descB, &d0, Bt, &i1, &i1, descBt);
 
 		// collect result
 		if (mpi_rank==0)
 		{
 			// Descriptors (global)
-			descinit_( descB_global, &m, &n, &one, &one, &zero, &zero, &context_global, &m, &info );
+			descinit_( descB_global, &m, &n, &i1, &i1, &i0, &i0, &context_global, &m, &info );
 		}
-		pdgemr2d_(&m, &n, Bt, &one, &one, descBt, B_global, &one, &one, descB_global, &context);
+		pdgemr2d_(&m, &n, Bt, &i1, &i1, descBt, B_global, &i1, &i1, descB_global, &context);
 
 
 		// cleanup

@@ -711,6 +711,15 @@ int main(int argc, char **argv)
 		DeallocateVector(x_ref);
 	}
 
+	//Close BLACS environment
+	//Cblacs_barrier( context, "All");	// not working! why?
+	//MPI_Barrier(MPI_COMM_WORLD);		// working but not needed
+	//Cblacs_gridexit( context );		// not needed if calling blacs_exit
+	//Cblacs_gridexit( context_global );// not needed if calling blacs_exit
+	//Cblacs_exit( one );				// argument not 0: it is assumed the user will continue using the machine after the BLACS are done
+										// error, if main function called more tha once, why?
+	//Cblacs_barrier( context_all, &order_all);
+
 	MPI_Finalize();
 	return 0;
 }

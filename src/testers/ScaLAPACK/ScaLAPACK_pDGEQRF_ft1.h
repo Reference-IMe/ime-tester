@@ -21,10 +21,10 @@
  *
  */
 
-test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
-									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq, \
-									int nprow, int npcol, int myrow, int mycol, \
-									int context_distributed, int context_source, int context_all, int context_cp)
+test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, int nb,												\
+									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,	\
+									int nprow, int npcol, int myrow, int mycol,										\
+									int ctxt, int ctxt_root, int ctxt_onerow, int ctxt_cp)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -35,61 +35,32 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
 	 */
 
 	// general
-	int i;				//iterators
-	int zero = 0, one = 1;	//numbers
+	int i;
+	int i0 = 0;
+	int i1 = 1;
 	int nprocs = cprocs + sprocs;
-	// MPI
-	//int ndims = 2, dims[2] = {0,0};
-	// BLACS/SCALAPACK
 	int info;
-	//int ic = -1, context_distributed, context_source, context_cp, context_all;
-	//int nprow, npcol, myrow, mycol;
-	//int tmprow,tmpcol,tmpmyrow, tmpmycol;
-	int descA_source[9], descA[9], descA_cp[9];
-
-	//char order = 'R';
-	// MATRIX
-	int nr, nc, lldA;
-	double* A;
-	double* A_cp;
 	double* work;
 	double* work_cp;
 	double* tau;
 	double* tau_cp;
-	int lwork=-1, ltau;
+	int lwork=-1;
+	int ltau;
 	double lazywork;
 
-	/*
-	// Initialize a default BLACS context and the processes grid
-	MPI_Dims_create(cprocs, ndims, dims);
-	nprow = dims[0];
-	npcol = dims[1];
-
-	// context for all processes
-	Cblacs_get( ic, zero, &context_all );
-	Cblacs_gridinit( &context_all, &order, one, nprocs );
-
-	// context for distributed matrix A
-	Cblacs_get( ic, zero, &context_distributed );
-	Cblacs_gridinit( &context_distributed, &order, nprow, npcol );
-	Cblacs_gridinfo( context_distributed, &nprow, &npcol, &myrow, &mycol );
-
-	// context for source global matrix A (A_source)
-	Cblacs_get( ic, zero, &context_source );
-	Cblacs_gridinit( &context_source, &order, one, one );
-	Cblacs_gridinfo( context_source, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-
-	// context for checkpointing global matrix (A_cp)
-	Cblacs_get( ic, zero, &context_cp );
-	int map_cp[1];
-	map_cp[0]=cprocs;
-	Cblacs_gridmap( &context_cp, map_cp, one, one, one);
-	Cblacs_gridinfo( context_cp, &tmprow, &tmpcol, &tmpmyrow, &tmpmycol );
-	*/
+	// matrix
+	int nr;
+	int nc;
+	int lldA;
+	double* A;
+	double* A_cp;
+	int descA_global[9];
+	int descA[9];
+	int descA_cp[9];
 
 	// Computation of local matrix size
-	nr = numroc_( &n, &nb, &myrow, &zero, &nprow );
-	nc = numroc_( &n, &nb, &mycol, &zero, &npcol );
+	nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
+	nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
 
 	lldA = MAX( 1 , nr );
 	MPI_Allreduce( MPI_IN_PLACE, &lldA, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
@@ -100,17 +71,17 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
 	if (mpi_rank==0)
 	{
 		// Descriptors (global, for root node)
-		descinit_( descA_source, &n, &n, &one, &one, &zero, &zero, &context_source, &n, &info );
+		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &ctxt_root, &n, &info );
 	}
 	else
 	{
 		// Descriptors (global, for non-root nodes)
-		A_source=NULL;
+		A_global=NULL;
 		for (i=0; i<9; i++)
 		{
-			descA_source[i]=0;
+			descA_global[i]=0;
 		}
-		descA_source[1]=-1;
+		descA_global[1]=-1;
 	}
 
 	// locally distributed matrices
@@ -121,10 +92,10 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
 
 		// Descriptors (local)
 		// all processes have to know descA (not only non-spare nodes)
-		descinit_( descA, &n, &n, &nb, &nb, &zero, &zero, &context_distributed, &lldA, &info );
+		descinit_( descA, &n, &n, &nb, &nb, &i0, &i0, &ctxt, &lldA, &info );
 
 		// init work space
-		pdgeqrf_(  &n, &n, A, &one, &one, descA, NULL, &lazywork, &lwork, &info );
+		pdgeqrf_(  &n, &n, A, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
 		lwork = (int)lazywork;
 	}
 	else								// spare node
@@ -158,7 +129,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
 		tau_cp=malloc(ltau*nprocs*sizeof(double));
 
 		// Descriptors
-		descinit_( descA_cp, &n, &n, &one, &one, &zero, &zero, &context_cp, &n, &info );
+		descinit_( descA_cp, &n, &n, &i1, &i1, &i0, &i0, &ctxt_cp, &n, &info );
 	}
 	else					// non-spare nodes
 	{
@@ -178,7 +149,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
 	}
 
 	// spread matrices
-	pdgemr2d_(&n, &n, A_source, &one, &one, descA_source, A, &one, &one, descA, &context_all);
+	pdgemr2d_(&n, &n, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ctxt_onerow);
 
 	if (failing_level>=0)
 	{
@@ -187,12 +158,12 @@ test_output ScaLAPACK_pDGEQRF_ft1(int n, double* A_source, int nb, \
 
 	// QR factorization
 	result.core_start_time = time(NULL);
-	pdgeqrf_cp_  (&n, &n, A, &one, &one, descA, A_cp, &one, &one, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &context_all, &info );
+	pdgeqrf_cp_  (&n, &n, A, &i1, &i1, descA, A_cp, &i1, &i1, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &ctxt_onerow, &info );
 	result.core_end_time = time(NULL);
 	result.exit_code = info;
 
 	// get matrix back
-	pdgemr2d_ (&n, &n, A, &one, &one, descA, A_source, &one, &one, descA_source, &context_all);
+	pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt_onerow);
 
 	if (mpi_rank < cprocs)
 	{

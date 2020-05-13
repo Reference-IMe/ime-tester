@@ -23,35 +23,25 @@
 #include "ftla-rSC13.mod/util_inject.h"
 #include "ftla-rSC13.mod/util_matrix.h"
 
-//extern void create_matrix (int ctxt, int seed, double **A, int *descA, int M, int N, int nb, int *np_A, int *nq_A);
-
 extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
-						int mpi_rank, int cprocs, int sprocs, \
-						int P, int Q, int myrow, int mycol, \
-						int ictxt, int ictxt_global)
+test_output FTLA_ftdqr(	int rows, double* A_global, int NB,			\
+						int mpi_rank, int cprocs, int sprocs,		\
+						int nprow, int npcol, int myrow, int mycol,	\
+						int ctxt, int ctxt_root)
 {
 	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 
-	int i0=0, i1=1;
 	int i;
-    //int NB=SCALAPACKNB;
+	int i0=0;
+	int i1=1;
     int M, N, Nc, Ne;
+	int info;
     ftla_work_t ftwork;
-
-    /*
-	// MPI
-	int ndims = 2, dims[2] = {0,0};
-	int P, Q;
-	MPI_Dims_create(cprocs, ndims, dims);
-	P = dims[0];
-	Q = dims[1];
-	*/
 
 	if (mpi_rank>=cprocs)
 	{
@@ -62,10 +52,6 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
 		MPI_Comm_split(MPI_COMM_WORLD, 1, mpi_rank, &ftla_current_comm);
 	}
 
-    // BLACS
-    //int ictxt, ictxt_global, info;
-	int info;
-    //int myrow, mycol;
     // faults
     int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
     int Fmin, Fmax;
@@ -74,28 +60,19 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
 
     // matrices
     double* A=NULL;
-    int descA[9], descA_global[9];
-
-    /*
-    {// init BLACS
-        Cblacs_get( -1, 0, &ictxt );
-        Cblacs_gridinit( &ictxt, "Row", P, Q );
-        Cblacs_gridinfo( ictxt, &P, &Q, &myrow, &mycol );
-        Cblacs_get( -1, 0, &ictxt_global );
-        Cblacs_gridinit( &ictxt_global, "Row", i1, i1 );
-    }
-	*/
+    int descA[9];
+    int descA_global[9];
 
 	{/* allocate matrices */
 		/* determine checksum size, generate A matrix */
 		N = M = rows;
-		Nc = numroc_( &N, &NB, &mycol, &i0, &Q ); //LOCc(N_A)
+		Nc = numroc_( &N, &NB, &mycol, &i0, &npcol ); //LOCc(N_A)
 		//Nr = numroc_( &N, &NB, &myrow, &i0, &P ); //LOCr(N_A)
 		//lld = MAX( 1 , Nr );
 		MPI_Allreduce( MPI_IN_PLACE, &Nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 #ifndef NO_EXTRAFLOPS
-		Ne = N + Nc*2;// + ((Nc/NB)%Q==0)*NB;
+		Ne = N + Nc*2;// + ((Nc/NB)%npcol==0)*NB;
 #else
 		Ne = N;
 #endif
@@ -103,7 +80,7 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
 		if (mpi_rank < cprocs)	// only calc nodes have a local copy of submatrix A
 		{
 			// Descriptors (local)
-			descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ictxt, &Nc, &info );
+			descinit_( descA, &N, &Ne, &NB, &NB, &i0, &i0, &ctxt, &Nc, &info );
 		}
 		else
 		{
@@ -117,7 +94,7 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
 		if (mpi_rank==0)
 		{
 			// Descriptors (global)
-			descinit_( descA_global, &N, &N, &i1, &i1, &i0, &i0, &ictxt_global, &N, &info );
+			descinit_( descA_global, &N, &N, &i1, &i1, &i0, &i0, &ctxt_root, &N, &info );
 		}
 		else
 		{
@@ -131,13 +108,13 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
 
 		if (mpi_rank < cprocs)	// only calc nodes initialize matrices
 		{
-			create_matrix( ictxt, 0,   &A,  descA, M, Ne, NB, NULL, NULL );
+			create_matrix( ctxt, 0,   &A,  descA, M, Ne, NB, NULL, NULL );
 
-			/* allocate local buffer for the Q-wide local panel copy */
-			create_matrix( ictxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (Q+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
+			/* allocate local buffer for the npcol-wide local panel copy */
+			create_matrix( ctxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, M, (npcol+2)*NB, NB, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
 
 			// spread matrices
-			pdgemr2d_(&N, &N, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ictxt);
+			pdgemr2d_(&N, &N, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ctxt);
 		}
 	}
 
@@ -179,7 +156,7 @@ test_output FTLA_ftdqr(int rows, double* A_global, int NB, \
 			result.exit_code = info;
 
 			// collect matrices
-			pdgemr2d_ (&N, &N, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ictxt);
+			pdgemr2d_ (&N, &N, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt);
 
 			// cleanup
 			Cftla_cof_cleanup( &ftwork );
