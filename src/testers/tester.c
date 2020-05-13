@@ -94,37 +94,9 @@ test_result dmedian(test_result* run, int n)
 	return run[n/2];
 }
 
-//test_result not_run={-1, -1, -1, -1};
-//test_result not_implemented={-99,-99, -1, -1};
 
 int main(int argc, char **argv)
 {
-	/*
-	 * parallel environment setup part 1 (MPI+OpenMP)
-	 */
-		// MPI
-		int mpi_rank;			// mpi rank
-		int mpi_procs;		// total num. of mpi ranks
-		int mpi_thread_support; // level of provided thread support
-		//MPI_Init(&argc, &argv);												// NOT working with OpenMP
-		MPI_Init_thread(&argc ,&argv, MPI_THREAD_FUNNELED, &mpi_thread_support);	// OK for OpenMP
-		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);									// get current process id
-		MPI_Comm_size(MPI_COMM_WORLD, &mpi_procs);								// get number of processes
-
-		// OpenMP
-		int omp_threads;			// number of OpenMP threads set with OMP_NUM_THREADS
-		int np;				// number of total processes
-
-		if (getenv("OMP_NUM_THREADS")==NULL)
-		{
-			omp_threads=1;
-		}
-		else
-		{
-			omp_threads=atoi(getenv("OMP_NUM_THREADS"));
-		}
-
-		np=mpi_procs*omp_threads;
 
 	/*
 	 * application variables
@@ -132,8 +104,10 @@ int main(int argc, char **argv)
     int i,j,rep;
 
 	int			versions_all;
+	int			versions_ime;
 	int			versions_selected;
     char*		versionname_all[MAX_VERSIONS];
+    char*		versionname_ime[MAX_VERSIONS];
     char*		versionname_selected[MAX_VERSIONS];
     int			versionnumber_selected[MAX_VERSIONS];
     test_result	versionrun[MAX_VERSIONS][MAX_RUNS];
@@ -162,9 +136,12 @@ int main(int argc, char **argv)
     int   file_name_len;
 	FILE* fp;
 
+    char* command;
+
     /*
      * default values
      */
+    command="null";
     n=8;
 	nrhs=1;
     verbose=1;					// minimum output verbosity (0 = none)
@@ -180,6 +157,18 @@ int main(int argc, char **argv)
     seed=1;						// seed for random generation
 
     // list of testable routines (see tester_labels.h)
+
+    versions_ime = 0;
+	versionname_ime[versions_ime++] = IME_SV;
+	//versionname_ime[versions_ime++] = IME_SV_CHECKSUMMED;
+	versionname_ime[versions_ime++] = IME_SV_FAULT_0_TOLERANT_1;
+	versionname_ime[versions_ime++] = IME_SV_FAULT_1_TOLERANT_1;
+	/*
+	versionname_ime[versions_ime++] = IME_XK;
+	versionname_ime[versions_ime++] = IME_XK_FAULT_0_TOLERANT_1;
+	versionname_ime[versions_ime++] = IME_XK_FAULT_1_TOLERANT_1;
+	*/
+
     versions_all = 0;
 	versionname_all[versions_all++] = IME_SV;
 	//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
@@ -268,15 +257,8 @@ int main(int argc, char **argv)
 			seed = atoi(argv[i+1]);
 			i++;
 		}
-		if( strcmp( argv[i], "--help" ) == 0 ) {
-			if (mpi_rank==0)
-			{
-				printf("HELP\n");
-			}
-			MPI_Finalize();
-			return(1);
-		}
 		if( strcmp( argv[i], "--run" ) == 0 ) {
+			command=argv[i];
 			i++;
 			// read functions to be tested
 			for( j = i; j < argc; j++ )
@@ -287,37 +269,45 @@ int main(int argc, char **argv)
 			i=j-1;
 		}
 		if( strcmp( argv[i], "--list" ) == 0 ) {
+			command=argv[i];
 			i++;
-			// print testable functions
-			if (mpi_rank==0)
-			{
-				printf("Testable routines:\n");
-				for( j = 0; j < versions_all; j++ )
-				{
-					printf("     %2d %s\n", j+1 ,versionname_all[j]);
-				}
-			}
-			MPI_Finalize();
-			return(1);
+		}
+		if( strcmp( argv[i], "--help" ) == 0 ) {
+			command=argv[i];
+			i++;
 		}
 	}
 
-	/*
-	 * other default values, depending on inputs
-	 */
-	rows=n;
-    cols=n;
-    cprocs=mpi_procs-sprocs;		// number of MPI processes for real IMe calc
-    scalapack_iter=(int)ceil(rows/scalapack_nb);
-
-    if (failing_level_override<0) 	// if faulty level NOT set on command line
-    {
-        failing_level=n/2;			// faulty level/iteration, -1=none
-    }
 
 	/*
-	 * parallel environment setup part 2 (BLACS)
+	 * parallel environment setup
 	 */
+		// MPI
+		int mpi_rank;				// mpi rank
+		int mpi_procs;				// total num. of mpi ranks
+		int mpi_thread_support; 	// level of provided thread support
+		//MPI_Init(&argc, &argv);													// NOT working with OpenMP
+		MPI_Init_thread(&argc ,&argv, MPI_THREAD_FUNNELED, &mpi_thread_support);	// OK for OpenMP
+		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);									// get current process id
+		MPI_Comm_size(MPI_COMM_WORLD, &mpi_procs);									// get number of processes
+
+		cprocs=mpi_procs-sprocs;	// number of MPI processes for real calc
+
+		// OpenMP
+		int omp_threads;			// number of OpenMP threads set with OMP_NUM_THREADS
+		int np;						// number of total processes
+
+		if (getenv("OMP_NUM_THREADS")==NULL)
+		{
+			omp_threads=1;
+		}
+		else
+		{
+			omp_threads=atoi(getenv("OMP_NUM_THREADS"));
+		}
+
+		np=mpi_procs*omp_threads;
+
 		// BLACS
 		int ndims = 2, dims[2] = {0,0};
 		MPI_Dims_create(cprocs, ndims, dims);
@@ -366,17 +356,75 @@ int main(int argc, char **argv)
 		// get coords in general grid context
 		Cblacs_gridinfo( blacs_ctxt, &blacs_nprow, &blacs_npcol, &blacs_row, &blacs_col );
 
-		parallel_env routine_env = {
-			mpi_rank,
-			blacs_nprow,
-			blacs_npcol,
-			blacs_row,
-			blacs_col,
-			blacs_ctxt_onerow,
-			blacs_ctxt,
-			blacs_ctxt_root,
-			blacs_ctxt_cp
-		};
+	parallel_env routine_env = {
+		mpi_rank,
+		blacs_nprow,
+		blacs_npcol,
+		blacs_row,
+		blacs_col,
+		blacs_ctxt_onerow,
+		blacs_ctxt,
+		blacs_ctxt_root,
+		blacs_ctxt_cp
+	};
+
+	/*
+	 * other default values, depending on inputs
+	 */
+	rows=n;
+	cols=n;
+	scalapack_iter=(int)ceil(rows/scalapack_nb);
+
+	if (failing_level_override<0) 	// if faulty level NOT set on command line
+	{
+		failing_level=n/2;			// faulty level/iteration, -1=none
+	}
+
+	/*
+	 * commands
+	 */
+	if ( strcmp(command, "--help" ) == 0 )
+	{
+		if (mpi_rank==0)
+		{
+			printf("Usage: tester [OPTION] command [TEST ROUTINE]\n\n");
+			printf("Commands are:\n");
+			printf("  --help \t\t print this help\n");
+			printf("  --list \t\t print the list of testable routines\n");
+			printf("  --run \t\t run the test(s)\n");
+			printf("        \t\t tests are specified by a space-separated list of testable routines\n");
+			printf("\n");
+			printf("Options are:\n");
+			printf("..to be written..\n\n");
+		}
+		MPI_Finalize();
+		return 0;
+	}
+	else if ( strcmp(command, "--list" ) == 0 )
+	{
+		// print testable functions
+		if (mpi_rank==0)
+		{
+			printf("Testable routines:\n");
+			for( j = 0; j < versions_all; j++ )
+			{
+				printf("     %2d %s\n", j+1 ,versionname_all[j]);
+			}
+			printf("\n");
+		}
+		MPI_Finalize();
+		return 0;
+	}
+	else if ( strcmp(command, "null" ) == 0 )
+	{
+		if (mpi_rank==0)
+		{
+			printf("Please specify command: --help|--list|--run\n\n");
+		}
+		MPI_Finalize();
+		return 1;
+	}
+	// if command is "--run" do the following:
 
 	/*
 	 * print initial summary to video
@@ -398,6 +446,8 @@ int main(int argc, char **argv)
 		if (sprocs>0)
 		{
 			printf("enabled = %d\n",sprocs);
+			printf("       Calc. processes:             %d\n",cprocs);
+			printf("       Spare processes:             %d\n",sprocs);
 			printf("     IMe failing rank:              %d\n",failing_rank);
 			printf("     IMe failing level:             %d\n",failing_level);
 			printf("     SPK-like failing level:        %d\n",n-failing_level);
@@ -457,7 +507,7 @@ int main(int argc, char **argv)
     		printf("ERR: The size of the matrix has to be a multiple of the number (%d) of calc. nodes\n",cprocs);
     	}
     	MPI_Finalize();
-        return 1;
+        return 2;
     }
 
     // check list of routines
@@ -471,7 +521,26 @@ int main(int argc, char **argv)
 	    		printf("ERR: Routine '%s' is unknown\n",versionname_selected[i]);
 	    	}
 	    	MPI_Finalize();
-	        return 1;
+	        return 3;
+		}
+	}
+
+	// check groups of routines
+	for (i=0; i<versions_selected; i++)
+	{
+		if ( versionnumber_in(versions_ime, versionname_ime, versionname_selected[i]) < 0) // there are non-IMe routines, that is: ScaLAPACK based routines
+		{
+			// ScaLAPACK based routines work on a sqare grid of procs
+			if ( (int)pow( floor( sqrt( cprocs ) ),2 ) != cprocs ) // if not:
+			{
+				if (mpi_rank==0)
+				{
+					printf("ERR: ScaLAPACK based routines need a square number of calc. processes (%d is not)\n",cprocs);
+					printf("     Hint: check fault tolerance level option '-ft' (now %d)\n",sprocs);
+				}
+			}
+	    	MPI_Finalize();
+	        return 4;
 		}
 	}
 
