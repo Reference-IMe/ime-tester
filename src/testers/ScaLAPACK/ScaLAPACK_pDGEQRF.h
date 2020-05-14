@@ -123,6 +123,8 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 
 		// get back
 		pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &context);
+
+		free(work);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
