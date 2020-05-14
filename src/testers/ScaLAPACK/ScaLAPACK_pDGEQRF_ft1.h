@@ -1,7 +1,7 @@
 /*
- * ScaLAPACK_pDGEQRF_ft1.h
+ * ScaLAPACK_pDGESV_ft1.h
  *
- *  Created on: Jan 8, 2020
+ *  Created on: Dec 28, 2019
  *      Author: marcello
  */
 
@@ -14,17 +14,11 @@
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
-/*
- * QR decomposition by ScaLAPACK
- *
- * WARNING: WITHOUT transposition of the input matrix A
- *
- */
 
-test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, int nb,												\
+test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, double* B_global, int nb,						\
 									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,	\
 									int nprow, int npcol, int myrow, int mycol,										\
-									int ctxt, int ctxt_root, int ctxt_onerow, int ctxt_cp)
+									int context, int context_global, int context_all, int context_cp)
 {
 	test_output result = EMPTY_OUTPUT;
 
@@ -32,93 +26,78 @@ test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, int nb,												\
 
 	/*
 	 * n = system rank (A_global n x n)
+	 * m = num. of r.h.s (B_global n x m)
 	 */
 
 	// general
 	int i;
 	int i0 = 0;
 	int i1 = 1;
+	int m = 1;
+	double d0 = 0.0;
+	double d1 = 1.0;
 	int nprocs = cprocs + sprocs;
 	int info;
+	
 	double* work;
 	double* work_cp;
 	double* tau;
 	double* tau_cp;
-	int lwork=-1;
+	int lwork;
 	int ltau;
 	double lazywork;
 
 	// matrix
-	int nr;
-	int nc;
-	int lldA;
-	double* A;
-	double* A_cp;
+	int nr, nc;
+	double *A;
+	double *At;
+	int ncrhs, nrrhs;
+	double *B;
+	int ncrhst, nrrhst;
+	double *Bt;
+	double *A_cp;
 	int descA_global[9];
+	int descB_global[9];
 	int descA[9];
+	int descAt[9];
+	int descB[9];
+	int descBt[9];
 	int descA_cp[9];
+	int lld, lld_global, lldt;
 
 	// Computation of local matrix size
-	nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
 	nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
+	nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
+	lld = MAX( 1 , nr );
+	MPI_Allreduce( MPI_IN_PLACE, &lld, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
-	lldA = MAX( 1 , nr );
-	MPI_Allreduce( MPI_IN_PLACE, &lldA, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+	ncrhs = numroc_( &m, &nb, &mycol, &i0, &npcol );
+	nrrhs = numroc_( &n, &nb, &myrow, &i0, &nprow );
 
-	ltau = lldA;
+	ncrhst = numroc_( &n, &nb, &mycol, &i0, &npcol );
+	nrrhst = numroc_( &m, &nb, &myrow, &i0, &nprow );
+	lldt = MAX( 1 , nrrhst );
+	MPI_Allreduce( MPI_IN_PLACE, &lldt, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 	// global matrices
 	if (mpi_rank==0)
 	{
-		// Descriptors (global, for root node)
-		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &ctxt_root, &n, &info );
+		// Descriptors (global)
+		lld_global = n;
+		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
+		descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
 	}
 	else
 	{
 		// Descriptors (global, for non-root nodes)
-		A_global=NULL;
 		for (i=0; i<9; i++)
 		{
 			descA_global[i]=0;
+			descB_global[i]=0;
 		}
 		descA_global[1]=-1;
+		descB_global[1]=-1;
 	}
-
-	// locally distributed matrices
-	if (mpi_rank < cprocs)				// non-spare nodes
-	{
-		// Allocation
-		A = malloc(nr*nc*sizeof(double));
-
-		// Descriptors (local)
-		// all processes have to know descA (not only non-spare nodes)
-		descinit_( descA, &n, &n, &nb, &nb, &i0, &i0, &ctxt, &lldA, &info );
-
-		// init work space
-		pdgeqrf_(  &n, &n, A, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
-		lwork = (int)lazywork;
-	}
-	else								// spare node
-	{
-		// Allocation not needed
-		A=NULL;
-
-		// Descriptors
-		for (i=0; i<9; i++)
-		{
-			descA[i]=0;
-		}
-		// all processes have to know something about descA (not only non-spare nodes)
-		// can't use descinint, due to illegal values of spare process not belonging to the right context
-		descA[1]=-1;
-		descA[4]=nb;
-		descA[5]=nb;
-	}
-
-	// workspace
-	MPI_Allreduce( MPI_IN_PLACE, &lwork, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
-	work = malloc( lwork*sizeof(double) ); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
-	tau = malloc( ltau*sizeof(double) );
 
 	// checkpointing matrices
 	if (mpi_rank==cprocs)	// spare (checkpointing) node
@@ -129,7 +108,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, int nb,												\
 		tau_cp=malloc(ltau*nprocs*sizeof(double));
 
 		// Descriptors
-		descinit_( descA_cp, &n, &n, &i1, &i1, &i0, &i0, &ctxt_cp, &n, &info );
+		descinit_( descA_cp, &n, &n, &i1, &i1, &i0, &i0, &context_cp, &n, &info );
 	}
 	else					// non-spare nodes
 	{
@@ -148,35 +127,147 @@ test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, int nb,												\
 		descA_cp[5]=nb; // ***
 	}
 
+	// locally distributed matrices
+	if (mpi_rank < cprocs)				// non-spare nodes
+	{
+		// Allocation
+		A = malloc(nr*nc*sizeof(double));
+		At = malloc(nr*nc*sizeof(double));
+		B = malloc(nrrhs*ncrhs*sizeof(double));
+		Bt = malloc(nrrhst*ncrhst*sizeof(double));
+
+		// Descriptors (local)
+		descinit_( descA, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descAt, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descB, &n, &m, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descBt, &m, &n, &nb, &nb, &i0, &i0, &context, &lldt, &info );
+
+		// init work space
+		lwork=-1;
+		pdgeqrf_(  &n, &n, A, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
+		lwork = (int)lazywork;
+	}
+	else								// spare node
+	{
+		// Allocation not needed
+		A=NULL;
+		B=NULL;
+		At=NULL;
+		Bt=NULL;
+
+		// Descriptors
+		for (i=0; i<9; i++)
+		{
+			descA[i]=0;
+			descB[i]=0;
+			descAt[i]=0;
+			descBt[i]=0;
+		}
+							// all processes have to know something about locally distributed matrices (not only non-spare nodes)
+							// can't use descinint, due to illegal values of spare process not belonging to the right context
+		descA[1]=-1;
+		descA[4]=nb;
+		descA[5]=nb;
+
+		descB[1]=-1;
+		descB[4]=nb;
+		descB[5]=nb;
+
+		descAt[1]=-1;
+		descAt[4]=nb;
+		descAt[5]=nb;
+
+		descBt[1]=-1;
+		descBt[4]=nb;
+		descBt[5]=nb;
+	}
+
+	// workspace
+	MPI_Allreduce( MPI_IN_PLACE, &lwork, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+	work = malloc( lwork*sizeof(double) ); // also allocated on the spare proc because MPI_GATHER wants a buffer for everyone
+	tau = malloc( ltau*sizeof(double) );
+
 	// spread matrices
-	pdgemr2d_(&n, &n, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &ctxt_onerow);
+	pdgemr2d_(&n, &n, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &context_all);
+	pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context_all);
+
+	// transpose system matrix
+	if (mpi_rank<cprocs) pdtran_(&n, &n, &d1, A, &i1, &i1, descA, &d0, At, &i1, &i1, descAt);
+
+	result.core_start_time = time(NULL);
 
 	if (failing_level>=0)
 	{
 		failing_level=n-failing_level;
 	}
 
+
 	// QR factorization
 	result.core_start_time = time(NULL);
-	pdgeqrf_cp_  (&n, &n, A, &i1, &i1, descA, A_cp, &i1, &i1, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &ctxt_onerow, &info );
+	pdgeqrf_cp_  (&n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &context_all, &info );
 	result.core_end_time = time(NULL);
 	result.exit_code = info;
 
+	// transpose back
+	if (mpi_rank<cprocs) pdtran_(&n, &n, &d1, At, &i1, &i1, descAt, &d0, A, &i1, &i1, descA);
+
 	// get matrix back
-	pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt_onerow);
+	pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &context_all);
+
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	result.total_end_time = time(NULL);
+
+	/*
+	 * estimate n.r.e
+	 */
+	if (mpi_rank < cprocs)
+	{
+		/*
+		 * calc solution vector for n.r.e
+		 *
+		 * https://en.wikipedia.org/wiki/QR_decomposition#Using_for_solution_to_linear_inverse_problems
+		 *
+		 * A=Q.R
+		 * Q.R.x=B
+		 * x=R^-1.(Q'.B)
+		 *
+		 * QR -> A		already calculated by pdgeqrf_
+		 * Q'.B -> B	calc with pdormqr_
+		 * R^-1.B) -> B	calc with pdtrsm_
+		 *
+		 */
+
+		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context);
+
+		lwork = -1;
+		pdormqr_( "L", "T", &n, &m, &n, At, &i1, &i1, descAt, tau,
+				  B, &i1, &i1, descB, &lazywork, &lwork, &info );
+		lwork = (int) lazywork;
+		work = (double*) malloc( lwork * sizeof(double) );
+
+		pdormqr_( "L", "T", &n, &m, &n, At, &i1, &i1, descAt, tau, B, &i1, &i1, descB, work, &lwork, &info);
+
+		pdtrsm_("L", "U", "N", "N", &n, &m, &d1, At, &i1, &i1, descAt, B, &i1, &i1, descB);
+
+		// collect result
+		pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &context);
+	}
 
 	if (mpi_rank < cprocs)
 	{
 		// cleanup
 		free(A);
-		free(work);
-		free(tau);
+		free(At);
+		free(B);
+		free(Bt);
 	}
 	else
 	{
 		free(A_cp);
-		free(work_cp);
 		free(tau_cp);
+		free(tau);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);

@@ -9,7 +9,6 @@
 #include <time.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
-//#include "ScaLAPACK/ScaLAPACK_pDGESV_ft1.nocp.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ft1.h"
 #include "tester_structures.h"
 

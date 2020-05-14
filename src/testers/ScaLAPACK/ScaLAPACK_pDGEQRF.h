@@ -54,6 +54,7 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 	int m=1; // B is a vector that will hold the solution vector for checking purposes
 	int ncrhs, nrrhs;
 	double *B;
+
 	int descA_global[9];
 	int descB_global[9];
 	int descA[9];
