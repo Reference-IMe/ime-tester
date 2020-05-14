@@ -21,7 +21,7 @@
  *
  */
 
-test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb,	\
+test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, int nb,			\
 								int mpi_rank, int cprocs,					\
 								int nprow, int npcol, int myrow, int mycol,	\
 								int context, int context_global)
@@ -43,24 +43,18 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 	int info;
 	double* work;
 	double* tau;
-	int lwork;
-	double lazywork;
 
 	// matrix
 	int nr;
 	int nc;
-	double* A;
-	double* At;
-	int m=1; // B is a vector that will hold the solution vector for checking purposes
-	int ncrhs, nrrhs;
-	double *B;
-	int descA_global[9];
-	int descB_global[9];
-	int descA[9];
-	int descAt[9];
-	int descB[9];
 	int lld;
 	int lld_global;
+	double* A;
+	double *At;
+	int descAt[9];
+	int descA_global[9];
+	int descA[9];
+
 
 	if (mpi_rank < cprocs)
 	{
@@ -72,21 +66,15 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 		At = malloc(nr*nc*sizeof(double));
 		tau = malloc( nc*sizeof(double) );
 
-		ncrhs = numroc_( &i1, &nb, &mycol, &i0, &npcol ); // one column vector
-		nrrhs = numroc_( &n, &nb, &myrow, &i0, &nprow );
-		B = malloc(nrrhs*ncrhs*sizeof(double));
-
 		// Descriptors (local)
 		descinit_( descA, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
 		descinit_( descAt, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
-		descinit_( descB, &n, &m, &nb, &nb, &i0, &i0, &context, &lld, &info );
 
 		if (mpi_rank==0)
 		{
 			// Descriptors (global, for root node)
 			lld_global = n;
 			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
-			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
 		}
 		else
 		{
@@ -94,10 +82,8 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 			for (i=0; i<9; i++)
 			{
 				descA_global[i]=0;
-				descB_global[i]=0;
 			}
 			descA_global[1]=-1;
-			descB_global[1]=-1;
 		}
 
 		// spread matrices
@@ -107,7 +93,8 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 		pdtran_(&n, &n, &d1, A, &i1, &i1, descA, &d0, At, &i1, &i1, descAt);
 
 		// init work space
-		lwork=-1;
+		int lwork=-1;
+		double lazywork;
 		pdgeqrf_(  &n, &n, At, &i1, &i1, descAt, NULL, &lazywork, &lwork, &info );
 		lwork = (int)lazywork;
 		work = malloc( lwork*sizeof(double) );
@@ -123,58 +110,17 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 
 		// get back
 		pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &context);
-	}
-
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	result.total_end_time = time(NULL);
-
-	/*
-	 * estimate n.r.e
-	 */
-	if (mpi_rank < cprocs)
-	{
-		/*
-		 * calc solution vector for n.r.e
-		 *
-		 * https://en.wikipedia.org/wiki/QR_decomposition#Using_for_solution_to_linear_inverse_problems
-		 *
-		 * A=Q.R
-		 * Q.R.x=B
-		 * x=R^-1.(Q'.B)
-		 *
-		 * QR -> A		already calculated by pdgeqrf_
-		 * Q'.B -> B	calc with pdormqr_
-		 * R^-1.B) -> B	calc with pdtrsm_
-		 *
-		 */
-
-		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context);
-
-		lwork = -1;
-		pdormqr_( "L", "T", &n, &m, &n, At, &i1, &i1, descAt, tau,
-				  B, &i1, &i1, descB, &lazywork, &lwork, &info );
-		lwork = (int) lazywork;
-		work = (double*) malloc( lwork * sizeof(double) );
-
-		pdormqr_( "L", "T", &n, &m, &n, At, &i1, &i1, descAt, tau, B, &i1, &i1, descB, work, &lwork, &info);
-
-		pdtrsm_("L", "U", "N", "N", &n, &m, &d1, At, &i1, &i1, descAt, B, &i1, &i1, descB);
-
-		// collect result
-		pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &context);
 
 		// cleanup
 		free(A);
 		free(At);
-		free(B);
 		free(work);
 		free(tau);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	//result.total_end_time = time(NULL);
+	result.total_end_time = time(NULL);
 
 	return result;
 }

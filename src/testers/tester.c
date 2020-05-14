@@ -270,11 +270,11 @@ int main(int argc, char **argv)
 		}
 		if( strcmp( argv[i], "--list" ) == 0 ) {
 			command=argv[i];
-			i++;
+			//i++;
 		}
 		if( strcmp( argv[i], "--help" ) == 0 ) {
 			command=argv[i];
-			i++;
+			//i++;
 		}
 	}
 
@@ -525,6 +525,10 @@ int main(int argc, char **argv)
 		}
 	}
 
+	//TODO: check processor grid requirements
+	/*
+	 * commented because ScaLAPACK and FTLA seem to work even with non square grid of processors
+	 *
 	// check groups of routines
 	for (i=0; i<versions_selected; i++)
 	{
@@ -538,11 +542,12 @@ int main(int argc, char **argv)
 					printf("ERR: ScaLAPACK based routines need a square number of calc. processes (%d is not)\n",cprocs);
 					printf("     Hint: check fault tolerance level option '-ft' (now %d)\n",sprocs);
 				}
+		    	MPI_Finalize();
+		        return 4;
 			}
-	    	MPI_Finalize();
-	        return 4;
 		}
 	}
+	*/
 
 	/*
 	 * prepare input matrices
