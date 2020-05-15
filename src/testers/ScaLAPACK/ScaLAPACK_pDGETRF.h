@@ -101,9 +101,8 @@ test_output ScaLAPACK_pDGETRF(int n, double* A_global, double* B_global, int nb,
 			descB_global[1]=-1;
 		}
 
-		// spread matrices
+		// spread A
 		pdgemr2d_(&n, &n, A_global, &i1, &i1, descA_global, A, &i1, &i1, descA, &context);
-		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context);
 
 		// transpose A
 		pdtran_(&n, &n, &d1, A, &i1, &i1, descA, &d0, At, &i1, &i1, descAt);
@@ -125,6 +124,9 @@ test_output ScaLAPACK_pDGETRF(int n, double* A_global, double* B_global, int nb,
 		/*
 		 * evaluate n.r.e.
 		 */
+		// spread B
+		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context);
+
 		pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
 			/*
 			 * no need of transposing back B, being an 1D vector

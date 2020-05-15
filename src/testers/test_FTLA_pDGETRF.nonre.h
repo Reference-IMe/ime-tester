@@ -19,23 +19,13 @@ test_result test_FTLA_pDGETRF(const char* label, int verbosity, parallel_env env
 	test_output output = EMPTY_OUTPUT;
 
 	double* A;
-	double* bb;
-	double* xx_ref;
-	int i;
 
 	if (env.mpi_rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
-		bb=AllocateMatrix1D(input.n, 1);
-		xx_ref=AllocateMatrix1D(input.n, 1);
 
 		CopyMatrix1D(input.A_ref, A, input.n, input.n);
 
-		for (i=0;i<input.n;i++)
-		{
-			bb[i] = input.b_ref[i];
-			xx_ref[i] = input.x_ref[i];
-		}
 		if (verbosity>2)
 		{
 			printf("\n\n Matrix A:\n");
@@ -43,7 +33,7 @@ test_result test_FTLA_pDGETRF(const char* label, int verbosity, parallel_env env
 		}
 	}
 
-	output = FTLA_ftdtr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, \
+	output = FTLA_ftdtr(input.n, A, input.scalapack_bf, env.mpi_rank, input.calc_procs, \
 							faults, \
 							env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col, \
 							env.blacs_ctxt_grid, env.blacs_ctxt_root);
@@ -55,8 +45,8 @@ test_result test_FTLA_pDGETRF(const char* label, int verbosity, parallel_env env
 		{
 			printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 		}
-		// calc error
-		output.norm_rel_err = NormwiseRelativeError1D(bb, xx_ref, input.n, 1);
+		// TODO calc error
+		output.norm_rel_err = -99;
 
 		if (verbosity>1)
 		{

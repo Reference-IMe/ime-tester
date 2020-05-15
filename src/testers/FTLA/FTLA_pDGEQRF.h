@@ -27,9 +27,9 @@ extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,			\
-						int mpi_rank, int cprocs, int sprocs,		\
-						int nprow, int npcol, int myrow, int mycol,	\
+test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
+						int mpi_rank, int cprocs, int sprocs,				\
+						int nprow, int npcol, int myrow, int mycol,			\
 						int ctxt, int ctxt_root)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -92,10 +92,11 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,			\
 		ne = n;
 #endif
 
-		if (mpi_rank < cprocs)	// only calc nodes have a local copy of submatrix A
+		if (mpi_rank < cprocs)	// only calc nodes have a local copy of submatrices A and B
 		{
 			// Descriptors (local)
 			descinit_( descB, &n, &i1, &nb, &nb, &i0, &i0, &ctxt, &nc, &info );
+			// descA inited below
 		}
 		else
 		{

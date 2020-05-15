@@ -26,13 +26,12 @@
 #include "test_IMe_pviDGESV.h"
 #include "test_ScaLAPACK_pDGESV.h"
 #include "test_ScaLAPACK_pDGESV_ft1.h"
+#include "test_ScaLAPACK_pDGETRF.h"
 #include "test_ScaLAPACK_pDGETRF_ft1.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
 #include "test_ScaLAPACK_pDGEQRF_ft1.h"
 #include "test_FTLA_pDGETRF.h"
 #include "test_FTLA_pDGEQRF.h"
-#include "test_ScaLAPACK_pDGETRF.h"
-
 
 
 /*
