@@ -16,8 +16,8 @@
 
 
 test_output ScaLAPACK_pDGETRF(int n, double* A_global, double* B_global, int nb,	\
-								int mpi_rank, int cprocs,								\
-								int nprow, int npcol, int myrow, int mycol,				\
+								int mpi_rank, int cprocs,							\
+								int nprow, int npcol, int myrow, int mycol,			\
 								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
