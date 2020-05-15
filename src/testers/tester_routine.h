@@ -1,8 +1,8 @@
 /*
  * tester_routine.c
  *
- *  Created on ) == 0 ) Apr 28, 2020
- *      Author ) == 0 ) marcello
+ *  Created on: Apr 28, 2020
+ *      Author: marcello
  */
 
 #include <mpi.h>
@@ -26,12 +26,12 @@
 #include "test_IMe_pviDGESV.h"
 #include "test_ScaLAPACK_pDGESV.h"
 #include "test_ScaLAPACK_pDGESV_ft1.h"
-#include "test_ScaLAPACK_pDGETRF.h"
 #include "test_ScaLAPACK_pDGETRF_ft1.h"
 #include "test_ScaLAPACK_pDGEQRF.h"
 #include "test_ScaLAPACK_pDGEQRF_ft1.h"
 #include "test_FTLA_pDGETRF.h"
 #include "test_FTLA_pDGEQRF.h"
+#include "test_ScaLAPACK_pDGETRF.h"
 
 
 

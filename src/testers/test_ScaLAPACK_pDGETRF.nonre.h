@@ -9,8 +9,8 @@
 #include <time.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
+#include "ScaLAPACK/ScaLAPACK_pDGETRF.nonre.h"
 #include "tester_structures.h"
-#include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 
 test_result test_ScaLAPACK_pDGETRF(const char* label, int verbosity, parallel_env env, test_input input)
 {
