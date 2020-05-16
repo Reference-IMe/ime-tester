@@ -26,8 +26,8 @@ void OrthogonalizeMatrix1D(double* mat, int rows, int cols)
     dgeqrfp_(&rows, &cols, mat, &rows, tau, work, &lwork, &info);
     dorgqr_(&rows, &cols, &cols, mat, &rows, tau, work, &lwork, &info);
 
-    free(work);
-    free(tau);
+    NULLFREE(work);
+    NULLFREE(tau);
 }
 
 void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)

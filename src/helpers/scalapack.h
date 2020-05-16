@@ -21,7 +21,6 @@ extern void pdgesv_( int* n, int* nrhs, double* A, int* ia, int* ja, int* desca,
 extern void pdgetrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
 extern void pdgetrs_( char *trans, int*n, int *nrhs, double *A, int *ia, int *ja, int *descA, int *ipiv, double *B, int *ib, int *jb, int *descB, int *info );
 extern void pdtran_( int *m, int *n, double *ALPHA, double *A, int *ia, int *ja, int *descA, double *BETA, double *B, int *ib, int *jb, int *descB);
-
 extern void pdgeqrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *tau, double *work, int *lwork, int *info );
 
 
@@ -33,5 +32,7 @@ extern void pdgeqrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *desc
 // FTLA
 extern void pdmatgen_ (int *, char *, char *, int *, int *, int *, int *, double *, int *, int *, int *, int *, int *, int *, int *, int *, int *, int *, int *, int *);
 extern void pdgeqrrv_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, double*tau, double *work);
+extern int pdtrsm_ ( char * SIDE, char * UPLO, char * TRANS, char * DIAG, int * M, int * N, double * ALPHA, double * A, int * IA, int * JA, int * DESCA, double * B, int * IB, int * JB, int * DESCB );
+extern void pdormqr_( char *side, char *tran, int *m, int *n, int *k, double *A, int *ia, int *ja, int *descA, double *tau, double *C, int *ic, int *jc, int *descC, double *work, int *lwork, int *info );
 
 #endif /* __SCALAPACK_H__ */

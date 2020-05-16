@@ -3,7 +3,7 @@
 #include "../../helpers/types.h"
 #include <mpi.h>
 
-void pGaussianElimination(double** A, double* b, cui n, int rank, int nprocs)
+void pGaussianElimination(double** A, double* b, int n, int rank, int nprocs)
 {
     ui i,j,k;
     double* c;
@@ -65,7 +65,7 @@ void pGaussianElimination(double** A, double* b, cui n, int rank, int nprocs)
 	DeallocateVector(c);
 }
 
-void BackSubstitution(double** A, double* b, double* x, cui n)
+void BackSubstitution(double** A, double* b, double* x, int n)
 {
 		double sum;
 		int i,j;

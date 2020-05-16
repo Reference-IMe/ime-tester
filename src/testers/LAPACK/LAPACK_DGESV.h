@@ -16,7 +16,7 @@ void Lapack_DGESV_calc(double* A, double* b, int n, int* ipiv)
 	dgesv_( &rows, &one, A, &rows, ipiv, b, &rows, &info );
 }
 
-void Lapack_DGESV(cui n, double* A, cui m, double* bb)
+void Lapack_DGESV(int n, double* A, int m, double* bb)
 {
 	int* ipiv = malloc(n * sizeof(int));
 	int rows;

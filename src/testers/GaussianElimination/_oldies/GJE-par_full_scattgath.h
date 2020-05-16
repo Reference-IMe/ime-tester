@@ -5,7 +5,7 @@
 
 #include "../../helpers/matrix.h"
 
-void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, cui n, int rank, int nprocs)
+void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, int n, int rank, int nprocs)
 {
     ui i,j,k;
     double* c;
@@ -110,7 +110,7 @@ void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, cu
 }
 
 
-void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int nprocs)
+void pGaussianElimination_fullmatrix(double** A, double* b, int n, int rank, int nprocs)
 {
     ui i,j,k;
     double* c;
@@ -241,7 +241,7 @@ void pGaussianElimination_fullmatrix(double** A, double* b, cui n, int rank, int
 	DeallocateVector(c);
 }
 
-void BackSubstitution(double** A, double* b, double* x, cui n)
+void BackSubstitution(double** A, double* b, double* x, int n)
 {
 		double sum;
 		int i,j;
