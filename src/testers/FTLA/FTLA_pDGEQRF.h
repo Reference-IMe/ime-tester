@@ -1,7 +1,7 @@
 /*
  * FTLA_pDGEQRF.h
  *
- *  Created on: Dec 27, 2019
+ *  Created on: May 15, 2020
  *      Author: marcello
  */
 
@@ -43,7 +43,7 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 	double d0 = 0.0;
 	double d1 = 1.0;
 	int info;
-    ftla_work_t ftwork;
+	ftla_work_t ftwork;
 	int lwork;
 	double lazywork;
 	double* work;
@@ -58,18 +58,18 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 		MPI_Comm_split(MPI_COMM_WORLD, 1, mpi_rank, &ftla_current_comm);
 	}
 
-    // faults
-    int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
-    int Fmin, Fmax;
-    int Finc = 1;
-    Fmin= Fmax = sprocs;
+	// faults
+	int Fstrat = 'e', F; // Fmin=0, Fmax=0, Finc=1;
+	int Fmin, Fmax;
+	int Finc = 1;
+	Fmin = Fmax = sprocs;
 
-    // matrices
-    int nc, nr, ne;
-    double* A;
+	// matrices
+	int nc, nr, ne;
+	double* A;
 	double* At;
-	int m=1; // B is a vector that will hold the solution vector for checking purposes
-    int ncrhs, nrrhs;
+	int m = 1; // B is a vector that will hold the solution vector for checking purposes
+	int ncrhs, nrrhs;
 	double *B;
 
 	int descA_global[9];
@@ -151,6 +151,7 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 			B=NULL;
 			A=NULL;
 			At=NULL;
+			ftwork.pcopy.Pc=NULL;
 		}
 
 	/* call resilient QR */
@@ -207,7 +208,7 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 #endif
 
 			free( work );
-			//free( tau ); // do NOT clear, as tau is used in n.r.e estimation
+			//free( tau ); // do NOT clear, as tau is used in n.r.e. estimation
 		}
 		else
 		{
@@ -261,13 +262,6 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 
 	/* Cleanup */
 		/*
-		NULLFREE(A);
-		NULLFREE(At);
-		NULLFREE(B);
-		NULLFREE(work);
-		NULLFREE(tau);
-		NULLFREE(ftwork.pcopy.Pc);
-		*/
 		if (mpi_rank < cprocs)
 		{
 			if( NULL != A  ) free( A );
@@ -280,14 +274,16 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 			free(work);
 			free(tau);
 		}
+		*/
+		NULLFREE(A);
+		NULLFREE(At);
+		NULLFREE(B);
+		NULLFREE(work);
+		NULLFREE(tau);
+		NULLFREE(ftwork.pcopy.Pc);
 
-
-    fflush( stdout );
-
+	fflush(stdout);
 	MPI_Barrier(MPI_COMM_WORLD);
-
-	//result.total_end_time = time(NULL);
-
 	return result;
 }
 
