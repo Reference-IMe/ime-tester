@@ -148,10 +148,10 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 		}
 		else
 		{
-			B=NULL;
-			A=NULL;
-			At=NULL;
-			ftwork.pcopy.Pc=NULL;
+			B  = NULL;
+			A  = NULL;
+			At = NULL;
+			ftwork.pcopy.Pc = NULL;
 		}
 
 	/* call resilient QR */
@@ -212,8 +212,8 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 		}
 		else
 		{
-			work=NULL;
-			tau=NULL;
+			work = NULL;
+			tau  = NULL;
 
 			result.core_start_time = time(NULL);
 			Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
@@ -257,7 +257,6 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 
 			// collect result
 			pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &ctxt);
-
 		}
 
 	/* Cleanup */

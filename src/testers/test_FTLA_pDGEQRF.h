@@ -44,8 +44,8 @@ test_result test_FTLA_pDGEQRF(const char* label, int verbosity, parallel_env env
 	}
 	else
 	{
-		A=NULL;
-		bb=NULL;
+		A  = NULL;
+		bb = NULL;
 	}
 
 	output = FTLA_ftdqr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, \
@@ -70,8 +70,11 @@ test_result test_FTLA_pDGEQRF(const char* label, int verbosity, parallel_env env
 			printf("\n with exit code     %d\n",output.exit_code);
 			printf("      norm.rel.err. %f\n",output.norm_rel_err);
 		}
-		DeallocateMatrix1D(A);
+		//DeallocateMatrix1D(A);
 	}
+
+	NULLFREE(A);
+	NULLFREE(bb);
 
 	TEST_END(output, rank_result, team_result);
 }

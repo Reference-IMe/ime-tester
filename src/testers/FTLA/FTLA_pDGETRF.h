@@ -28,9 +28,9 @@ extern int *errors;
 extern MPI_Comm ftla_current_comm;
 
 
-test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
-						int mpi_rank, int cprocs, int sprocs,	\
-						int nprow, int npcol, int myrow, int mycol,		\
+test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
+						int mpi_rank, int cprocs, int sprocs,				\
+						int nprow, int npcol, int myrow, int mycol,			\
 						int ctxt, int ctxt_root)
 {
 	test_output result;
@@ -40,11 +40,8 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
 	int i;
 	int i0=0;
 	int i1=1;
-	int m = 1;
 	double d0 = 0.0;
 	double d1 = 1.0;
-    int nc, nr, ne;
-    int ncrhs, nrrhs;
 	int info;
 	int *ipiv;
     ftla_work_t ftwork;
@@ -66,9 +63,13 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
     Fmin= Fmax = sprocs;
 
     // matrices
-    double* A=NULL;
+	int nc, nr, ne;
+	double* A;
 	double* At;
+	int m = 1; // B is a vector that will hold the solution vector for checking purposes
+	int ncrhs, nrrhs;
 	double *B;
+
 	int descA_global[9];
 	int descB_global[9];
 	int descA[9];
@@ -77,7 +78,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
 
     int lld;
 
-
+	/* allocate matrices */
 
 		/* A */
 		nc = numroc_( &n, &nb, &mycol, &i0, &npcol ); //LOCc(N_A)
@@ -88,7 +89,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
 
 
 		/* B */
-		ncrhs = numroc_( &i1, &nb, &mycol, &i0, &npcol ); // one column vector
+		ncrhs = numroc_( &m, &nb, &mycol, &i0, &npcol ); // one column vector
 		nrrhs = numroc_( &n, &nb, &myrow, &i0, &nprow );
 
 #ifndef NO_EXTRAFLOPS
@@ -102,7 +103,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
 			// Descriptors (local)
 			//descinit_( descA, &n, &ne, &nb, &nb, &i0, &i0, &ctxt, &lld, &info );
 			// descA inited below
-			descinit_( descB, &n, &i1, &nb, &nb, &i0, &i0, &ctxt, &nc, &info );
+			descinit_( descB, &n, &m, &nb, &nb, &i0, &i0, &ctxt, &nc, &info );
 		}
 		else
 		{
@@ -119,7 +120,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
 		{
 			// Descriptors (global)
 			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &ctxt_root, &n, &info );
-			descinit_( descB_global, &n, &i1, &i1, &i1, &i0, &i0, &ctxt_root, &n, &info );
+			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &ctxt_root, &n, &info );
 		}
 		else
 		{
@@ -149,92 +150,107 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,		\
 			// transpose system matrix
 			pdtran_(&n, &n, &d1, A, &i1, &i1, descA, &d0, At, &i1, &i1, descAt);
 		}
-
-
-	if (mpi_rank < cprocs)
-	{/* call resilient LU */
-		int err=0;
-		ipiv = (int*)malloc(ne*sizeof(int) );
-
-		result.core_start_time = time(NULL);
-
-#ifdef INJECT
-		for( F = Fmin; F<=Fmax; F+=Finc )
+		else
 		{
-			errors = create_error_list( n, nb, F, Fstrat );
+			B  = NULL;
+			A  = NULL;
+			At = NULL;
+			ftwork.pcopy.Pc = NULL;
+		}
+
+	/* call resilient LU */
+		if (mpi_rank < cprocs)
+		{
+			int err=0;
+			ipiv = (int*)malloc(ne*sizeof(int) );
+
+			result.core_start_time = time(NULL);
+
+#ifdef 	INJECT
+			for( F = Fmin; F<=Fmax; F+=Finc )
+			{
+				errors = create_error_list( n, nb, F, Fstrat );
 #endif
 
-			Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
+				Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
 
-			do { // call ftpdgetrf until we complete w/o a failure
+				do { // call ftpdgetrf until we complete w/o a failure
 
 #ifdef USE_CoF
-				if(err) Cftla_cof_dgeqrr( At, descAt, tau, work, lwork, &ftwork );
+					if(err) Cftla_cof_dgeqrr( At, descAt, tau, work, lwork, &ftwork );
 #endif
 
-				err = ftla_pdgetrf( &n, &ne, At, &i1, &i1, descAt, ipiv, &info, (int*)&ftwork );
+					err = ftla_pdgetrf( &n, &ne, At, &i1, &i1, descAt, ipiv, &info, (int*)&ftwork );
 
 #ifdef USE_CoF
-				if(err) Cftla_cof_dgeqrr( At, descAt, tau, work, lwork, &ftwork );
+					if(err) Cftla_cof_dgeqrr( At, descAt, tau, work, lwork, &ftwork );
 #endif
 
-			} while(err);
+				} while(err);
 
-			result.core_end_time = time(NULL);
-			result.exit_code = info;
+				result.core_end_time = time(NULL);
+				result.exit_code = info;
 
-			// transpose back
-			pdtran_(&n, &n, &d1, At, &i1, &i1, descAt, &d0, A, &i1, &i1, descA);
+				// transpose back
+				pdtran_(&n, &n, &d1, At, &i1, &i1, descAt, &d0, A, &i1, &i1, descA);
 
-			// collect matrices
-			pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt);
+				// collect matrices
+				pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt);
 
-			// cleanup
-			Cftla_cof_cleanup( &ftwork );
-			Cftla_work_destruct( &ftwork );
-			free( errors );
+				// cleanup
+				Cftla_cof_cleanup( &ftwork );
+				Cftla_work_destruct( &ftwork );
+				free( errors );
 
 #ifdef INJECT
-		}
+			}
 #endif
 
-		//free(ipiv);
-	}
-	else
-	{
-		result.core_start_time = time(NULL);
-		Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
-		result.core_end_time = time(NULL);
-	}
+			//free(ipiv); // do NOT clear, as ipiv is used in n.r.e. estimation
+		}
+		else
+		{
+			ipiv = NULL;
 
-	if (mpi_rank < cprocs)
-	{/* Cleanup */
-		if( NULL != A  ) free( A );
-		A = NULL;
-		if( NULL != ftwork.pcopy.Pc ) free( ftwork.pcopy.Pc);
-		ftwork.pcopy.Pc = NULL;
-	}
+			result.core_start_time = time(NULL);
+			Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
+			result.core_end_time = time(NULL);
+		}
 
-    fflush( stdout );
+		/*
+		if (mpi_rank < cprocs)
+		{// Cleanup
+			if( NULL != A  ) free( A );
+			A = NULL;
+			if( NULL != ftwork.pcopy.Pc ) free( ftwork.pcopy.Pc);
+			ftwork.pcopy.Pc = NULL;
+		}
+		*/
+		MPI_Barrier(MPI_COMM_WORLD);
 
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	result.total_end_time = time(NULL);
+		result.total_end_time = time(NULL);
 
 	/*
 	 * estimate n.r.e
 	 */
-	if (mpi_rank < cprocs)
-	{
-		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &ctxt);
+		if (mpi_rank < cprocs)
+		{
+			pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &ctxt);
 
-		pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
+			pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
 
-		pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &ctxt);
+			pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &ctxt);
+		}
 
-		free(ipiv);
-	}
+	/* Cleanup */
+		NULLFREE(A);
+		NULLFREE(At);
+		NULLFREE(B);
+		NULLFREE(ipiv);
+		NULLFREE(ftwork.pcopy.Pc);
 
+	fflush(stdout);
+	MPI_Barrier(MPI_COMM_WORLD);
 	return result;
 }
 
