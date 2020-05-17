@@ -15,9 +15,9 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_global, int nb,						\
-									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,	\
-									int nprow, int npcol, int myrow, int mycol,										\
+test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_global, int nb,
+									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,
+									int nprow, int npcol, int myrow, int mycol,
 									int context, int context_global, int context_all, int context_cp)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -100,8 +100,8 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	if (mpi_rank==cprocs) // spare (checkpointing) node
 	{
 		// Allocation
-		A_cp = malloc(n*n*sizeof(double));
-		ipiv_cp=malloc(nipiv*nprocs*sizeof(int)); //ipiv_cp=malloc(nIPIV*cprocs*sizeof(int)); // with cprocs is not good because MPI_GATHER wants a buffer for everyone
+		A_cp    = malloc(n*n*sizeof(double));
+		ipiv_cp = malloc(nipiv*nprocs*sizeof(int)); //ipiv_cp=malloc(nIPIV*cprocs*sizeof(int)); // with cprocs is not good because MPI_GATHER wants a buffer for everyone
 
 		// Descriptors
 		descinit_( descA_cp, &n, &n, &i1, &i1, &i0, &i0, &context_cp, &n, &info );
@@ -109,8 +109,8 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	else				// non-spare nodes
 	{
 		// Allocation not needed
-		A_cp=NULL;
-		ipiv_cp=NULL;
+		A_cp    = NULL;
+		ipiv_cp = NULL;
 
 		// Descriptors
 		for (i=0; i<9; i++)
@@ -126,9 +126,9 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	if (mpi_rank < cprocs)				// non-spare nodes
 	{
 		// Allocation
-		A = malloc(nr*nc*sizeof(double));
+		A  = malloc(nr*nc*sizeof(double));
 		At = malloc(nr*nc*sizeof(double));
-		B = malloc(nrrhs*ncrhs*sizeof(double));
+		B  = malloc(nrrhs*ncrhs*sizeof(double));
 		Bt = malloc(nrrhst*ncrhst*sizeof(double));
 
 		// Descriptors (local)
@@ -140,10 +140,10 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	else								// spare node
 	{
 		// Allocation not needed
-		A=NULL;
-		B=NULL;
-		At=NULL;
-		Bt=NULL;
+		A  = NULL;
+		B  = NULL;
+		At = NULL;
+		Bt = NULL;
 
 		// Descriptors
 		for (i=0; i<9; i++)
@@ -181,13 +181,12 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 
 	result.core_start_time = time(NULL);
 
-	// Linear system equations solver
-
 	if (failing_level>=0)
 	{
 		failing_level=n-failing_level;
 	}
 
+	// Linear system equations solver
 	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
 	// checkpointed factorization called by everyone
 	pdgetrf_cp_  (&n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
@@ -209,20 +208,16 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 		}
 		// get matrix back
 		pdgemr2d_(&m, &n, Bt, &i1, &i1, descBt, B_global, &i1, &i1, descB_global, &context);
+	}
 
-		// cleanup
-		free(A);
-		free(At);
-		free(B);
-		free(Bt);
-		free(ipiv);
-	}
-	else
-	{
-		free(A_cp);
-		free(ipiv_cp);
-		free(ipiv);
-	}
+	// cleanup
+	NULLFREE(A);
+	NULLFREE(At);
+	NULLFREE(B);
+	NULLFREE(Bt);
+	NULLFREE(ipiv);
+	NULLFREE(ipiv_cp);
+	NULLFREE(A_cp);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 

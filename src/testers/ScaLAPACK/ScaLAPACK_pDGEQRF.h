@@ -22,17 +22,13 @@
  */
 
 test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb,	\
-								int mpi_rank, int cprocs,					\
-								int nprow, int npcol, int myrow, int mycol,	\
+								int mpi_rank, int cprocs,							\
+								int nprow, int npcol, int myrow, int mycol,			\
 								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
-
-	/*
-	 * n = system rank (A_global n x n)
-	 */
 
 	// general
 	int i;
@@ -127,6 +123,14 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 
 		free(work);
 	}
+	else
+	{
+		A  = NULL;
+		At = NULL;
+		B  = NULL;
+		tau  = NULL;
+		work = NULL;
+	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
@@ -155,8 +159,7 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 		pdgemr2d_(&n, &m, B_global, &i1, &i1, descB_global, B, &i1, &i1, descB, &context);
 
 		lwork = -1;
-		pdormqr_( "L", "T", &n, &m, &n, At, &i1, &i1, descAt, tau,
-				  B, &i1, &i1, descB, &lazywork, &lwork, &info );
+		pdormqr_( "L", "T", &n, &m, &n, At, &i1, &i1, descAt, tau, B, &i1, &i1, descB, &lazywork, &lwork, &info );
 		lwork = (int) lazywork;
 		work = (double*) malloc( lwork * sizeof(double) );
 
@@ -167,17 +170,22 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 		// collect result
 		pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &context);
 
-		// cleanup
+		/*
 		free(A);
 		free(At);
 		free(B);
 		free(work);
 		free(tau);
+		*/
 	}
 
+	// cleanup
+	NULLFREE(A);
+	NULLFREE(At);
+	NULLFREE(B);
+	NULLFREE(work);
+	NULLFREE(tau);
+
 	MPI_Barrier(MPI_COMM_WORLD);
-
-	//result.total_end_time = time(NULL);
-
 	return result;
 }

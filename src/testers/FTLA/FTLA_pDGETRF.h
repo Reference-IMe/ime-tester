@@ -76,7 +76,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 	int descAt[9];
 	int descB[9];
 
-    int lld;
+    //int lld;
 
 	/* allocate matrices */
 
@@ -85,7 +85,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 		nr = numroc_( &n, &nb, &myrow, &i0, &nprow ); //LOCr(N_A)
 		MPI_Allreduce( MPI_IN_PLACE, &nc, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 		MPI_Allreduce( MPI_IN_PLACE, &nr, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
-		lld = MAX( 1 , nr );
+		//lld = MAX( 1 , nr );
 
 
 		/* B */

@@ -16,7 +16,7 @@ test_result test_ScaLAPACK_pDGETRF_ft1(const char* label, int verbosity, paralle
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output = EMPTY_OUTPUT;
+	test_output output      = EMPTY_OUTPUT;
 
 	int i,j;
 
@@ -46,10 +46,16 @@ test_result test_ScaLAPACK_pDGETRF_ft1(const char* label, int verbosity, paralle
 			PrintMatrix1D(A, input.n, input.n);
 		}
 	}
+	else
+	{
+		A      = NULL;
+		bb     = NULL;
+		xx_ref = NULL;
+	}
 
-	output = ScaLAPACK_pDGETRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs, \
-									failing_level, checkpoint_freq, \
-									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col, \
+	output = ScaLAPACK_pDGETRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs,
+									failing_level, checkpoint_freq,
+									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 									env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare);
 
 	if (env.mpi_rank==0)
@@ -69,10 +75,11 @@ test_result test_ScaLAPACK_pDGETRF_ft1(const char* label, int verbosity, paralle
 			printf("\n with exit code     %d\n",output.exit_code);
 			printf("      norm.rel.err. %f\n",output.norm_rel_err);
 		}
-		DeallocateMatrix1D(A);
-		DeallocateMatrix1D(bb);
-		DeallocateMatrix1D(xx_ref);
 	}
+
+	NULLFREE(A);
+	NULLFREE(bb);
+	NULLFREE(xx_ref);
 
 	TEST_END(output, rank_result, team_result);
 }

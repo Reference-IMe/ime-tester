@@ -15,9 +15,9 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb,	\
-								int mpi_rank, int cprocs,								\
-								int nprow, int npcol, int myrow, int mycol,				\
+test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, int nb,
+								int mpi_rank, int cprocs,
+								int nprow, int npcol, int myrow, int mycol,
 								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -61,7 +61,7 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 		nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
 		nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
 		lld = MAX( 1 , nr );
-		A = malloc(nr*nc*sizeof(double));
+		A  = malloc(nr*nc*sizeof(double));
 		At = malloc(nr*nc*sizeof(double));
 
 		ncrhs = numroc_( &m, &nb, &mycol, &i0, &npcol );
@@ -123,21 +123,26 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 			descinit_( descB_global, &m, &n, &i1, &i1, &i0, &i0, &context_global, &m, &info );
 		}
 		pdgemr2d_(&m, &n, Bt, &i1, &i1, descBt, B_global, &i1, &i1, descB_global, &context);
-
-
-		// cleanup
-		free(A);
-		free(At);
-		free(B);
-		free(Bt);
-		free(ipiv);
 	}
 	else
 	{
+		A  = NULL;
+		At = NULL;
+		B  = NULL;
+		Bt = NULL;
+		ipiv = NULL;
+
 		result.core_start_time = time(NULL);
 		result.core_end_time = time(NULL);
 		result.exit_code = 0;
 	}
+
+	// cleanup
+	NULLFREE(A);
+	NULLFREE(At);
+	NULLFREE(B);
+	NULLFREE(Bt);
+	NULLFREE(ipiv);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
