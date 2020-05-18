@@ -1,7 +1,7 @@
 /*
  * ScaLAPACK_pDGETRF_ft1.h
  *
- *  Created on: Dec 28, 2019
+ *  Created on: May 15, 2020
  *      Author: marcello
  */
 
@@ -46,6 +46,7 @@ test_output ScaLAPACK_pDGETRF_ft1(	int n, double* A_global, double* B_global, in
 	int ncrhst, nrrhst;
 	double *Bt;
 	double *A_cp;
+
 	int descA_global[9];
 	int descB_global[9];
 	int descA[9];
@@ -53,7 +54,8 @@ test_output ScaLAPACK_pDGETRF_ft1(	int n, double* A_global, double* B_global, in
 	int descB[9];
 	int descBt[9];
 	int descA_cp[9];
-	int lld, lld_global, lldt;
+
+	int lld, lldt;
 
 	// Computation of local matrix size
 	nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
@@ -76,9 +78,8 @@ test_output ScaLAPACK_pDGETRF_ft1(	int n, double* A_global, double* B_global, in
 	if (mpi_rank==0)
 	{
 		// Descriptors (global)
-		lld_global = n;
-		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
-		descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
+		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+		descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &n, &info );
 	}
 	else
 	{
@@ -155,7 +156,6 @@ test_output ScaLAPACK_pDGETRF_ft1(	int n, double* A_global, double* B_global, in
 		descA[4]=nb;
 		descA[5]=nb;
 
-
 		descAt[1]=-1;
 		descAt[4]=nb;
 		descAt[5]=nb;
@@ -186,7 +186,7 @@ test_output ScaLAPACK_pDGETRF_ft1(	int n, double* A_global, double* B_global, in
 	}
 
 	// checkpointed factorization called by everyone
-	pdgetrf_cp_  (&n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
+	pdgetrf_cp_(&n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
 
 	result.core_end_time = time(NULL);
 	result.exit_code = info;

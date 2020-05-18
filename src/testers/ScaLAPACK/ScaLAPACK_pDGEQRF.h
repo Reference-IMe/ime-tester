@@ -1,7 +1,7 @@
 /*
  * ScaLAPACK_pDGEQRF.h
  *
- *  Created on: Dec 27, 2019
+ *  Created on: May 26, 2020
  *      Author: marcello
  */
 
@@ -21,9 +21,9 @@
  *
  */
 
-test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb,	\
-								int mpi_rank, int cprocs,							\
-								int nprow, int npcol, int myrow, int mycol,			\
+test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb,
+								int mpi_rank, int cprocs,
+								int nprow, int npcol, int myrow, int mycol,
 								int context, int context_global)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -57,7 +57,6 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 	int descAt[9];
 	int descB[9];
 	int lld;
-	int lld_global;
 
 	if (mpi_rank < cprocs)
 	{
@@ -69,7 +68,7 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 		At = malloc(nr*nc*sizeof(double));
 		tau = malloc( nc*sizeof(double) );
 
-		ncrhs = numroc_( &i1, &nb, &mycol, &i0, &npcol ); // one column vector
+		ncrhs = numroc_( &m, &nb, &mycol, &i0, &npcol ); // one column vector
 		nrrhs = numroc_( &n, &nb, &myrow, &i0, &nprow );
 		B = malloc(nrrhs*ncrhs*sizeof(double));
 
@@ -81,9 +80,8 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 		if (mpi_rank==0)
 		{
 			// Descriptors (global, for root node)
-			lld_global = n;
-			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
-			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
+			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &n, &info );
 		}
 		else
 		{
@@ -105,13 +103,13 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 
 		// init work space
 		lwork=-1;
-		pdgeqrf_(  &n, &n, At, &i1, &i1, descAt, NULL, &lazywork, &lwork, &info );
+		pdgeqrf_( &n, &n, At, &i1, &i1, descAt, NULL, &lazywork, &lwork, &info );
 		lwork = (int)lazywork;
 		work = malloc( lwork*sizeof(double) );
 
 		// QR factorization
 		result.core_start_time = time(NULL);
-		pdgeqrf_(  &n, &n, At, &i1, &i1, descAt, tau, work, &lwork, &info );
+		pdgeqrf_( &n, &n, At, &i1, &i1, descAt, tau, work, &lwork, &info );
 		result.core_end_time = time(NULL);
 		result.exit_code = info;
 
@@ -169,14 +167,6 @@ test_output ScaLAPACK_pDGEQRF(	int n, double* A_global, double* B_global, int nb
 
 		// collect result
 		pdgemr2d_(&n, &m, B, &i1, &i1, descB, B_global, &i1, &i1, descB_global, &context);
-
-		/*
-		free(A);
-		free(At);
-		free(B);
-		free(work);
-		free(tau);
-		*/
 	}
 
 	// cleanup

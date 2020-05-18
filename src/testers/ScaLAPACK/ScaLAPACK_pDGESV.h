@@ -46,13 +46,15 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 	double *B;
 	int ncrhst, nrrhst;
 	double *Bt;
+
 	int descA_global[9];
 	int descB_global[9];
 	int descA[9];
 	int descAt[9];
 	int descB[9];
 	int descBt[9];
-	int lld, lld_global, lldt;
+
+	int lld, lldt;
 
 
 	if (mpi_rank < cprocs)
@@ -84,9 +86,8 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 		if (mpi_rank==0)
 		{
 			// Descriptors (global)
-			lld_global = n;
-			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
-			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
+			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+			descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &n, &info );
 		}
 		else
 		{
@@ -109,7 +110,7 @@ test_output ScaLAPACK_pDGESV(int n, double* A_global, int m, double* B_global, i
 
 		// linear system equations solver
 		result.core_start_time = time(NULL);
-		pdgesv_(  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info );
+		pdgesv_( &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info );
 		result.core_end_time = time(NULL);
 		result.exit_code = info;
 

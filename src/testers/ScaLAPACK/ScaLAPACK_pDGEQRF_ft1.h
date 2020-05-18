@@ -1,7 +1,7 @@
 /*
  * ScaLAPACK_pDGESV_ft1.h
  *
- *  Created on: Dec 28, 2019
+ *  Created on: May 17, 2020
  *      Author: marcello
  */
 
@@ -15,9 +15,9 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, double* B_global, int nb,						\
-									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,	\
-									int nprow, int npcol, int myrow, int mycol,										\
+test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, double* B_global, int nb,
+									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,
+									int nprow, int npcol, int myrow, int mycol,
 									int context, int context_global, int context_all, int context_cp)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -113,7 +113,7 @@ test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, double* B_global, in
 
 		// init work space
 		lwork=-1;
-		pdgeqrf_(  &n, &n, A, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
+		pdgeqrf_( &n, &n, A, &i1, &i1, descA, NULL, &lazywork, &lwork, &info );
 		lwork = (int)lazywork;
 	}
 	else								// spare node
@@ -195,7 +195,6 @@ test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, double* B_global, in
 		failing_level=n-failing_level;
 	}
 
-
 	// QR factorization
 	result.core_start_time = time(NULL);
 	pdgeqrf_cp_(&n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, tau, tau_cp, &ltau, work, work_cp, &lwork, &checkpoint_freq, &failing_level, &context_all, &info );
@@ -248,21 +247,6 @@ test_output ScaLAPACK_pDGEQRF_ft1(	int n, double* A_global, double* B_global, in
 	}
 
 	// cleanup
-	/*
-	if (mpi_rank < cprocs)
-	{
-		free(A);
-		free(At);
-		free(B);
-		free(Bt);
-	}
-	else
-	{
-		free(A_cp);
-		free(tau_cp);
-		free(tau);
-	}
-	*/
 	NULLFREE(A);
 	NULLFREE(At);
 	NULLFREE(B);

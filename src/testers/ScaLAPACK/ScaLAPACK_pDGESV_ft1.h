@@ -50,6 +50,7 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	int ncrhst, nrrhst;
 	double *Bt;
 	double *A_cp;
+
 	int descA_global[9];
 	int descB_global[9];
 	int descA[9];
@@ -57,7 +58,8 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	int descB[9];
 	int descBt[9];
 	int descA_cp[9];
-	int lld, lld_global, lldt;
+
+	int lld, lldt;
 
 	// Computation of local matrix size
 	nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
@@ -80,9 +82,8 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	if (mpi_rank==0)
 	{
 		// Descriptors (global)
-		lld_global = n;
-		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
-		descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &lld_global, &info );
+		descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+		descinit_( descB_global, &n, &m, &i1, &i1, &i0, &i0, &context_global, &n, &info );
 	}
 	else
 	{
@@ -189,7 +190,7 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	// Linear system equations solver
 	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
 	// checkpointed factorization called by everyone
-	pdgetrf_cp_  (&n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
+	pdgetrf_cp_( &n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
 	// solve called by non-spare nodes only
 	if (mpi_rank < cprocs)
 	{

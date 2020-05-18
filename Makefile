@@ -14,7 +14,9 @@ FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
 OPTIMIZATION = -O3
 DEBUG = -g
 NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -w3 -wd1418 -wd2259
+CFLAGS_enea_intel = -lifcore -w3 -wd1418 -wd2259
+CFLAGS_enea_open  = 
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
 FFLAGS = $(OPTIMIZATION) $(DEBUG)
 
 
@@ -44,7 +46,7 @@ else
 endif
 
 
-## set compilers
+## set compilers, depending on MPI flavour
 ifeq ($(mpi),intel)
   MPICC = mpiicc
   MPIFC = mpiifort
@@ -81,6 +83,10 @@ SEQ_MFLAGS_enea_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/libr
 PAR_MFLAGS_enea_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
 FTLAMAKEFILE_enea_intel = Makefile.enea.mk
 
+SEQ_MFLAGS_enea_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
+PAR_MFLAGS_enea_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
+FTLAMAKEFILE_enea_open = Makefile.enea.mk
+
 # ubuntu
   # TODO
 
@@ -108,21 +114,22 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 $(LAPACK_LIB_DIR)/librefblas.a:
-	cd $(LAPACK_LIB_DIR) && $(MAKE) blaslib
+	cd $(LAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) blaslib
 
 $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
-	cd $(LAPACK_LIB_DIR) && $(MAKE) lapacklib
+	cd $(LAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) lapacklib
 
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
-	cd $(SCALAPACK_LIB_DIR) && $(MAKE) LAPACK_DIR=$(LAPACK_LIB_DIR) lib
+	cd $(SCALAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
 $(FTLA_LIB_DIR)/libftla.a:
 	cd $(FTLA_LIB_DIR) && $(MAKE) -f $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
-	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
+	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
+#	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
 
 
 # static linking experiment
@@ -153,12 +160,7 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/FTLA/*.h \
 				| $(FTLA_LIB_DIR)/libftla.a \
 				$(BIN_DIR)
-	$(MPICC) $(CFLAGS) -lifcore $< -o $(BIN_DIR)/tester $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
-
-
-
-#$(BIN_DIR)/%: $(SRC_DIR)/%.c $(SRC_DIR)/*.h $(SRC_DIR)/../ft-simulated/*.h $(SRC_DIR)/ScaLAPACK/*.o $(SRC_DIR)/ScaLAPACK/*.f $(SRC_DIR)/ScaLAPACK/*.h $(SRC_DIR)/FTLA/libftla.a $(SRC_DIR)/FTLA/helpersftla.a
-#	$(MPICC) $(CFLAGS)  -lifcore $< -o $@ $(SRC_DIR)/FTLA/helpersftla.a $(SRC_DIR)/FTLA/libftla.a -L$(SRC_DIR)/ScaLAPACK  $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
 # cleanup
 #

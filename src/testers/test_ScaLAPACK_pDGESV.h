@@ -41,7 +41,6 @@ test_result test_ScaLAPACK_pDGESV(const char* label, int verbosity, parallel_env
 			}
 		}
 
-
 		if (verbosity>2)
 		{
 			printf("\n\n Matrix A:\n");

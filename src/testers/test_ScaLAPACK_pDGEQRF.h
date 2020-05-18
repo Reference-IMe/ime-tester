@@ -20,21 +20,18 @@ test_result test_ScaLAPACK_pDGEQRF(const char* label, int verbosity, parallel_en
 
 	double* A;
 	double* bb;
-	//double* xx_ref;
 	int i;
 
 	if (env.mpi_rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
 		bb=AllocateMatrix1D(input.n, 1);
-		//xx_ref=AllocateMatrix1D(input.n, 1);
 
 		CopyMatrix1D(input.A_ref, A, input.n, input.n);
 
 		for (i=0;i<input.n;i++)
 		{
 			bb[i] = input.b_ref[i];
-			//xx_ref[i] = input.x_ref[i];
 		}
 		if (verbosity>2)
 		{

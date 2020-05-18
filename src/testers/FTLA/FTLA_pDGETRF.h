@@ -1,7 +1,7 @@
 /*
  * FTLA_pDGETRF.h
  *
- *  Created on: Dec 27, 2019
+ *  Created on: May 15, 2020
  *      Author: marcello
  */
 
@@ -27,10 +27,9 @@ extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-
-test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
-						int mpi_rank, int cprocs, int sprocs,				\
-						int nprow, int npcol, int myrow, int mycol,			\
+test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
+						int mpi_rank, int cprocs, int sprocs,
+						int nprow, int npcol, int myrow, int mycol,
 						int ctxt, int ctxt_root)
 {
 	test_output result;
@@ -44,7 +43,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 	double d1 = 1.0;
 	int info;
 	int *ipiv;
-    ftla_work_t ftwork;
+	ftla_work_t ftwork;
 
 
 	if (mpi_rank>=cprocs)
@@ -56,13 +55,13 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 		MPI_Comm_split(MPI_COMM_WORLD, 1, mpi_rank, &ftla_current_comm);
 	}
 
-    // faults
-    int Fstrat='e', F; // Fmin=0, Fmax=0, Finc=1;
-    int Fmin, Fmax;
-    int Finc = 1;
-    Fmin= Fmax = sprocs;
+	// faults
+	int Fstrat = 'e', F; // Fmin=0, Fmax=0, Finc=1;
+	int Fmin, Fmax;
+	int Finc = 1;
+	Fmin = Fmax = sprocs;
 
-    // matrices
+	// matrices
 	int nc, nr, ne;
 	double* A;
 	double* At;
@@ -97,13 +96,11 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 #else
 		ne = n;
 #endif
-
 		if (mpi_rank < cprocs)	// only calc nodes have a local copy of submatrix A
 		{
 			// Descriptors (local)
-			//descinit_( descA, &n, &ne, &nb, &nb, &i0, &i0, &ctxt, &lld, &info );
+			descinit_( descB, &n, &m, &nb, &nb, &i0, &i0, &ctxt, &nr, &info );
 			// descA inited below
-			descinit_( descB, &n, &m, &nb, &nb, &i0, &i0, &ctxt, &nc, &info );
 		}
 		else
 		{
@@ -137,9 +134,8 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 		if (mpi_rank < cprocs)	// only calc nodes initialize matrices
 		{
 			B = malloc(nrrhs*ncrhs*sizeof(double));
-
-			create_matrix( ctxt, 0,   &A,  descA, n, ne, nb, NULL, NULL );
-			create_matrix( ctxt, 0,   &At,  descAt, n, ne, nb, NULL, NULL );
+			create_matrix( ctxt, 0, &A,  descA,  n, ne, nb, NULL, NULL );
+			create_matrix( ctxt, 0, &At, descAt, n, ne, nb, NULL, NULL );
 
 			/* allocate local buffer for the npcol-wide local panel copy */
 			create_matrix( ctxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, n, (npcol+2)*nb, nb, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
@@ -217,15 +213,6 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,	\
 			result.core_end_time = time(NULL);
 		}
 
-		/*
-		if (mpi_rank < cprocs)
-		{// Cleanup
-			if( NULL != A  ) free( A );
-			A = NULL;
-			if( NULL != ftwork.pcopy.Pc ) free( ftwork.pcopy.Pc);
-			ftwork.pcopy.Pc = NULL;
-		}
-		*/
 		MPI_Barrier(MPI_COMM_WORLD);
 
 		result.total_end_time = time(NULL);

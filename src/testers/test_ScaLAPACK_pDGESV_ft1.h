@@ -1,5 +1,5 @@
 /*
- * test_ScaLAPACK_pDGESV_cp_ft1.h
+ * test_ScaLAPACK_pDGESV_ft1.h
  *
  *  Created on: Dec 5, 2019
  *      Author: marcello

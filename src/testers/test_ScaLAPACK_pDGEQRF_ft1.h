@@ -1,5 +1,5 @@
 /*
- * test_ScaLAPACK_pDGEQRF_cp_ft1.h
+ * test_ScaLAPACK_pDGEQRF_ft1.h
  *
  *  Created on: Jan 8, 2020
  *      Author: marcello
@@ -16,25 +16,22 @@ test_result test_ScaLAPACK_pDGEQRF_ft1(const char* label, int verbosity, paralle
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output = EMPTY_OUTPUT;
+	test_output output      = EMPTY_OUTPUT;
 
 	double* A;
 	double* bb;
-	//double* xx_ref;
 	int i;
 
 	if (env.mpi_rank==0)
 	{
 		A=AllocateMatrix1D(input.n, input.n);
 		bb=AllocateMatrix1D(input.n, 1);
-		//xx_ref=AllocateMatrix1D(input.n, 1);
 
 		CopyMatrix1D(input.A_ref, A, input.n, input.n);
 
 		for (i=0;i<input.n;i++)
 		{
 			bb[i] = input.b_ref[i];
-			//xx_ref[i] = input.x_ref[i];
 		}
 		if (verbosity>2)
 		{
@@ -48,9 +45,9 @@ test_result test_ScaLAPACK_pDGEQRF_ft1(const char* label, int verbosity, paralle
 		bb = NULL;
 	}
 
-	output = ScaLAPACK_pDGEQRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs, \
-									failing_level, checkpoint_freq, \
-									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col, \
+	output = ScaLAPACK_pDGEQRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs,
+									failing_level, checkpoint_freq,
+									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 									env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare);
 
 	if (env.mpi_rank==0)
@@ -70,7 +67,6 @@ test_result test_ScaLAPACK_pDGEQRF_ft1(const char* label, int verbosity, paralle
 			printf("\n with exit code     %d\n",output.exit_code);
 			printf("      norm.rel.err. %f\n",output.norm_rel_err);
 		}
-		//DeallocateMatrix1D(A);
 	}
 
 	NULLFREE(A);

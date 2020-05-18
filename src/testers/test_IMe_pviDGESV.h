@@ -12,15 +12,15 @@ test_result test_IMe_pviDGESV(const char* label, int verbosity, test_input input
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output = EMPTY_OUTPUT;
+	test_output output      = EMPTY_OUTPUT;
 
 	int i,j;
 
 	double** A2;
-	double* A2_1D;
+	double*  A2_1D;
 	double** bb;
 	double** xx;
-	double* xx_ref;
+	double*  xx_ref;
 
 	MPI_Comm comm_calc;
 
@@ -69,6 +69,7 @@ test_result test_IMe_pviDGESV(const char* label, int verbosity, test_input input
 		else
 		{
 			A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
+			xx_ref=NULL;
 		}
 
 		output = pviDGESV_WO(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
@@ -92,8 +93,7 @@ test_result test_IMe_pviDGESV(const char* label, int verbosity, test_input input
 			}
 		}
 
-		DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
-		DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
+		//cleanup
 		if (rank==0)
 		{
 			DeallocateMatrix2D(A2, input.n, CONTIGUOUS);
@@ -102,12 +102,19 @@ test_result test_IMe_pviDGESV(const char* label, int verbosity, test_input input
 		{
 			DeallocateMatrix2D(A2, 0, CONTIGUOUS);
 		}
+		DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
+		DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
+
 	}
 	else
 	{
+		xx=NULL;
+		bb=NULL;
+
 		rank_result.total_time=0;
 		rank_result.core_time=0;
 	}
+
 
 	if (input.spare_procs>0)
 	{

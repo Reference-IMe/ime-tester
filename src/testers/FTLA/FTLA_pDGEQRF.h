@@ -28,9 +28,9 @@ extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
-						int mpi_rank, int cprocs, int sprocs,				\
-						int nprow, int npcol, int myrow, int mycol,			\
+test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,
+						int mpi_rank, int cprocs, int sprocs,
+						int nprow, int npcol, int myrow, int mycol,
 						int ctxt, int ctxt_root)
 {
 	test_output result = EMPTY_OUTPUT;
@@ -95,7 +95,6 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 #else
 		ne = n;
 #endif
-
 		if (mpi_rank < cprocs)	// only calc nodes have a local copy of submatrices A and B
 		{
 			// Descriptors (local)
@@ -134,8 +133,8 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 		if (mpi_rank < cprocs)	// only calc nodes initialize matrices
 		{
 			B = malloc(nrrhs*ncrhs*sizeof(double));
-			create_matrix( ctxt, 0,   &A,  descA, n, ne, nb, NULL, NULL );
-			create_matrix( ctxt, 0,   &At,  descAt, n, ne, nb, NULL, NULL );
+			create_matrix( ctxt, 0, &A,  descA,  n, ne, nb, NULL, NULL );
+			create_matrix( ctxt, 0, &At, descAt, n, ne, nb, NULL, NULL );
 
 			/* allocate local buffer for the npcol-wide local panel copy */
 			create_matrix( ctxt, 0, (typeof(&A))&(ftwork.pcopy.Pc), ftwork.pcopy.descPc, n, (npcol+2)*nb, nb, &(ftwork.pcopy.nrPc), &(ftwork.pcopy.ncPc) );
@@ -260,20 +259,6 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 		}
 
 	/* Cleanup */
-		/*
-		if (mpi_rank < cprocs)
-		{
-			if( NULL != A  ) free( A );
-			A = NULL;
-			if( NULL != ftwork.pcopy.Pc ) free( ftwork.pcopy.Pc);
-			ftwork.pcopy.Pc = NULL;
-
-			free(At);
-			free(B);
-			free(work);
-			free(tau);
-		}
-		*/
 		NULLFREE(A);
 		NULLFREE(At);
 		NULLFREE(B);
@@ -285,4 +270,3 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,	\
 	MPI_Barrier(MPI_COMM_WORLD);
 	return result;
 }
-
