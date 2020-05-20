@@ -14,11 +14,15 @@ FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
 OPTIMIZATION = -O3
 DEBUG = -g
 NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
-CFLAGS_enea_intel = -lifcore -w3 -wd1418 -wd2259
-CFLAGS_enea_open  = 
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
-FFLAGS = $(OPTIMIZATION) $(DEBUG)
 
+CFLAGS_cineca_intel = -lifcore -w3 -wd1418 -wd2259
+CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
+CFLAGS_enea_open    = 
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
+
+FFLAGS_enea_intel = 
+FFLAGS_cineca_intel = -nofor-main
+FFLAGS = $(OPTIMIZATION) $(DEBUG) $(FFLAGS_$(machine)_$(mpi))
 
 ## check machine/platform, library type and mpi flavour
 ifeq ($(machine),)
@@ -128,8 +132,7 @@ $(FTLA_LIB_DIR)/libftla.a:
 	cd $(FTLA_LIB_DIR) && $(MAKE) -f $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
-	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
-#	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
+	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
 
 
 # static linking experiment
