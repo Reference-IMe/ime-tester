@@ -21,7 +21,7 @@ CFLAGS_cineca_open  = -lgfortran
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_enea_open    = 
 
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -Wall $(CFLAGS_$(machine)_$(mpi))
 
 FFLAGS_cineca_intel = -nofor-main
 FFLAGS_cineca_open  = 
@@ -129,18 +129,18 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 $(LAPACK_LIB_DIR)/librefblas.a:
-	cd $(LAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) blaslib
+	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(DEBUG) $(OPTIMIZATION)" FFLAGS="$(DEBUG) $(OPTIMIZATION)" blaslib
 
 $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
-	cd $(LAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) lapacklib
+	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(DEBUG) $(OPTIMIZATION)" FFLAGS="$(DEBUG) $(OPTIMIZATION)" lapacklib
 
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
-	cd $(SCALAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) LAPACK_DIR=$(LAPACK_LIB_DIR) lib
+	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(DEBUG) $(OPTIMIZATION)" FCFLAGS="$(DEBUG) $(OPTIMIZATION)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
 $(FTLA_LIB_DIR)/libftla.a:
-	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
+	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(DEBUG) $(OPTIMIZATION) -DINJECT" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 #	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
