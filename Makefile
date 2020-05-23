@@ -16,12 +16,18 @@ DEBUG = -g
 NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
 
 CFLAGS_cineca_intel = -lifcore -w3 -wd1418 -wd2259
+CFLAGS_cineca_open  = -lgfortran
+
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_enea_open    = 
+
 CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
 
-FFLAGS_enea_intel = 
 FFLAGS_cineca_intel = -nofor-main
+FFLAGS_cineca_open  = 
+
+FFLAGS_enea_intel = 
+
 FFLAGS = $(OPTIMIZATION) $(DEBUG) $(FFLAGS_$(machine)_$(mpi))
 
 ## check machine/platform, library type and mpi flavour
@@ -75,9 +81,14 @@ PAR_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lm
 SEQ_MFLAGS_cineca_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
 PAR_MFLAGS_cineca_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
 
+SEQ_MFLAGS_cineca_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm -ldl
+PAR_MFLAGS_cineca_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lm -ldl
+
 PAR_MFLAGS_cineca_ch_mkl    = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lm
 PAR_MFLAGS_cineca_open_sys  = -L$(SCALAPACK_LIB) -lscalapack -L$(LAPACK_LIB) -llapack -L$(BLAS_LIB) -lblas -lifcore -lm
-FTLAMAKEFILE_cineca_intel = Makefile.cineca.mk
+
+FTLAMAKEFILE_cineca_intel = Makefile.cineca.intel.mk
+FTLAMAKEFILE_cineca_open  = Makefile.cineca.open.mk
 
 # cresco6/cresco4 -> enea
 SEQ_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -ldl -lm
@@ -85,11 +96,11 @@ PAR_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -lmkl_sca
 
 SEQ_MFLAGS_enea_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
 PAR_MFLAGS_enea_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
-FTLAMAKEFILE_enea_intel = Makefile.enea.mk
+FTLAMAKEFILE_enea_intel = Makefile.enea.intel.mk
 
 SEQ_MFLAGS_enea_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
 PAR_MFLAGS_enea_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
-FTLAMAKEFILE_enea_open = Makefile.enea.mk
+FTLAMAKEFILE_enea_open = Makefile.enea.open.mk
 
 # ubuntu
   # TODO
@@ -129,10 +140,11 @@ $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
 $(FTLA_LIB_DIR)/libftla.a:
-	cd $(FTLA_LIB_DIR) && $(MAKE) -f $(FTLAMAKEFILE)
+	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
-	$(MPIFC) $(FFLAGS) -c $< -o $@ $(PAR_MACHINEFLAGS)
+#	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
+	$(MPIFC) $(FFLAGS) -c $< -o $@ #$(PAR_MACHINEFLAGS)
 
 
 # static linking experiment
