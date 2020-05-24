@@ -19,7 +19,7 @@ CFLAGS_cineca_intel = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_cineca_open  = -lgfortran
 
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
-CFLAGS_enea_open    = 
+CFLAGS_enea_open    = -lgfortran
 
 CFLAGS = $(OPTIMIZATION) $(DEBUG) -Wall $(CFLAGS_$(machine)_$(mpi))
 
@@ -98,8 +98,8 @@ SEQ_MFLAGS_enea_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/libr
 PAR_MFLAGS_enea_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
 FTLAMAKEFILE_enea_intel = Makefile.enea.intel.mk
 
-SEQ_MFLAGS_enea_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
-PAR_MFLAGS_enea_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
+SEQ_MFLAGS_enea_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -ldl -lm
+PAR_MFLAGS_enea_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lm -ldl
 FTLAMAKEFILE_enea_open = Makefile.enea.open.mk
 
 # ubuntu
