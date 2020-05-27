@@ -24,6 +24,7 @@
 #include "tester_labels.h"
 #include "tester_routine.h"
 #include "tester_structures.h"
+#include "test_dummy.h"
 
 #define MAX_VERSIONS 30
 #define MAX_RUNS 10
@@ -169,7 +170,9 @@ int main(int argc, char **argv)
 	versionname_ime[versions_ime++] = IME_XK_FAULT_1_TOLERANT_1;
 	*/
 
-    versions_all = 0;
+	versions_all = 0;
+	versionname_all[versions_all++] = "dummy";
+
 	versionname_all[versions_all++] = IME_SV;
 	//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
 	versionname_all[versions_all++] = IME_SV_FAULT_0_TOLERANT_1;
@@ -662,6 +665,8 @@ int main(int argc, char **argv)
 			ime_nb,
 			scalapack_nb
 	};
+
+	test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
 
 	/*
 	 * main loop
