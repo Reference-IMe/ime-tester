@@ -36,6 +36,7 @@ typedef struct test_input
 	int spare_procs;
 	int ime_bf;
 	int scalapack_bf;
+	char calc_nre;
 	//int failing_rank;
 	//int failing_level;
 	//int checkpoint_skip_interval;
@@ -47,21 +48,21 @@ typedef struct test_output
 	time_t total_end_time;
 	time_t core_start_time;
 	time_t core_end_time;
-	int	   exit_code;
-	double norm_rel_err;
+	char   exit_code;
+	//double norm_rel_err;
 } test_output;
 
 typedef struct test_result
 {
 	double total_time;
 	double core_time;
-	int	   exit_code;
+	char   exit_code;
 	double norm_rel_err;
 } test_result;
 
 // as array/struct in #define are not allowed in assignment, a constant has to be defined
 const test_result TEST_NOT_IMPLEMENTED	= { -99, -99, -99, -99 };
 const test_result TEST_NOT_RUN			= { -1,  -1,  -1,  -1  };
-const test_output EMPTY_OUTPUT			= { -1,  -1,  -1,  -1,  -1,  -1};
+const test_output EMPTY_OUTPUT			= { -1,  -1,  -1,  -1,  -1};
 
 #endif

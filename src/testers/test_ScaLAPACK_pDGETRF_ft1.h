@@ -58,14 +58,14 @@ test_result test_ScaLAPACK_pDGETRF_ft1(const char* label, int verbosity, paralle
 			printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 		}
 		// calc error
-		output.norm_rel_err = NormwiseRelativeError1D(bb, input.x_ref, input.n, input.nrhs);
+		if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(bb, input.x_ref, input.n, input.nrhs);
 
 		if (verbosity>1)
 		{
 			printf("\nThe %s factorization is:\n",label);
 			PrintMatrix1D(A, input.n, input.n);
 			printf("\n with exit code     %d\n",output.exit_code);
-			printf("      norm.rel.err. %f\n",output.norm_rel_err);
+			printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
 		}
 	}
 

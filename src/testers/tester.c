@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     int sprocs;				// number of processes to allocate for summing (0 = no fault tolerance)
     int cprocs;				// number of processes for real IMe calc
     int repetitions;
-    int verbose;
+    char verbose;
     int failing_rank;
     int failing_level;
     int failing_level_override;
@@ -144,6 +144,7 @@ int main(int argc, char **argv)
     sds matrix_input_file_name;
     sds test_output_file_name;
 
+    char calc_nre;
     int output_to_file;
     int input_from_file;
 
@@ -180,8 +181,11 @@ int main(int argc, char **argv)
 		ime_nb=1;					// ime blocking factor
 		cnd=1;						// condition number for randomly generated matrices
 		seed=1;						// seed for random generation
+		calc_nre=1;					// calc (1) normwise relative error or not (0)
 
-		// list of testable routines (see tester_labels.h)
+		/*
+		 * list of testable routines (see tester_labels.h)
+		 */
 
 		/*
 		versions_ime = 0;
@@ -291,6 +295,10 @@ int main(int argc, char **argv)
 			}
 			if( strcmp( argv[i], "-seed" ) == 0 ) {
 				seed = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-no-nre" ) == 0 ) {
+				calc_nre = 0;
 				i++;
 			}
 			if( strcmp( argv[i], "--run" ) == 0 ) {
@@ -449,6 +457,9 @@ int main(int argc, char **argv)
 		printf("     Matrix condition number:       %d\n",cnd);
 		printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
+		printf("     Calculate n.r.e.:              ");
+			if (calc_nre)	{printf("yes\n");}
+			else			{printf("no\n");}
 		printf("     IMe iterations:                %d\n",rows);
 		printf("     IMe blocking factor:           %d\n",ime_nb);
 		printf("     SPK-like iterations:           %d\n",scalapack_iter);
@@ -847,7 +858,8 @@ int main(int argc, char **argv)
 					cprocs,
 					sprocs,
 					ime_nb,
-					scalapack_nb
+					scalapack_nb,
+					calc_nre
 			};
 
 			// init communication channels

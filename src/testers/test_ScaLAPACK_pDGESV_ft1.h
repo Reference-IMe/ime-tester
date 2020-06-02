@@ -68,14 +68,14 @@ test_result test_ScaLAPACK_pDGESV_ft1(const char* label, int verbosity, parallel
 			printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 		}
 		// calc error
-		output.norm_rel_err = NormwiseRelativeError1D(bb, xx_ref, input.n, input.nrhs);
+		if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(bb, xx_ref, input.n, input.nrhs);
 
 		if (verbosity>1)
 		{
 			printf("\nThe %s solution is:\n",label);
 			PrintMatrix1D(bb, input.n, input.nrhs);
 			printf("\n with exit code     %d\n",output.exit_code);
-			printf("      norm.rel.err. %f\n",output.norm_rel_err);
+			printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
 		}
 	}
 
