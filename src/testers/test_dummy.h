@@ -8,12 +8,6 @@
 
 void test_dummy(const char* label, int verbosity, test_input input, int rank, MPI_Comm comm_world)
 {
-	test_result rank_result = TEST_NOT_RUN;
-	test_result team_result = TEST_NOT_RUN;
-	test_output output      = EMPTY_OUTPUT;
-
-	int i,j;
-
 	double** xx;
 	double x;
 
@@ -40,7 +34,7 @@ void test_dummy(const char* label, int verbosity, test_input input, int rank, MP
 		{
 			if (verbosity>1)
 			{
-				printf("\n\n Opening MPI communication channels..\n");
+				printf("\n\n     Opening MPI communication channels..\n");
 			}
 		}
 
@@ -50,7 +44,7 @@ void test_dummy(const char* label, int verbosity, test_input input, int rank, MP
 		{
 			if (verbosity>1)
 			{
-				printf("\n..opened\n");
+				printf("     ..opened\n");
 			}
 		}
 

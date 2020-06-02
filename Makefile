@@ -10,6 +10,7 @@ TST_DIR = $(SRC_DIR)/testers
 LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/lapack-3.9.0
 SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-2.1.0.mod
 FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
+SDS_LIB_DIR       = $(SRC_DIR)/helpers/simple_dynamic_strings
 
 OPTIMIZATION = -O3
 DEBUG = -g
@@ -19,14 +20,15 @@ CFLAGS_cineca_intel = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_cineca_open  = -lgfortran
 
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
-CFLAGS_enea_open    = -lgfortran
+CFLAGS_enea_open    = -lgfortran -Wno-unknown-pragmas
 
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -Wall $(CFLAGS_$(machine)_$(mpi))
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
 
 FFLAGS_cineca_intel = -nofor-main
 FFLAGS_cineca_open  = 
 
 FFLAGS_enea_intel = 
+FFLAGS_enea_open = 
 
 FFLAGS = $(OPTIMIZATION) $(DEBUG) $(FFLAGS_$(machine)_$(mpi))
 
@@ -146,6 +148,8 @@ $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 #	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
 	$(MPIFC) $(FFLAGS) -c $< -o $@ #$(PAR_MACHINEFLAGS)
 
+$(SDS_LIB_DIR)/sds.o: $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
+	cd $(SDS_LIB_DIR) && $(MPICC) $(CFLAGS) -std=c99 -pedantic -c sds.c
 
 # static linking experiment
 #
@@ -169,13 +173,14 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/pviDGESV*.h \
 				$(SRC_DIR)/ft-simulated/*.h \
+				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
 				$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
 				$(TST_DIR)/FTLA/*.h \
 				| $(FTLA_LIB_DIR)/libftla.a \
 				$(BIN_DIR)
-	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
 # cleanup
 #

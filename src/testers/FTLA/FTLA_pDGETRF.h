@@ -56,10 +56,10 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
 	}
 
 	// faults
-	int Fstrat = 'e', F; // Fmin=0, Fmax=0, Finc=1;
+	int Fstrat = 'e', F;
 	int Fmin, Fmax;
-	int Finc = 1;
 	Fmin = Fmax = sprocs;
+	int Finc = 1;
 
 	// matrices
 	int nc, nr, ne;

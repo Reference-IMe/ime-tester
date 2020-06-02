@@ -20,6 +20,7 @@
 #include "../helpers/lapack.h"
 #include "../helpers/scalapack.h"
 #include "../helpers/Cblacs.h"
+#include "../helpers/simple_dynamic_strings/sds.h"
 
 #include "tester_labels.h"
 #include "tester_routine.h"
@@ -28,6 +29,8 @@
 
 #define MAX_VERSIONS 30
 #define MAX_RUNS 10
+
+// TODO: rename auxiliary functions
 
 int versionnumber_in(int n_all, char** all, char* selected)
 {
@@ -100,7 +103,9 @@ int main(int argc, char **argv)
 {
 
 	/*
+	 * *********************
 	 * application variables
+	 * *********************
 	 */
     int i,j,rep;
 
@@ -133,159 +138,216 @@ int main(int argc, char **argv)
     int failing_level_override;
     int checkpoint_skip_interval;
 
-    char* file_name;
-    int   file_name_len;
+    sds matrix_output_base_name;
+    sds matrix_output_file_name;
+    sds matrix_input_base_name;
+    sds matrix_input_file_name;
+    sds test_output_file_name;
+
+    int output_to_file;
+    int input_from_file;
+
 	FILE* fp;
 
     char* command;
 
     /*
-     * default values
+     * ************
+     * input values
+     * ************
      */
-    command="null";
-    n=8;
-	nrhs=1;
-    verbose=1;					// minimum output verbosity (0 = none)
-    repetitions=1;				// how many calls for each routine
-    sprocs=0;					// no fault tolerance enabled
-    file_name_len=0;			// no output to file
-    failing_rank=2;				// process 2 will fail
-    failing_level_override=-1;
-    checkpoint_skip_interval=-1;// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
-    scalapack_nb=SCALAPACKNB;	// scalapack blocking factor, default defined in header
-    ime_nb=1;					// ime blocking factor
-    cnd=1;						// condition number for randomly generated matrices
-    seed=1;						// seed for random generation
 
-    // list of testable routines (see tester_labels.h)
+		/*
+		 * FIXED defaults
+		 */
+		matrix_output_base_name = NULL;
+		matrix_output_file_name = NULL;
+		matrix_input_base_name  = NULL;
+		matrix_input_file_name  = NULL;
+		test_output_file_name   = NULL;
+		output_to_file = 0;			// no output to file
+		input_from_file = 0;		// no input from file
+		command="null";
+		n=8;
+		nrhs=1;
+		verbose=1;					// minimum output verbosity (0 = none)
+		repetitions=1;				// how many calls for each routine
+		sprocs=0;					// no fault tolerance enabled
+		failing_rank=2;				// process 2 will fail
+		failing_level_override=-1;
+		checkpoint_skip_interval=-1;// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
+		scalapack_nb=SCALAPACKNB;	// scalapack blocking factor, default defined in header
+		ime_nb=1;					// ime blocking factor
+		cnd=1;						// condition number for randomly generated matrices
+		seed=1;						// seed for random generation
 
-    versions_ime = 0;
-	versionname_ime[versions_ime++] = IME_SV;
-	//versionname_ime[versions_ime++] = IME_SV_CHECKSUMMED;
-	versionname_ime[versions_ime++] = IME_SV_FAULT_0_TOLERANT_1;
-	versionname_ime[versions_ime++] = IME_SV_FAULT_1_TOLERANT_1;
-	/*
-	versionname_ime[versions_ime++] = IME_XK;
-	versionname_ime[versions_ime++] = IME_XK_FAULT_0_TOLERANT_1;
-	versionname_ime[versions_ime++] = IME_XK_FAULT_1_TOLERANT_1;
-	*/
+		// list of testable routines (see tester_labels.h)
 
-	versions_all = 0;
-	versionname_all[versions_all++] = "dummy";
+		/*
+		versions_ime = 0;
+		versionname_ime[versions_ime++] = IME_SV;
+		//versionname_ime[versions_ime++] = IME_SV_CHECKSUMMED;
+		versionname_ime[versions_ime++] = IME_SV_FAULT_0_TOLERANT_1;
+		versionname_ime[versions_ime++] = IME_SV_FAULT_1_TOLERANT_1;
+		*/
+		/*
+		versionname_ime[versions_ime++] = IME_XK;
+		versionname_ime[versions_ime++] = IME_XK_FAULT_0_TOLERANT_1;
+		versionname_ime[versions_ime++] = IME_XK_FAULT_1_TOLERANT_1;
+		*/
 
-	versionname_all[versions_all++] = IME_SV;
-	//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
-	versionname_all[versions_all++] = IME_SV_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = IME_SV_FAULT_1_TOLERANT_1;
-	/*
-	versionname_all[versions_all++] = IME_XK;
-	versionname_all[versions_all++] = IME_XK_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = IME_XK_FAULT_1_TOLERANT_1;
-	*/
-	versionname_all[versions_all++] = SPK_SV;
-	versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1;
+		versions_all = 0;
+		versionname_all[versions_all++] = "dummy";
 
-	versionname_all[versions_all++] = SPK_LU;
-	versionname_all[versions_all++] = SPK_LU_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = SPK_LU_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = IME_SV;
+		//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
+		versionname_all[versions_all++] = IME_SV_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = IME_SV_FAULT_1_TOLERANT_1;
+		/*
+		versionname_all[versions_all++] = IME_XK;
+		versionname_all[versions_all++] = IME_XK_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = IME_XK_FAULT_1_TOLERANT_1;
+		*/
+		versionname_all[versions_all++] = SPK_SV;
+		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1;
 
-	versionname_all[versions_all++] = SPK_QR;
-	versionname_all[versions_all++] = SPK_QR_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = SPK_QR_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = SPK_LU;
+		versionname_all[versions_all++] = SPK_LU_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = SPK_LU_FAULT_1_TOLERANT_1;
 
-	versionname_all[versions_all++] = FTLA_LU_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = FTLA_LU_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = SPK_QR;
+		versionname_all[versions_all++] = SPK_QR_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = SPK_QR_FAULT_1_TOLERANT_1;
 
-	versionname_all[versions_all++] = FTLA_QR_FAULT_0_TOLERANT_1;
-	versionname_all[versions_all++] = FTLA_QR_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_LU_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_LU_FAULT_1_TOLERANT_1;
 
-    /*
-     * read command line parameters
-     */
-	for( i = 1; i < argc; i++ )
-	{
-		if( strcmp( argv[i], "-n" ) == 0 ) {
-			n = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-nrhs" ) == 0 ) {
-			nrhs = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-v" ) == 0 ) {
-			verbose = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-r" ) == 0 ) {
-			repetitions = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-ft" ) == 0 ) {
-			sprocs = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-o" ) == 0 ) {
-			file_name_len = strlen(argv[i+1]);
-			file_name = malloc(file_name_len+1);
-			strcpy(file_name, argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-fr" ) == 0 ) {
-			failing_rank = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-fl" ) == 0 ) {
-			failing_level = atoi(argv[i+1]);
-			failing_level_override = 1;
-			i++;
-		}
-		if( strcmp( argv[i], "-cp" ) == 0 ) {
-			checkpoint_skip_interval = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
-			scalapack_nb = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-ime-nb" ) == 0 ) {
-			ime_nb = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-cnd" ) == 0 ) {
-			cnd = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "-seed" ) == 0 ) {
-			seed = atoi(argv[i+1]);
-			i++;
-		}
-		if( strcmp( argv[i], "--run" ) == 0 ) {
-			command=argv[i];
-			i++;
-			// read functions to be tested
-			for( j = i; j < argc; j++ )
-			{
-				versionname_selected[j-i]=argv[j];
+		versionname_all[versions_all++] = FTLA_QR_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_QR_FAULT_1_TOLERANT_1;
+
+		versions_selected = 0;
+
+		/*
+		 * read command line parameters
+		 */
+		// TODO: checking for valid arguments
+		for( i = 1; i < argc; i++ )
+		{
+			if( strcmp( argv[i], "-n" ) == 0 ) {
+				n = atoi(argv[i+1]);
+				i++;
 			}
-			versions_selected=j-i;
-			i=j-1;
+			if( strcmp( argv[i], "-nrhs" ) == 0 ) {
+				nrhs = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-v" ) == 0 ) {
+				verbose = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-r" ) == 0 ) {
+				repetitions = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-ft" ) == 0 ) {
+				sprocs = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-o" ) == 0 ) {
+				output_to_file = 1;
+				test_output_file_name = sdsnew(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-i" ) == 0 ) {
+				input_from_file = 1;
+				matrix_input_base_name = sdsnew(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-fr" ) == 0 ) {
+				failing_rank = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-fl" ) == 0 ) {
+				failing_level = atoi(argv[i+1]);
+				failing_level_override = 1;
+				i++;
+			}
+			if( strcmp( argv[i], "-cp" ) == 0 ) {
+				checkpoint_skip_interval = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
+				scalapack_nb = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-ime-nb" ) == 0 ) {
+				ime_nb = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-cnd" ) == 0 ) {
+				cnd = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-seed" ) == 0 ) {
+				seed = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "--run" ) == 0 ) {
+				command=argv[i];
+				i++;
+				// read functions to be tested
+				for( j = i; j < argc; j++ )
+				{
+					versionname_selected[j-i]=argv[j];
+				}
+				versions_selected=j-i;
+				//i=j-1;
+				break;
+			}
+			if( strcmp( argv[i], "--list" ) == 0 ) {
+				command=argv[i];
+				break;
+			}
+			if( strcmp( argv[i], "--help" ) == 0 ) {
+				command=argv[i];
+				break;
+			}
+			if( strcmp( argv[i], "--save" ) == 0 ) {
+				command=argv[i];
+				i++;
+				if (i < argc)
+				{
+					matrix_output_base_name = sdsnew(argv[i]);
+				}
+				else
+				{
+					matrix_output_base_name = NULL;
+				}
+				break;
+			}
 		}
-		if( strcmp( argv[i], "--list" ) == 0 ) {
-			command=argv[i];
-			//i++;
-		}
-		if( strcmp( argv[i], "--help" ) == 0 ) {
-			command=argv[i];
-			//i++;
-		}
-	}
 
+		/*
+		 * CALCULATED defaults (depending on command line inputs)
+		 */
+		rows=n;
+		cols=n;
+		scalapack_iter=(int)ceil(rows/scalapack_nb);
+
+		if (failing_level_override<0) 	// if faulty level NOT set on command line
+		{
+			failing_level=n/2;			// faulty level/iteration, -1=none
+		}
 
 	/*
+	 * **************************
 	 * parallel environment setup
+	 * **************************
 	 */
-		// MPI
+		/*
+		 * MPI + openMP
+		 */
 		int mpi_rank;				// mpi rank
 		int mpi_procs;				// total num. of mpi ranks
 		int mpi_thread_support; 	// level of provided thread support
@@ -311,7 +373,9 @@ int main(int argc, char **argv)
 
 		np=mpi_procs*omp_threads;
 
-		// BLACS
+		/*
+		 * BLACS
+		 */
 		int ndims = 2, dims[2] = {0,0};
 		MPI_Dims_create(cprocs, ndims, dims);
 
@@ -359,78 +423,23 @@ int main(int argc, char **argv)
 		// get coords in general grid context
 		Cblacs_gridinfo( blacs_ctxt, &blacs_nprow, &blacs_npcol, &blacs_row, &blacs_col );
 
-	parallel_env routine_env = {
-		mpi_rank,
-		blacs_nprow,
-		blacs_npcol,
-		blacs_row,
-		blacs_col,
-		blacs_ctxt_onerow,
-		blacs_ctxt,
-		blacs_ctxt_root,
-		blacs_ctxt_cp
-	};
+		parallel_env routine_env = {
+			mpi_rank,
+			blacs_nprow,
+			blacs_npcol,
+			blacs_row,
+			blacs_col,
+			blacs_ctxt_onerow,
+			blacs_ctxt,
+			blacs_ctxt_root,
+			blacs_ctxt_cp
+		};
+
 
 	/*
-	 * other default values, depending on inputs
-	 */
-	rows=n;
-	cols=n;
-	scalapack_iter=(int)ceil(rows/scalapack_nb);
-
-	if (failing_level_override<0) 	// if faulty level NOT set on command line
-	{
-		failing_level=n/2;			// faulty level/iteration, -1=none
-	}
-
-	/*
-	 * commands
-	 */
-	if ( strcmp(command, "--help" ) == 0 )
-	{
-		if (mpi_rank==0)
-		{
-			printf("Usage: tester [OPTION] command [TEST ROUTINE]\n\n");
-			printf("Commands are:\n");
-			printf("  --help \t\t print this help\n");
-			printf("  --list \t\t print the list of testable routines\n");
-			printf("  --run \t\t run the test(s)\n");
-			printf("        \t\t tests are specified by a space-separated list of testable routines\n");
-			printf("\n");
-			printf("Options are:\n");
-			printf("..to be written..\n\n");
-		}
-		MPI_Finalize();
-		return 0;
-	}
-	else if ( strcmp(command, "--list" ) == 0 )
-	{
-		// print testable functions
-		if (mpi_rank==0)
-		{
-			printf("Testable routines:\n");
-			for( j = 0; j < versions_all; j++ )
-			{
-				printf("     %2d %s\n", j+1 ,versionname_all[j]);
-			}
-			printf("\n");
-		}
-		MPI_Finalize();
-		return 0;
-	}
-	else if ( strcmp(command, "null" ) == 0 )
-	{
-		if (mpi_rank==0)
-		{
-			printf("Please specify command: --help|--list|--run\n\n");
-		}
-		MPI_Finalize();
-		return 1;
-	}
-	// if command is "--run" do the following:
-
-	/*
+	 * ******************************
 	 * print initial summary to video
+	 * ******************************
 	 */
 	if (mpi_rank==0 && verbose>0)
 	{
@@ -487,9 +496,9 @@ int main(int argc, char **argv)
 
 		printf("     Run repetitions:               %d\n",repetitions);
 
-		if (file_name_len>0)
+		if (output_to_file)
 		{
-			printf("     Output file:                   %s\n",file_name);
+			printf("     Output file:                   %s\n",test_output_file_name);
 		}
 		else
 		{
@@ -501,6 +510,12 @@ int main(int argc, char **argv)
 			printf("WRN: ScaLAPACK blocking factor probably too small\n");;
 		}
     }
+
+	/*
+	 * ********
+	 * checking
+	 * ********
+	 */
 
 	// check matrix size
     if ((n % cprocs) != 0)
@@ -553,9 +568,11 @@ int main(int argc, char **argv)
 	*/
 
 	/*
+	 * **********************
 	 * prepare input matrices
+	 * **********************
 	 */
-	int read_cnd;
+	int read_cnd = -99;
 	double* A_ref;
 	double* x_ref;
 	double* b_ref;
@@ -568,14 +585,6 @@ int main(int argc, char **argv)
 		A_ref = AllocateMatrix1D(n, n);
 		x_ref = AllocateVector(n);
 		b_ref = AllocateVector(n);
-		RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
-		read_cnd = round(ConditionNumber1D(A_ref, n, n));
-		if (read_cnd!=cnd && verbose>0)
-		{
-			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
-		}
-		FillVector(x_ref, n, 1);
-		dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
 	}
 	else
 	{
@@ -583,205 +592,381 @@ int main(int argc, char **argv)
 		x_ref = NULL;
 		b_ref = NULL;
 	}
-
-	/*
-	 * get time now
-	 */
-	time_t rawtime;
-	struct tm *readtime;
-	time ( &rawtime );
-	readtime = localtime ( &rawtime );
-
-	/*
-	 * print initial summary to file
-	 */
-	#define fpinfo(string_label,integer_info) if (fp!=NULL && mpi_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
-	}
-	#define fpdata(track_num) if (fp!=NULL && mpi_rank==0) {																			\
-		fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",versionname_all[track_num], rep+1,	versionrun[track_num][rep].exit_code,				\
-																			versionrun[track_num][rep].total_time,					\
-																			versionrun[track_num][rep].norm_rel_err);				\
-		fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",versionname_all[track_num],"(core)", rep+1,	versionrun[track_num][rep].exit_code,	\
-																						versionrun[track_num][rep].core_time,		\
-																						versionrun[track_num][rep].norm_rel_err);	\
-	}
-
-	if (file_name_len>0 && mpi_rank==0)
-	{
-		fp=fopen(file_name,"w");
-
-		fprintf(fp,"info,command,");
-		for (i=0;i<argc;i++)
+		/*
+		 * matrices from file
+		 */
+		if (input_from_file)
 		{
-			fprintf(fp,"%s ",argv[i]);
+			if ( strcmp(command, "--save" ) == 0 )
+			{
+				if (mpi_rank == 0) printf("ERR: Cannot take input matrices with '--save' command.\n");
+				MPI_Finalize();
+				return 1;
+			}
+			if (mpi_rank==0)
+			{
+				if (verbose > 0) printf("     Loading reference matrices from binary files..\n");
+
+				matrix_input_file_name = sdsdup(matrix_input_base_name);
+				matrix_input_file_name = sdscat(matrix_input_file_name, ".X");
+				fp=fopen(matrix_input_file_name,"rb");
+				fread(x_ref,sizeof(double),n,fp);
+				fclose(fp);
+				sdsfree(matrix_input_file_name);
+				if (verbose > 0) printf("     ..X\n");
+
+				matrix_input_file_name = sdsdup(matrix_input_base_name);
+				matrix_input_file_name = sdscat(matrix_input_file_name, ".B");
+				fp=fopen(matrix_input_file_name,"rb");
+				fread(b_ref,sizeof(double),n,fp);
+				fclose(fp);
+				sdsfree(matrix_input_file_name);
+				if (verbose > 0) printf("     ..B\n");
+
+				matrix_input_file_name = sdsdup(matrix_input_base_name);
+				matrix_input_file_name = sdscat(matrix_input_file_name, ".A");
+				fp=fopen(matrix_input_file_name,"rb");
+				fread(A_ref,sizeof(double),n*n,fp);
+				fclose(fp);
+				sdsfree(matrix_input_file_name);
+				if (verbose > 0) printf("     ..A\n");
+			}
 		}
-		fprintf(fp,"\n");
-
-		fpinfo("year",readtime->tm_year+1900);
-		fpinfo("month",readtime->tm_mon+1);
-		fpinfo("day",readtime->tm_mday);
-		fpinfo("hour",readtime->tm_hour);
-		fpinfo("minute",readtime->tm_min);
-		fpinfo("second",readtime->tm_sec);
-		fpinfo("number of MPI ranks",cprocs);
-		fpinfo("number of OMP threads",omp_threads);
-		fpinfo("number of processes",np);
-		fpinfo("fault tolerance",sprocs);
-		fpinfo("failing rank",failing_rank);
-		fpinfo("failing level",failing_level);
-		fpinfo("checkpoint skip interval",checkpoint_skip_interval);
-		fpinfo("seed",seed);
-		fpinfo("condition number set",cnd);
-		fpinfo("condition number got",read_cnd);
-		fpinfo("matrix size",n);
-		fpinfo("scalapack blocking factor",scalapack_nb);
-		fpinfo("ime blocking factor",ime_nb);
-		fpinfo("repetitions",repetitions);
-
-		fprintf(fp,"head,code name,run num. (0=avg,-1=mdn),exit code (0=ok),run time,rel.err.\n");
-	}
-	else
-	{
-		fp=NULL;
-	}
-
-	// init totals to 0 before accumulation
-	for (i=0; i<versions_selected; i++)
-	{
-		versiontot[i].total_time   = 0;
-		versiontot[i].core_time    = 0;
-		versiontot[i].norm_rel_err = 0;
-		versiontot[i].exit_code    = -1;
-	}
-
-	test_input routine_input = {
-			n,
-			A_ref,
-			x_ref,
-			b_ref,
-			nrhs,
-			cprocs,
-			sprocs,
-			ime_nb,
-			scalapack_nb
-	};
-
-	test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+		/*
+		 * generated matrices
+		 */
+		else
+		{
+			if (mpi_rank==0)
+			{
+				RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
+				read_cnd = round(ConditionNumber1D(A_ref, n, n));
+				if (read_cnd!=cnd && verbose>0)
+				{
+					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
+				}
+				FillVector(x_ref, n, 1);
+				dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
+			}
+		}
+		sdsfree(matrix_input_base_name);
 
 	/*
-	 * main loop
+	 * ********
+	 * commands
+	 * ********
 	 */
-	// runs are repeated
-	for (rep=0; rep<repetitions; rep++)
+	if ( strcmp(command, "--help" ) == 0 )			// print help summary
 	{
-		if (mpi_rank==0 && verbose>0) {printf("\n Run #%d:\n",rep+1);}
-
-		// every run calls some selected routines
-		for (i=0; i<versions_selected; i++)
-		{
-			versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
-		}
-
 		if (mpi_rank==0)
 		{
-			// accumulation of totals
+			printf("Usage: tester [OPTION] command [TEST ROUTINE]\n\n");
+			printf("Commands are:\n");
+			printf("  --help \t\t print this help\n");
+			printf("  --list \t\t print the list of testable routines\n");
+			printf("  --run \t\t run the test(s)\n");
+			printf("        \t\t tests are specified by a space-separated list of testable routines\n");
+			printf("\n");
+			printf("Options are:\n");
+			printf("..to be written..\n\n");
+			// TODO: help summary
+		}
+		MPI_Finalize();
+		return 0;
+	}
+	else if ( strcmp(command, "--list" ) == 0 )		// print list of testable functions
+	{
+		if (mpi_rank==0)
+		{
+			printf("Testable routines:\n");
+			for( j = 0; j < versions_all; j++ )
+			{
+				printf("     %2d %s\n", j+1 ,versionname_all[j]);
+			}
+			printf("\n");
+		}
+		MPI_Finalize();
+		return 0;
+	}
+	else if ( strcmp(command, "--save" ) == 0 )		// save generated matrices
+	{
+		if (matrix_output_base_name == NULL)
+		{
+			if (mpi_rank==0)
+			{
+				printf("ERR: Please specify a base file path to save to\n\n");
+			}
+
+			MPI_Finalize();
+			return 1;
+		}
+		else
+		{
+			if (mpi_rank == 0)
+			{
+				if (verbose > 0) printf("     Saving reference matrices to binary files..\n");
+
+				matrix_output_file_name = sdsdup(matrix_output_base_name);
+				matrix_output_file_name = sdscat(matrix_output_file_name, ".X");
+				fp=fopen(matrix_output_file_name,"wb");
+				fwrite(x_ref,sizeof(double),n,fp);
+				fclose(fp);
+				sdsfree(matrix_output_file_name);
+				if (verbose > 0) printf("     ..X\n");
+
+				matrix_output_file_name = sdsdup(matrix_output_base_name);
+				matrix_output_file_name = sdscat(matrix_output_file_name, ".B");
+				fp=fopen(matrix_output_file_name,"wb");
+				fwrite(b_ref,sizeof(double),n,fp);
+				fclose(fp);
+				sdsfree(matrix_output_file_name);
+				if (verbose > 0) printf("     ..B\n");
+
+				matrix_output_file_name = sdsdup(matrix_output_base_name);
+				matrix_output_file_name = sdscat(matrix_output_file_name, ".A");
+				fp=fopen(matrix_output_file_name,"wb");
+				fwrite(A_ref,sizeof(double),n*n,fp);
+				fclose(fp);
+				sdsfree(matrix_output_file_name);
+				if (verbose > 0) printf("     ..A\n");
+			}
+			sdsfree(matrix_output_base_name);
+
+			MPI_Finalize();
+			return 0;
+		}
+	}
+	else if ( strcmp(command, "null" ) == 0 )		// no command given
+	{
+		if (mpi_rank==0)
+		{
+			printf("ERR: Please specify command: --help|--list|--run|--save\n\n");
+		}
+		MPI_Finalize();
+		return 1;
+	}
+	else if ( strcmp(command, "--run" ) == 0 )		// run tests
+	{
+		if (versions_selected == 0)
+		{
+			if (mpi_rank==0)
+			{
+				printf("ERR: Please specify at least one test routine\n\n");
+			}
+
+			MPI_Finalize();
+			return 1;
+		}
+		else
+		{
+		/*
+		 * *********
+		 * run tests
+		 * *********
+		 */
+
+			/*
+			 * print initial summary to file
+			 */
+			#define fpinfo(string_label,integer_info) if (fp!=NULL && mpi_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
+			}
+			#define fpdata(track_num) if (fp!=NULL && mpi_rank==0) {																		\
+				fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",versionname_all[track_num], rep+1,	versionrun[track_num][rep].exit_code,				\
+																					versionrun[track_num][rep].total_time,					\
+																					versionrun[track_num][rep].norm_rel_err);				\
+				fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",versionname_all[track_num],"(core)", rep+1,	versionrun[track_num][rep].exit_code,	\
+																								versionrun[track_num][rep].core_time,		\
+																								versionrun[track_num][rep].norm_rel_err);	\
+			}
+
+			// get time now
+			time_t rawtime;
+			struct tm *readtime;
+			time ( &rawtime );
+			readtime = localtime ( &rawtime );
+
+			// dump summary
+			if (output_to_file && mpi_rank == 0)
+			{
+				fp=fopen(test_output_file_name,"w");
+
+				fprintf(fp,"info,command,");
+				for (i=0;i<argc;i++)
+				{
+					fprintf(fp,"%s ",argv[i]);
+				}
+				fprintf(fp,"\n");
+
+				fpinfo("year",readtime->tm_year+1900);
+				fpinfo("month",readtime->tm_mon+1);
+				fpinfo("day",readtime->tm_mday);
+				fpinfo("hour",readtime->tm_hour);
+				fpinfo("minute",readtime->tm_min);
+				fpinfo("second",readtime->tm_sec);
+				fpinfo("number of MPI ranks",cprocs);
+				fpinfo("number of OMP threads",omp_threads);
+				fpinfo("number of processes",np);
+				fpinfo("fault tolerance",sprocs);
+				fpinfo("failing rank",failing_rank);
+				fpinfo("failing level",failing_level);
+				fpinfo("checkpoint skip interval",checkpoint_skip_interval);
+				fpinfo("seed",seed);
+				fpinfo("condition number set",cnd);
+				fpinfo("condition number got",read_cnd);
+				fpinfo("matrix size",n);
+				fpinfo("scalapack blocking factor",scalapack_nb);
+				fpinfo("ime blocking factor",ime_nb);
+				fpinfo("repetitions",repetitions);
+
+				fprintf(fp,"head,code name,run num. (0=avg,-1=mdn),exit code (0=ok),run time,rel.err.\n");
+			}
+			else
+			{
+				fp=NULL;
+			}
+
+			/*
+			 * init tests
+			 */
+
+			// init totals to 0 before accumulation
 			for (i=0; i<versions_selected; i++)
 			{
-				versiontot[i].total_time	+= versionrun[i][rep].total_time;
-				versiontot[i].core_time		+= versionrun[i][rep].core_time;
-				versiontot[i].norm_rel_err	+= versionrun[i][rep].norm_rel_err;
-				if (verbose>0)
+				versiontot[i].total_time   = 0;
+				versiontot[i].core_time    = 0;
+				versiontot[i].norm_rel_err = 0;
+				versiontot[i].exit_code    = -1;
+			}
+
+			test_input routine_input = {
+					n,
+					A_ref,
+					x_ref,
+					b_ref,
+					nrhs,
+					cprocs,
+					sprocs,
+					ime_nb,
+					scalapack_nb
+			};
+
+			// init communication channels
+			test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+
+			/*
+			 * main loop
+			 */
+
+			// runs are repeated
+			for (rep=0; rep<repetitions; rep++)
+			{
+				if (mpi_rank==0 && verbose>0) {printf("\n Run #%d:\n",rep+1);}
+
+				// every run calls some selected routines
+				for (i=0; i<versions_selected; i++)
 				{
-					printf("%-20s    call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
-																					versionrun[i][rep].total_time,	\
-																					versionrun[i][rep].core_time,	\
-																					versionrun[i][rep].norm_rel_err	\
-					);
+					versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
+				}
+
+				if (mpi_rank==0)
+				{
+					// accumulation of totals
+					for (i=0; i<versions_selected; i++)
+					{
+						versiontot[i].total_time	+= versionrun[i][rep].total_time;
+						versiontot[i].core_time		+= versionrun[i][rep].core_time;
+						versiontot[i].norm_rel_err	+= versionrun[i][rep].norm_rel_err;
+						if (verbose>0)
+						{
+							printf("%-20s    call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
+																							versionrun[i][rep].total_time,	\
+																							versionrun[i][rep].core_time,	\
+																							versionrun[i][rep].norm_rel_err	\
+							);
+						}
+					}
 				}
 			}
+
+			/*
+			 * print final summary to video and to file
+			 */
+			if (mpi_rank==0)
+			{
+				printf("\n Summary:\n");
+
+				// total
+				for (i=0; i<versions_selected; i++)
+				{
+					printf("%-20s    Total   run time: %10.0f (%.0f)\ts\n",	versionname_selected[i],	\
+																			versiontot[i].total_time,	\
+																			versiontot[i].core_time		\
+					);
+				}
+				printf("\n");
+
+				// average
+				for (i=0; i<versions_selected; i++)
+				{
+					printf("%-20s    Average run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],				\
+																						versiontot[i].total_time/repetitions,	\
+																						versiontot[i].core_time/repetitions,	\
+																						versiontot[i].norm_rel_err/repetitions	\
+					);
+					if (output_to_file)
+					{
+						fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], 0,				\
+																versionrun[i][0].exit_code,				\
+																versiontot[i].total_time/repetitions,	\
+																versiontot[i].norm_rel_err/repetitions	\
+						);
+						fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)", 0,	\
+																versionrun[i][0].exit_code,				\
+																versiontot[i].core_time/repetitions,	\
+																versiontot[i].norm_rel_err/repetitions	\
+						);
+					}
+				}
+				printf("\n");
+
+				// median
+				for (i=0; i<versions_selected; i++)
+				{
+					dmedian( versionrun[i], repetitions);
+					printf("%-20s    Median  run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],					\
+																						versionrun[i][repetitions/2].total_time,	\
+																						versionrun[i][repetitions/2].core_time,		\
+																						versionrun[i][repetitions/2].norm_rel_err	\
+					);
+					if (output_to_file)
+					{
+						fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], -1,				\
+																versionrun[i][0].exit_code,					\
+																versionrun[i][repetitions/2].total_time,	\
+																versionrun[i][repetitions/2].norm_rel_err	\
+						);
+						fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)",-1,		\
+																versionrun[i][0].exit_code,					\
+																versionrun[i][repetitions/2].core_time,		\
+																versionrun[i][repetitions/2].norm_rel_err	\
+						);
+					}
+				}
+				printf("\n");
+			}
 		}
 	}
 
-	/*
-	 * print final summary to video and to file
-	 */
-	if (mpi_rank==0)
-	{
-		printf("\n Summary:\n");
-
-		// total
-		for (i=0; i<versions_selected; i++)
-		{
-			printf("%-20s    Total   run time: %10.0f (%.0f)\ts\n",	versionname_selected[i],	\
-																	versiontot[i].total_time,	\
-																	versiontot[i].core_time		\
-			);
-		}
-		printf("\n");
-
-		// average
-		for (i=0; i<versions_selected; i++)
-		{
-			printf("%-20s    Average run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],				\
-																				versiontot[i].total_time/repetitions,	\
-																				versiontot[i].core_time/repetitions,	\
-																				versiontot[i].norm_rel_err/repetitions	\
-			);
-			if (file_name_len>0)
-			{
-				fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], 0,				\
-														versionrun[i][0].exit_code,				\
-														versiontot[i].total_time/repetitions,	\
-														versiontot[i].norm_rel_err/repetitions	\
-				);
-				fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)", 0,	\
-														versionrun[i][0].exit_code,				\
-														versiontot[i].core_time/repetitions,	\
-														versiontot[i].norm_rel_err/repetitions	\
-				);
-			}
-		}
-		printf("\n");
-
-		// median
-		for (i=0; i<versions_selected; i++)
-		{
-			dmedian( versionrun[i], repetitions);
-			printf("%-20s    Median  run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],					\
-																				versionrun[i][repetitions/2].total_time,	\
-																				versionrun[i][repetitions/2].core_time,		\
-																				versionrun[i][repetitions/2].norm_rel_err	\
-			);
-			if (file_name_len>0)
-			{
-				fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], -1,				\
-														versionrun[i][0].exit_code,					\
-														versionrun[i][repetitions/2].total_time,	\
-														versionrun[i][repetitions/2].norm_rel_err	\
-				);
-				fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)",-1,		\
-														versionrun[i][0].exit_code,					\
-														versionrun[i][repetitions/2].core_time,		\
-														versionrun[i][repetitions/2].norm_rel_err	\
-				);
-			}
-		}
-		printf("\n");
-	}
 
 	/*
-	 * slow down exit
-	 */
-	//sleep(3);
-	//MPI_Barrier(MPI_COMM_WORLD);
-	//printf("Done %d.\n",rank);
-
-	/*
+	 * *******
 	 * cleanup
+	 * *******
 	 */
+	// memory and pointers
 	if (mpi_rank==0)
 	{
-		if (file_name_len>0)
+		if (output_to_file)
 		{
 			fclose(fp);
 		}
@@ -789,7 +974,10 @@ int main(int argc, char **argv)
 		DeallocateVector(b_ref);
 		DeallocateVector(x_ref);
 	}
+	sdsfree(test_output_file_name);
 
+	// BLACS
+	// TODO: cleanup BLACS
 	//Close BLACS environment
 	//Cblacs_barrier( context, "All");	// not working! why?
 	//MPI_Barrier(MPI_COMM_WORLD);		// working but not needed
@@ -799,6 +987,7 @@ int main(int argc, char **argv)
 										// error, if main function called more tha once, why?
 	//Cblacs_barrier( context_all, &order_all);
 
+	// MPI
 	MPI_Finalize();
 	return 0;
 }
