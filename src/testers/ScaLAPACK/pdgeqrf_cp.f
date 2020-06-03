@@ -181,7 +181,7 @@
      $                   JB, JN, K, LWMIN, MP0, MYCOL, MYROW, NPCOL,
      $                   NPROW, NQ0,
      $                   NPROCS, MYPNUM, JCP, FAULTOCCURRED,
-     $                   LASTCP, IERR, CPAFTERFAULT
+     $                   LASTCP, IERR, CPAFTERFAULT, RECOVERABLE
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -213,6 +213,7 @@
         JCP = 0
       END IF
 *
+      RECOVERABLE=1
       FAULTOCCURRED=0
 *      continue (-1) checkpointing after first fault or not (1)
 *      CPAFTERFAULT=1
@@ -263,6 +264,8 @@
 *                  can't recover, exit
                    J=JA+K
                    PRINT*, "## pgeqrf_cp: ..unrecoverable! exiting.."
+                   RECOVERABLE=0
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                  ELSE
                    PRINT*, "## pgeqrf_cp: recovering.."
                    CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
@@ -430,6 +433,8 @@
 *                  can't recover, exit
                    J=JA+MN
 *                   PRINT*, "..unrecoverable! exiting.."
+                   RECOVERABLE=0
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                  ELSE
 *                   PRINT*, "recovering.."
                    CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
@@ -457,6 +462,11 @@
       CALL PB_TOPSET( ICTXT, 'Broadcast', 'Columnwise', COLBTOP )
 *
       WORK( 1 ) = DBLE( LWMIN )
+*
+*     if not recoverable, set error code
+      IF( RECOVERABLE.EQ.0) THEN
+        INFO = -99
+      END IF
 *
 *     end of main if for CP
       END IF

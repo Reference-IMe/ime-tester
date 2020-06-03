@@ -431,6 +431,11 @@ int main(int argc, char **argv)
 		// get coords in general grid context
 		Cblacs_gridinfo( blacs_ctxt, &blacs_nprow, &blacs_npcol, &blacs_row, &blacs_col );
 
+	/*
+	 * ****************************
+	 * common input data structures
+	 * ****************************
+	 */
 		parallel_env routine_env = {
 			mpi_rank,
 			blacs_nprow,
@@ -443,6 +448,18 @@ int main(int argc, char **argv)
 			blacs_ctxt_cp
 		};
 
+		test_input routine_input = {
+				n,
+				NULL,
+				NULL,
+				NULL,
+				nrhs,
+				cprocs,
+				sprocs,
+				ime_nb,
+				scalapack_nb,
+				calc_nre
+		};
 
 	/*
 	 * ******************************
@@ -515,12 +532,7 @@ int main(int argc, char **argv)
 		{
 			printf("WRN: No output to file\n");
 		}
-
-		if (n/cprocs < scalapack_nb )
-		{
-			printf("WRN: ScaLAPACK blocking factor probably too small\n");;
-		}
-    }
+	}
 
 	/*
 	 * ********
@@ -528,18 +540,7 @@ int main(int argc, char **argv)
 	 * ********
 	 */
 
-	// check matrix size
-    if ((n % cprocs) != 0)
-    {
-    	if (mpi_rank==0)
-    	{
-    		printf("ERR: The size of the matrix has to be a multiple of the number (%d) of calc. nodes\n",cprocs);
-    	}
-    	MPI_Finalize();
-        return 2;
-    }
-
-    // check list of routines
+	// check list of selected routines
 	for (i=0; i<versions_selected; i++)
 	{
 		versionnumber_selected[i]=versionnumber_in(versions_all, versionname_all, versionname_selected[i]);
@@ -554,29 +555,19 @@ int main(int argc, char **argv)
 		}
 	}
 
-	//TODO: check processor grid requirements
-	/*
-	 * commented because ScaLAPACK and FTLA seem to work even with non square grid of processors
-	 *
-	// check groups of routines
+	// check specific condition for every selected routine
+	j=0; // error accumulation
 	for (i=0; i<versions_selected; i++)
 	{
-		if ( versionnumber_in(versions_ime, versionname_ime, versionname_selected[i]) < 0) // there are non-IMe routines, that is: ScaLAPACK based routines
-		{
-			// ScaLAPACK based routines work on a sqare grid of procs
-			if ( (int)pow( floor( sqrt( cprocs ) ),2 ) != cprocs ) // if not:
-			{
-				if (mpi_rank==0)
-				{
-					printf("ERR: ScaLAPACK based routines need a square number of calc. processes (%d is not)\n",cprocs);
-					printf("     Hint: check fault tolerance level option '-ft' (now %d)\n",sprocs);
-				}
-		    	MPI_Finalize();
-		        return 4;
-			}
-		}
+		j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval)).exit_code;
 	}
-	*/
+	MPI_Bcast(&j,1,MPI_INT,0,MPI_COMM_WORLD);
+	if (j != 0)
+	{
+    	MPI_Finalize();
+        return 4;
+	}
+	// continue if no errors
 
 	/*
 	 * **********************
@@ -661,6 +652,24 @@ int main(int argc, char **argv)
 			}
 		}
 		sdsfree(matrix_input_base_name);
+
+		routine_input.A_ref = A_ref;
+		routine_input.x_ref = x_ref;
+		routine_input.b_ref = b_ref;
+		/*
+		{
+				n,
+				A_ref,
+				x_ref,
+				b_ref,
+				nrhs,
+				cprocs,
+				sprocs,
+				ime_nb,
+				scalapack_nb,
+				calc_nre
+		};
+		*/
 
 	/*
 	 * ********
@@ -849,19 +858,6 @@ int main(int argc, char **argv)
 				versiontot[i].exit_code    = -1;
 			}
 
-			test_input routine_input = {
-					n,
-					A_ref,
-					x_ref,
-					b_ref,
-					nrhs,
-					cprocs,
-					sprocs,
-					ime_nb,
-					scalapack_nb,
-					calc_nre
-			};
-
 			// init communication channels
 			test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
 
@@ -877,7 +873,7 @@ int main(int argc, char **argv)
 				// every run calls some selected routines
 				for (i=0; i<versions_selected; i++)
 				{
-					versionrun[i][rep]=tester_routine(versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
+					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
 				}
 
 				if (mpi_rank==0)

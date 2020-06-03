@@ -215,7 +215,7 @@ test_output FTLA_ftdqr(	int n, double* A_global, double* B_global, int nb,
 			tau  = NULL;
 
 			result.core_start_time = time(NULL);
-			Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
+			//Cftla_work_construct( 0, descAt, 0, ne-n, &ftwork );
 			result.core_end_time = time(NULL);
 		}
 

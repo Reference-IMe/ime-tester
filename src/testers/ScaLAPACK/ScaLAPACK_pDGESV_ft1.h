@@ -194,7 +194,7 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	// solve called by non-spare nodes only
 	if (mpi_rank < cprocs)
 	{
-		pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
+		if (info==0) pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
 	    result.core_end_time = time(NULL);
 		result.exit_code = info;
 

@@ -204,7 +204,10 @@ test_output ScaLAPACK_pDGETRF_ft1(	int n, double* A_global, double* B_global, in
 		/*
 		 * evaluate n.r.e.
 		 */
-		pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
+		if (info==0) // if all went good
+		{
+			pdgetrs_("N",  &n, &m, At, &i1, &i1, descAt, ipiv, B, &i1, &i1, descB, &info  );
+		}
 			/*
 			 * no need of transposing back B, being an 1D vector
 			 */

@@ -153,7 +153,7 @@
       INTEGER            I, ICOFF, ICTXT, IINFO, IN, IROFF, J, JB, JN,
      $                   MN, MYCOL, MYROW, NPCOL, NPROW,
      $                   NPROCS, MYPNUM, JCP, FAULTOCCURRED,
-     $                   LASTCP, IERR, CPAFTERFAULT
+     $                   LASTCP, IERR, CPAFTERFAULT, RECOVERABLE
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -186,6 +186,7 @@
         JCP = 0
       END IF
 *
+      RECOVERABLE=1
       FAULTOCCURRED=0
 *      continue (-1) checkpointing after first fault or not (1)
 *      CPAFTERFAULT=1
@@ -233,6 +234,8 @@
 *                  can't recover, exit
                    J=JA+MN
                    PRINT*, "## pgetrf_cp: ..unrecoverable! exiting.."
+                   RECOVERABLE=0
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                  ELSE
                    PRINT*, "## pgetrf_cp: recovering.."
                    CALL BLACS_BARRIER ( ICTXTALL, 'A' )
@@ -412,6 +415,8 @@
 *                  can't recover, exit
                    J=JA+MN
 *                   PRINT*, "..unrecoverable! exiting.."
+                   RECOVERABLE=0
+                   CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                  ELSE
 *                   PRINT*, "recovering.."
                    CALL BLACS_BARRIER ( ICTXTALL, 'A' )
@@ -434,15 +439,20 @@
 *
 *
       IF( INFO.EQ.0 )
-     $   INFO = MN + 1
+     $ INFO = MN + 1
       CALL IGAMN2D( ICTXT, 'Rowwise', ' ', 1, 1, INFO, 1, IDUM1, IDUM2,
-     $              -1, -1, MYCOL )
+     $            -1, -1, MYCOL )
       IF( INFO.EQ.MN+1 )
-     $   INFO = 0
+     $ INFO = 0
 *
       CALL PB_TOPSET( ICTXT, 'Broadcast', 'Rowwise', ROWBTOP )
       CALL PB_TOPSET( ICTXT, 'Broadcast', 'Columnwise', COLBTOP )
       CALL PB_TOPSET( ICTXT, 'Combine', 'Columnwise', COLCTOP )
+*
+*     if not recoverable, set error code
+      IF( RECOVERABLE.EQ.0) THEN
+        INFO = -99
+      END IF
 *
 *     end of main if for CP
       END IF
