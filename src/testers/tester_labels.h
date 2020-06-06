@@ -8,6 +8,13 @@
 #ifndef __TESTER_LABELS_H__
 #define __TESTER_LABELS_H__
 
+#define IME_SV_OA					"IMe-SV-oa"
+#define IME_SV_OG					"IMe-SV-og"
+#define IME_SV_U1A					"IMe-SV-u1a"
+#define IME_SV_U1G					"IMe-SV-u1g"
+#define IME_SV_U2A					"IMe-SV-u2a"
+#define IME_SV_U2G					"IMe-SV-u2g"
+
 #define IME_SV						"IMe-SV"
 #define IME_SV_CHECKSUMMED			"IMe-SV-cs"
 #define IME_SV_FAULT_0_TOLERANT_1 	"IMe-SV-ft1/0"

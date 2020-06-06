@@ -187,6 +187,8 @@ int main(int argc, char **argv)
 		 * list of testable routines (see tester_labels.h)
 		 */
 
+		// TODO: add a description for every routine
+
 		/*
 		versions_ime = 0;
 		versionname_ime[versions_ime++] = IME_SV;
@@ -202,6 +204,13 @@ int main(int argc, char **argv)
 
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy";
+
+		versionname_all[versions_all++] =  IME_SV_OA;
+		versionname_all[versions_all++] =  IME_SV_OG;
+		versionname_all[versions_all++] =  IME_SV_U1A;
+		versionname_all[versions_all++] =  IME_SV_U1G;
+		versionname_all[versions_all++] =  IME_SV_U2A;
+		versionname_all[versions_all++] =  IME_SV_U2G;
 
 		versionname_all[versions_all++] = IME_SV;
 		//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;

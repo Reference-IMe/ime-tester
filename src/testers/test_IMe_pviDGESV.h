@@ -5,10 +5,14 @@
 #include "../helpers/matrix_advanced.h"
 #include "tester_structures.h"
 #include "../pviDGESV_WO.h"
+#include "../pviDGESV_WO.ordered.allgather.h"
+#include "../pviDGESV_WO.ordered.gather.h"
+#include "../pviDGESV_WO.unordered1.allgather.h"
+#include "../pviDGESV_WO.unordered1.gather.h"
+#include "../pviDGESV_WO.unordered2.allgather.h"
+#include "../pviDGESV_WO.unordered2.gather.h"
 
-
-
-test_result test_IMe_pviDGESV(const char check, const char* label, int verbosity, test_input input, int rank)
+test_result test_IMe_pviDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -97,7 +101,13 @@ test_result test_IMe_pviDGESV(const char check, const char* label, int verbosity
 				xx_ref=NULL;
 			}
 
-			output = pviDGESV_WO(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			if 		( strcmp( variant, "default" ) == 0) output = pviDGESV_WO(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "oa"  )     == 0) output = pviDGESV_WO_oa(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "og"  )     == 0) output = pviDGESV_WO_og(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "u1a" )     == 0) output = pviDGESV_WO_u1a(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "u1g" )     == 0) output = pviDGESV_WO_u1g(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "u2a" )     == 0) output = pviDGESV_WO_u2a(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "u2g" )     == 0) output = pviDGESV_WO_u2g(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
 			if (rank==0)
 			{
