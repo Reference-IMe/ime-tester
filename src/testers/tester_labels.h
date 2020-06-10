@@ -8,12 +8,25 @@
 #ifndef __TESTER_LABELS_H__
 #define __TESTER_LABELS_H__
 
+#define IME_SV_OAE					"IMe-SV-oae"
 #define IME_SV_OA					"IMe-SV-oa"
+#define IME_SV_OGE					"IMe-SV-oge"
 #define IME_SV_OG					"IMe-SV-og"
+
+#define IME_SV_U1AE					"IMe-SV-u1ae"
 #define IME_SV_U1A					"IMe-SV-u1a"
+#define IME_SV_U1GE					"IMe-SV-u1ge"
 #define IME_SV_U1G					"IMe-SV-u1g"
+
+#define IME_SV_U2AE					"IMe-SV-u2ae"
 #define IME_SV_U2A					"IMe-SV-u2a"
+#define IME_SV_U2GE					"IMe-SV-u2ge"
 #define IME_SV_U2G					"IMe-SV-u2g"
+
+#define IME_SV_U3AE					"IMe-SV-u3ae"
+#define IME_SV_U3A					"IMe-SV-u3a"
+#define IME_SV_U3GE					"IMe-SV-u3ge"
+#define IME_SV_U3G					"IMe-SV-u3g"
 
 #define IME_SV						"IMe-SV"
 #define IME_SV_CHECKSUMMED			"IMe-SV-cs"

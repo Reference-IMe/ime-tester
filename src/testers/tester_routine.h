@@ -45,12 +45,26 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	test_result info;
 
 	if		( strcmp( routine_name, IME_SV ) 					== 0 )	info = test_IMe_pviDGESV(check, routine_name, "default", verbosity, routine_input, rank);
+
+	else if	( strcmp( routine_name, IME_SV_OAE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "oae", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_OA ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "oa", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_OGE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "oge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_OG ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "og", verbosity, routine_input, rank);
+
+	else if	( strcmp( routine_name, IME_SV_U1AE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u1ae", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_U1A ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u1a", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_U1GE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u1ge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_U1G ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u1g", verbosity, routine_input, rank);
+
+	else if	( strcmp( routine_name, IME_SV_U2AE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u2ae", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_U2A ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u2a", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_U2GE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u2ge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_U2G ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u2g", verbosity, routine_input, rank);
+
+	else if	( strcmp( routine_name, IME_SV_U3AE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u3ae", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_U3A ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u3a", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_U3GE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u3ge", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_U3G ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "u3g", verbosity, routine_input, rank);
 
 //	else if	( strcmp( routine_name, IME_SV_CHECKSUMMED ) 		== 0 )	info = test_IMe_pviDGESV_cs(routine_name, verbosity, rows, cols, 1, rank, sprocs);
 /*	else if	( strcmp( routine_name, IME_SV_FAULT_0_TOLERANT_1 ) == 0 )	info = test_IMe_pviDGESV_ft1_sim(routine_name, verbosity, rows, cols, 1, rank, sprocs, -1, -1);

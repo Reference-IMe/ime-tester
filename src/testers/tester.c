@@ -27,7 +27,7 @@
 #include "tester_structures.h"
 #include "test_dummy.h"
 
-#define MAX_VERSIONS 30
+#define MAX_VERSIONS 50
 #define MAX_RUNS 10
 
 // TODO: rename auxiliary functions
@@ -110,10 +110,8 @@ int main(int argc, char **argv)
     int i,j,rep;
 
 	int			versions_all;
-	int			versions_ime;
 	int			versions_selected;
     char*		versionname_all[MAX_VERSIONS];
-    char*		versionname_ime[MAX_VERSIONS];
     char*		versionname_selected[MAX_VERSIONS];
     int			versionnumber_selected[MAX_VERSIONS];
     test_result	versionrun[MAX_VERSIONS][MAX_RUNS];
@@ -166,6 +164,7 @@ int main(int argc, char **argv)
 		matrix_input_base_name  = NULL;
 		matrix_input_file_name  = NULL;
 		test_output_file_name   = NULL;
+		fp = NULL;
 		output_to_file = 0;			// no output to file
 		input_from_file = 0;		// no input from file
 		command="null";
@@ -189,28 +188,28 @@ int main(int argc, char **argv)
 
 		// TODO: add a description for every routine
 
-		/*
-		versions_ime = 0;
-		versionname_ime[versions_ime++] = IME_SV;
-		//versionname_ime[versions_ime++] = IME_SV_CHECKSUMMED;
-		versionname_ime[versions_ime++] = IME_SV_FAULT_0_TOLERANT_1;
-		versionname_ime[versions_ime++] = IME_SV_FAULT_1_TOLERANT_1;
-		*/
-		/*
-		versionname_ime[versions_ime++] = IME_XK;
-		versionname_ime[versions_ime++] = IME_XK_FAULT_0_TOLERANT_1;
-		versionname_ime[versions_ime++] = IME_XK_FAULT_1_TOLERANT_1;
-		*/
-
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy";
 
+		versionname_all[versions_all++] =  IME_SV_OAE;
 		versionname_all[versions_all++] =  IME_SV_OA;
+		versionname_all[versions_all++] =  IME_SV_OGE;
 		versionname_all[versions_all++] =  IME_SV_OG;
+
+		versionname_all[versions_all++] =  IME_SV_U1AE;
 		versionname_all[versions_all++] =  IME_SV_U1A;
+		versionname_all[versions_all++] =  IME_SV_U1GE;
 		versionname_all[versions_all++] =  IME_SV_U1G;
+
+		versionname_all[versions_all++] =  IME_SV_U2AE;
 		versionname_all[versions_all++] =  IME_SV_U2A;
+		versionname_all[versions_all++] =  IME_SV_U2GE;
 		versionname_all[versions_all++] =  IME_SV_U2G;
+
+		versionname_all[versions_all++] =  IME_SV_U3AE;
+		versionname_all[versions_all++] =  IME_SV_U3A;
+		versionname_all[versions_all++] =  IME_SV_U3GE;
+		versionname_all[versions_all++] =  IME_SV_U3G;
 
 		versionname_all[versions_all++] = IME_SV;
 		//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
@@ -985,7 +984,7 @@ int main(int argc, char **argv)
 	{
 		if (output_to_file)
 		{
-			fclose(fp);
+			if (fp != NULL) fclose(fp);
 		}
 		DeallocateMatrix1D(A_ref);
 		DeallocateVector(b_ref);
