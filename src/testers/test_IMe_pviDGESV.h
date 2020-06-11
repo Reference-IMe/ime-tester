@@ -65,7 +65,7 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 					DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
 				}
 			}
-			else DISPLAY_ERR(label,"the number of columns per process has to be a multiple of the calc. processes");
+			else DISPLAY_ERR(label,"the number of columns has to be a multiple of the calc. processes");
 		}
 	}
 	else
@@ -166,6 +166,7 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 			{
 				DeallocateMatrix2D(A2, 0, CONTIGUOUS);
 			}
+			DeallocateMatrix1D(xx_ref);
 			DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
 			DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
 
