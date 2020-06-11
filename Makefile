@@ -22,6 +22,8 @@ CFLAGS_cineca_open  = -lgfortran
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_enea_open    = -lgfortran -Wno-unknown-pragmas
 
+CFLAGS_ubuntu_open    = -lgfortran -Wno-unknown-pragmas
+
 CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
 
 FFLAGS_cineca_intel = -nofor-main
@@ -29,6 +31,8 @@ FFLAGS_cineca_open  =
 
 FFLAGS_enea_intel = 
 FFLAGS_enea_open = 
+
+FFLAGS_ubuntu_open = 
 
 FFLAGS = $(OPTIMIZATION) $(DEBUG) $(FFLAGS_$(machine)_$(mpi))
 
@@ -105,7 +109,9 @@ PAR_MFLAGS_enea_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)
 FTLAMAKEFILE_enea_open = Makefile.enea.open.mk
 
 # ubuntu
-  # TODO
+SEQ_MFLAGS_ubuntu_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -ldl -lm
+PAR_MFLAGS_ubuntu_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lgfortran -lm -ldl
+FTLAMAKEFILE_ubuntu_open = Makefile.ubuntu.open.mk
 
 PAR_MACHINEFLAGS = $(PAR_MFLAGS_$(machine)_$(mpi)_$(library))
 SEQ_MACHINEFLAGS = $(SEQ_MFLAGS_$(machine)_$(mpi)_$(library))
@@ -123,6 +129,7 @@ all: $(LAPACK_LIB_DIR)/librefblas.a \
 		$(LAPACK_LIB_DIR)/liblapack.a \
 		$(SCALAPACK_LIB_DIR)/libscalapack.a \
 		$(FTLA_LIB_DIR)/libftla.a \
+		$(SDS_LIB_DIR)/sds.o \
 		$(EXE) \
 		| $(BIN_DIR)
 .PHONY: all
@@ -180,7 +187,7 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/FTLA/*.h \
 				| $(FTLA_LIB_DIR)/libftla.a \
 				$(BIN_DIR)
-	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
 # cleanup
 #
