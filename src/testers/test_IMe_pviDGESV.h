@@ -49,23 +49,30 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 	{
 		if (rank==0)
 		{
-			if (IS_MULT(input.n, input.calc_procs))
+			if (input.ime_bf < 2)
 			{
-				if (input.spare_procs > 0)
-				{
-					DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
-				}
-				if (IS_MULT(input.n / input.calc_procs, input.ime_bf))
-				{
-					DISPLAY_MSG(label,"OK");
-					output.exit_code = 0;
-				}
-				else
-				{
-					DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
-				}
+				DISPLAY_ERR(label,"the blocking factor has to be greater than 1");
 			}
-			else DISPLAY_ERR(label,"the number of columns has to be a multiple of the calc. processes");
+			else
+			{
+				if (IS_MULT(input.n, input.calc_procs))
+				{
+					if (input.spare_procs > 0)
+					{
+						DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
+					}
+					if (IS_MULT(input.n / input.calc_procs, input.ime_bf))
+					{
+						DISPLAY_MSG(label,"OK");
+						output.exit_code = 0;
+					}
+					else
+					{
+						DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
+					}
+				}
+				else DISPLAY_ERR(label,"the number of columns has to be a multiple of the calc. processes");
+			}
 		}
 	}
 	else
