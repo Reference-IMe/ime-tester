@@ -1,6 +1,6 @@
 
 MACHINETYPE = cineca|enea|ubuntu
-MPIFLAVOUR = intel|ch|open
+MPIFLAVOUR = intel|ch|open|spectrum
 LIBTYPE  = mkl|src|sys
 
 PROJECT_DIR = $(CURDIR)
@@ -18,16 +18,19 @@ NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
 
 CFLAGS_cineca_intel = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_cineca_open  = -lgfortran
+CFLAGS_cineca_spectrum = -I$(MPI_ROOT)/include
 
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
 CFLAGS_enea_open    = -lgfortran -Wno-unknown-pragmas
 
 CFLAGS_ubuntu_open    = -lgfortran -Wno-unknown-pragmas
 
+
 CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
 
 FFLAGS_cineca_intel = -nofor-main
 FFLAGS_cineca_open  = 
+FFLAGS_cineca_spectrum  = -I$(MPI_ROOT)/include -qextname
 
 FFLAGS_enea_intel = 
 FFLAGS_enea_open = 
@@ -75,6 +78,10 @@ ifeq ($(mpi),ch)
   MPICC = mpicc
   MPIFC = mpif77
 endif
+ifeq ($(mpi),spectrum)
+  MPICC = mpicc
+  MPIFC = mpif77
+endif
 
 ## machine/platform flags
 ##
@@ -90,11 +97,15 @@ PAR_MFLAGS_cineca_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_D
 SEQ_MFLAGS_cineca_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm -ldl
 PAR_MFLAGS_cineca_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lm -ldl
 
+SEQ_MFLAGS_cineca_spectrum_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm -ldl
+PAR_MFLAGS_cineca_spectrum_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -L/m100/prod/opt/compilers/xl/16.1.1/binary/xlf/16.1.1/lib -lxlf90_r -lxlfmath -lmpi_ibm_mpifh -lm -ldl
+
 PAR_MFLAGS_cineca_ch_mkl    = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lm
 PAR_MFLAGS_cineca_open_sys  = -L$(SCALAPACK_LIB) -lscalapack -L$(LAPACK_LIB) -llapack -L$(BLAS_LIB) -lblas -lifcore -lm
 
 FTLAMAKEFILE_cineca_intel = Makefile.cineca.intel.mk
 FTLAMAKEFILE_cineca_open  = Makefile.cineca.open.mk
+FTLAMAKEFILE_cineca_spectrum  = Makefile.cineca.spectrum.mk
 
 # cresco6/cresco4 -> enea
 SEQ_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -ldl -lm
@@ -138,18 +149,18 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 $(LAPACK_LIB_DIR)/librefblas.a:
-	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(DEBUG) $(OPTIMIZATION)" FFLAGS="$(DEBUG) $(OPTIMIZATION)" blaslib
+	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" blaslib
 
 $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
-	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(DEBUG) $(OPTIMIZATION)" FFLAGS="$(DEBUG) $(OPTIMIZATION)" lapacklib
+	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" lapacklib
 
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
-	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(DEBUG) $(OPTIMIZATION)" FCFLAGS="$(DEBUG) $(OPTIMIZATION)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
+	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
 $(FTLA_LIB_DIR)/libftla.a:
-	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(DEBUG) $(OPTIMIZATION) -DINJECT" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
+	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 #	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
@@ -187,7 +198,9 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/FTLA/*.h \
 				| $(FTLA_LIB_DIR)/libftla.a \
 				$(BIN_DIR)
-	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+#	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+#	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 
 # cleanup
 #
