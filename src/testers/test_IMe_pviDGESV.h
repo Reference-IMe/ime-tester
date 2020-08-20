@@ -49,27 +49,31 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 	{
 		if (rank==0)
 		{
-			if (input.ime_bf < 2)
+			if (input.ime_bf < 1)
 			{
-				DISPLAY_ERR(label,"the blocking factor has to be greater than 1");
+				DISPLAY_ERR(label,"the blocking factor has to be greater than 0");
 			}
 			else
 			{
 				if (IS_MULT(input.n, input.calc_procs))
 				{
-					if (input.spare_procs > 0)
+					if (input.n / input.calc_procs > 0)
 					{
-						DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
+						if (input.spare_procs > 0)
+						{
+							DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
+						}
+						if (IS_MULT(input.n / input.calc_procs, input.ime_bf))
+						{
+							DISPLAY_MSG(label,"OK");
+							output.exit_code = 0;
+						}
+						else
+						{
+							DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
+						}
 					}
-					if (IS_MULT(input.n / input.calc_procs, input.ime_bf))
-					{
-						DISPLAY_MSG(label,"OK");
-						output.exit_code = 0;
-					}
-					else
-					{
-						DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
-					}
+					else DISPLAY_ERR(label,"the number of columns per calc. process has to be greater than 0");
 				}
 				else DISPLAY_ERR(label,"the number of columns has to be a multiple of the calc. processes");
 			}
@@ -119,7 +123,7 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 			}
 			else
 			{
-				A2=AllocateMatrix2D(0, 0, CONTIGUOUS);
+				A2=AllocateMatrix2D(1, 1, CONTIGUOUS);
 				xx_ref=NULL;
 			}
 
@@ -171,7 +175,7 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 			}
 			else
 			{
-				DeallocateMatrix2D(A2, 0, CONTIGUOUS);
+				DeallocateMatrix2D(A2, 1, CONTIGUOUS);
 			}
 			DeallocateMatrix1D(xx_ref);
 			DeallocateMatrix2D(xx, input.n, CONTIGUOUS);

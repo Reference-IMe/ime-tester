@@ -99,6 +99,7 @@ test_result dmedian(test_result* run, int n)
 }
 
 
+
 int main(int argc, char **argv)
 {
 
@@ -638,6 +639,7 @@ int main(int argc, char **argv)
 				fp=fopen(matrix_input_file_name,"rb");
 				fread(A_ref,sizeof(double),n*n,fp);
 				fclose(fp);
+				fp=NULL;
 				sdsfree(matrix_input_file_name);
 				if (verbose > 0) printf("     ..A\n");
 			}
@@ -699,6 +701,7 @@ int main(int argc, char **argv)
 			printf("..to be written..\n\n");
 			// TODO: help summary
 		}
+		MAIN_CLEANUP(mpi_rank);
 		MPI_Finalize();
 		return 0;
 	}
@@ -713,6 +716,7 @@ int main(int argc, char **argv)
 			}
 			printf("\n");
 		}
+		MAIN_CLEANUP(mpi_rank);
 		MPI_Finalize();
 		return 0;
 	}
@@ -724,7 +728,7 @@ int main(int argc, char **argv)
 			{
 				printf("ERR: Please specify a base file path to save to\n\n");
 			}
-
+			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
 			return 1;
 		}
@@ -755,11 +759,13 @@ int main(int argc, char **argv)
 				fp=fopen(matrix_output_file_name,"wb");
 				fwrite(A_ref,sizeof(double),n*n,fp);
 				fclose(fp);
+				fp=NULL;
 				sdsfree(matrix_output_file_name);
 				if (verbose > 0) printf("     ..A\n");
 			}
 			sdsfree(matrix_output_base_name);
 
+			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
 			return 0;
 		}
@@ -770,6 +776,7 @@ int main(int argc, char **argv)
 		{
 			printf("ERR: Please specify command: --help|--list|--run|--save\n\n");
 		}
+		MAIN_CLEANUP(mpi_rank);
 		MPI_Finalize();
 		return 1;
 	}
@@ -781,7 +788,7 @@ int main(int argc, char **argv)
 			{
 				printf("ERR: Please specify at least one test routine\n\n");
 			}
-
+			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
 			return 1;
 		}
@@ -980,9 +987,10 @@ int main(int argc, char **argv)
 	 * *******
 	 */
 	// memory and pointers
+	/*
 	if (mpi_rank==0)
 	{
-		if (output_to_file)
+		if (output_to_file || input_from_file)
 		{
 			if (fp != NULL) fclose(fp);
 		}
@@ -991,6 +999,8 @@ int main(int argc, char **argv)
 		DeallocateVector(x_ref);
 	}
 	sdsfree(test_output_file_name);
+	*/
+	MAIN_CLEANUP(mpi_rank);
 
 	// BLACS
 	// TODO: cleanup BLACS
