@@ -4,7 +4,6 @@
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
 #include "tester_structures.h"
-#include "../pviDGESV_WO.h"
 
 #include "../pviDGESV_WO.ordered.allgather.early.h"
 #include "../pviDGESV_WO.ordered.allgather.h"
@@ -127,27 +126,25 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 				xx_ref=NULL;
 			}
 
-			if 		( strcmp( variant, "default"  ) == 0) output = pviDGESV_WO(input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			     if ( strcmp( variant, "WO-oae"  )     == 0) output = pviDGESV_WO_oae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-oa"   )     == 0) output = pviDGESV_WO_oa  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-oge"  )     == 0) output = pviDGESV_WO_oge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-og"   )     == 0) output = pviDGESV_WO_og  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "oae"  )     == 0) output = pviDGESV_WO_oae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "oa"   )     == 0) output = pviDGESV_WO_oa  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "oge"  )     == 0) output = pviDGESV_WO_oge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "og"   )     == 0) output = pviDGESV_WO_og  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u1ae" )     == 0) output = pviDGESV_WO_u1ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u1a"  )     == 0) output = pviDGESV_WO_u1a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u1ge" )     == 0) output = pviDGESV_WO_u1ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u1g"  )     == 0) output = pviDGESV_WO_u1g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "u1ae" )     == 0) output = pviDGESV_WO_u1ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u1a"  )     == 0) output = pviDGESV_WO_u1a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u1ge" )     == 0) output = pviDGESV_WO_u1ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u1g"  )     == 0) output = pviDGESV_WO_u1g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u2ae" )     == 0) output = pviDGESV_WO_u2ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u2a"  )     == 0) output = pviDGESV_WO_u2a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u2ge" )     == 0) output = pviDGESV_WO_u2ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u2g"  )     == 0) output = pviDGESV_WO_u2g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "u2ae" )     == 0) output = pviDGESV_WO_u2ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u2a"  )     == 0) output = pviDGESV_WO_u2a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u2ge" )     == 0) output = pviDGESV_WO_u2ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u2g"  )     == 0) output = pviDGESV_WO_u2g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-
-			else if ( strcmp( variant, "u3ae" )     == 0) output = pviDGESV_WO_u3ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u3a"  )     == 0) output = pviDGESV_WO_u3a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u3ge" )     == 0) output = pviDGESV_WO_u3ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "u3g"  )     == 0) output = pviDGESV_WO_u3g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u3ae" )     == 0) output = pviDGESV_WO_u3ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u3a"  )     == 0) output = pviDGESV_WO_u3a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u3ge" )     == 0) output = pviDGESV_WO_u3ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-u3g"  )     == 0) output = pviDGESV_WO_u3g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
 			if (rank==0)
 			{

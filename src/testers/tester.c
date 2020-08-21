@@ -192,34 +192,33 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy";
 
-		versionname_all[versions_all++] =  IME_SV_OAE;
-		versionname_all[versions_all++] =  IME_SV_OA;
-		versionname_all[versions_all++] =  IME_SV_OGE;
-		versionname_all[versions_all++] =  IME_SV_OG;
+		versionname_all[versions_all++] =  IME_SV_WO_OAE;
+		versionname_all[versions_all++] =  IME_SV_WO_OA;
+		versionname_all[versions_all++] =  IME_SV_WO_OGE;
+		versionname_all[versions_all++] =  IME_SV_WO_OG;
 
-		versionname_all[versions_all++] =  IME_SV_U1AE;
-		versionname_all[versions_all++] =  IME_SV_U1A;
-		versionname_all[versions_all++] =  IME_SV_U1GE;
-		versionname_all[versions_all++] =  IME_SV_U1G;
+		versionname_all[versions_all++] =  IME_SV_WO_U1AE;
+		versionname_all[versions_all++] =  IME_SV_WO_U1A;
+		versionname_all[versions_all++] =  IME_SV_WO_U1GE;
+		versionname_all[versions_all++] =  IME_SV_WO_U1G;
 
-		versionname_all[versions_all++] =  IME_SV_U2AE;
-		versionname_all[versions_all++] =  IME_SV_U2A;
-		versionname_all[versions_all++] =  IME_SV_U2GE;
-		versionname_all[versions_all++] =  IME_SV_U2G;
+		versionname_all[versions_all++] =  IME_SV_WO_U2AE;
+		versionname_all[versions_all++] =  IME_SV_WO_U2A;
+		versionname_all[versions_all++] =  IME_SV_WO_U2GE;
+		versionname_all[versions_all++] =  IME_SV_WO_U2G;
 
-		versionname_all[versions_all++] =  IME_SV_U3AE;
-		versionname_all[versions_all++] =  IME_SV_U3A;
-		versionname_all[versions_all++] =  IME_SV_U3GE;
-		versionname_all[versions_all++] =  IME_SV_U3G;
+		versionname_all[versions_all++] =  IME_SV_WO_U3AE;
+		versionname_all[versions_all++] =  IME_SV_WO_U3A;
+		versionname_all[versions_all++] =  IME_SV_WO_U3GE;
+		versionname_all[versions_all++] =  IME_SV_WO_U3G;
 
-		versionname_all[versions_all++] = IME_SV;
-		//versionname_all[versions_all++] = IME_SV_CHECKSUMMED;
-		versionname_all[versions_all++] = IME_SV_FAULT_0_TOLERANT_1;
-		versionname_all[versions_all++] = IME_SV_FAULT_1_TOLERANT_1;
+		//versionname_all[versions_all++] = IME_SV_WO_CHECKSUMMED;
+		versionname_all[versions_all++] = IME_SV_WO_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = IME_SV_WO_FAULT_1_TOLERANT_1;
 		/*
-		versionname_all[versions_all++] = IME_XK;
-		versionname_all[versions_all++] = IME_XK_FAULT_0_TOLERANT_1;
-		versionname_all[versions_all++] = IME_XK_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = IME_XK_WO;
+		versionname_all[versions_all++] = IME_XK_WO_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = IME_XK_WO_FAULT_1_TOLERANT_1;
 		*/
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1;
@@ -690,10 +689,11 @@ int main(int argc, char **argv)
 	{
 		if (mpi_rank==0)
 		{
-			printf("Usage: tester [OPTION] command [TEST ROUTINE]\n\n");
+			printf("Usage: tester [OPTION] command [TEST ROUTINE(S)]\n\n");
 			printf("Commands are:\n");
 			printf("  --help \t\t print this help\n");
 			printf("  --list \t\t print the list of testable routines\n");
+			printf("  --save \t\t save the generated matrices to files\n");
 			printf("  --run \t\t run the test(s)\n");
 			printf("        \t\t tests are specified by a space-separated list of testable routines\n");
 			printf("\n");
