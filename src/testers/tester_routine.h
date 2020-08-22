@@ -64,6 +64,8 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_SV_WO_U3GE ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "WO-u3ge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_WO_U3G ) 				== 0 )	info = test_IMe_pviDGESV(check, routine_name, "WO-u3g", verbosity, routine_input, rank);
 
+	else if	( strcmp( routine_name, IME_SV_CO_OG ) 					== 0 )	info = test_IMe_pviDGESV(check, routine_name, "CO-og", verbosity, routine_input, rank);
+
 //	else if	( strcmp( routine_name, IME_SV_WO_CHECKSUMMED ) 		== 0 )	info = test_IMe_pviDGESV_cs(routine_name, verbosity, rows, cols, 1, rank, sprocs);
 /*	else if	( strcmp( routine_name, IME_SV_WO_FAULT_0_TOLERANT_1 ) == 0 )	info = test_IMe_pviDGESV_ft1_sim(routine_name, verbosity, rows, cols, 1, rank, sprocs, -1, -1);
 	else if	( strcmp( routine_name, IME_SV_WO_FAULT_1_TOLERANT_1 ) == 0 )	info = test_IMe_pviDGESV_ft1_sim(routine_name, verbosity, rows, cols, 1, rank, sprocs, -1, -1);

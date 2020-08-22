@@ -25,6 +25,7 @@
 #include "../pviDGESV_WO.unordered3.gather.early.h"
 #include "../pviDGESV_WO.unordered3.gather.h"
 
+#include "../pviDGESV_CO.ordered.gather.h"
 
 test_result test_IMe_pviDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
 {
@@ -145,6 +146,8 @@ test_result test_IMe_pviDGESV(const char check, const char* label, const char* v
 			else if ( strcmp( variant, "WO-u3a"  )     == 0) output = pviDGESV_WO_u3a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "WO-u3ge" )     == 0) output = pviDGESV_WO_u3ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "WO-u3g"  )     == 0) output = pviDGESV_WO_u3g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+
+			else if ( strcmp( variant, "CO-og"   )     == 0) output = pviDGESV_CO_og   (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
 			if (rank==0)
 			{
