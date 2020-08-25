@@ -37,6 +37,7 @@
 #define IME_WO_XK_FAULT_1_TOLERANT_1	"IMe-WO-XK-ft1/1"
 
 #define IME_SV_CO_OG					"IMe-SV-CO-og"
+#define IME_SV_CO						"IMe-SV-CO"
 
 #define SPK_SV						"SPK-SV"
 #define SPK_SV_FAULT_0_TOLERANT_1	"SPK-SV-ft1/0"
