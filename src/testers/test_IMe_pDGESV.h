@@ -5,6 +5,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "tester_structures.h"
 
+#include "../pviDGESV_WO.h"
 #include "../pviDGESV_WO.ordered.allgather.early.h"
 #include "../pviDGESV_WO.ordered.allgather.h"
 #include "../pviDGESV_WO.ordered.gather.early.h"
@@ -26,8 +27,11 @@
 #include "../pviDGESV_WO.unordered3.gather.h"
 
 #include "../pviDGESV_CO.ordered.gather.h"
+#include "../pvDGESV_CO.h"
 #include "../pvDGESV_CO.ordered.gather.h"
-#include "../pvDGESV_CO.ordered.gather.noind.h"
+#include "../pvDGESV_CO.ordered.gather.noind.2pass.h"
+#include "../pvDGESV_CO.ordered.gather.noind.smallerchunk.h"
+#include "../pvDGESV_CO.ordered.gather.noind.smallestchunk.h"
 
 test_result test_IMe_pDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
 {
@@ -128,8 +132,8 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 				A2=AllocateMatrix2D(1, 1, CONTIGUOUS);
 				xx_ref=NULL;
 			}
-
-			     if ( strcmp( variant, "WO-oae"  )     == 0) output = pviDGESV_WO_oae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			     if ( strcmp( variant, "WO"      )     == 0) output = pviDGESV_WO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "WO-oae"  )     == 0) output = pviDGESV_WO_oae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "WO-oa"   )     == 0) output = pviDGESV_WO_oa  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "WO-oge"  )     == 0) output = pviDGESV_WO_oge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "WO-og"   )     == 0) output = pviDGESV_WO_og  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
@@ -151,8 +155,11 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 
 			else if ( strcmp( variant, "iCO-og"  )     == 0) output = pviDGESV_CO_og   (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			//TODO: create a separate test launcher for non-interleaved routines or rename this launcher
-			else if ( strcmp( variant, "CO-og"   )     == 0) output = pvDGESV_CO_og    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-og-noind")  == 0) output = pvDGESV_CO_og_noind  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO"      )             == 0) output = pvDGESV_CO_default  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-og"   )             == 0) output = pvDGESV_CO_og       (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-og-noind-2pass")    == 0) output = pvDGESV_CO_og_noind_2pass    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-og-noind-smaller")  == 0) output = pvDGESV_CO_og_noind_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-og-noind-smallest") == 0) output = pvDGESV_CO_og_noind_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
 			if (rank==0)
 			{

@@ -192,6 +192,9 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy";
 
+		versionname_all[versions_all++] =  IME_SV_WO;
+		versionname_all[versions_all++] =  IME_SV_CO;
+
 		versionname_all[versions_all++] =  IME_SV_WO_OAE;
 		versionname_all[versions_all++] =  IME_SV_WO_OA;
 		versionname_all[versions_all++] =  IME_SV_WO_OGE;
@@ -214,7 +217,9 @@ int main(int argc, char **argv)
 
 		versionname_all[versions_all++] =  IME_SV_ICO_OG;
 		versionname_all[versions_all++] =  IME_SV_CO_OG;
-		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND;
+		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND_2PASS;
+		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND_SMALLER;
+		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND_SMALLEST;
 
 		//versionname_all[versions_all++] = IME_SV_WO_CHECKSUMMED;
 		//versionname_all[versions_all++] = IME_SV_WO_FAULT_0_TOLERANT_1;
@@ -905,7 +910,7 @@ int main(int argc, char **argv)
 						versiontot[i].norm_rel_err	+= versionrun[i][rep].norm_rel_err;
 						if (verbose>0)
 						{
-							printf("%-20s    call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
+							printf("%-30s    call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
 																							versionrun[i][rep].total_time,	\
 																							versionrun[i][rep].core_time,	\
 																							versionrun[i][rep].norm_rel_err	\
@@ -925,7 +930,7 @@ int main(int argc, char **argv)
 				// total
 				for (i=0; i<versions_selected; i++)
 				{
-					printf("%-20s    Total   run time: %10.0f (%.0f)\ts\n",	versionname_selected[i],	\
+					printf("%-30s    Total   run time: %10.0f (%.0f)\ts\n",	versionname_selected[i],	\
 																			versiontot[i].total_time,	\
 																			versiontot[i].core_time		\
 					);
@@ -935,7 +940,7 @@ int main(int argc, char **argv)
 				// average
 				for (i=0; i<versions_selected; i++)
 				{
-					printf("%-20s    Average run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],				\
+					printf("%-30s    Average run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],				\
 																						versiontot[i].total_time/repetitions,	\
 																						versiontot[i].core_time/repetitions,	\
 																						versiontot[i].norm_rel_err/repetitions	\
@@ -960,7 +965,7 @@ int main(int argc, char **argv)
 				for (i=0; i<versions_selected; i++)
 				{
 					dmedian( versionrun[i], repetitions);
-					printf("%-20s    Median  run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],					\
+					printf("%-30s    Median  run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],					\
 																						versionrun[i][repetitions/2].total_time,	\
 																						versionrun[i][repetitions/2].core_time,		\
 																						versionrun[i][repetitions/2].norm_rel_err	\

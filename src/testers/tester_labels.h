@@ -8,6 +8,7 @@
 #ifndef __TESTER_LABELS_H__
 #define __TESTER_LABELS_H__
 
+#define IME_SV_WO						"IMe-SV-WO"
 #define IME_SV_WO_OAE					"IMe-SV-WO-oae"
 #define IME_SV_WO_OA					"IMe-SV-WO-oa"
 #define IME_SV_WO_OGE					"IMe-SV-WO-oge"
@@ -37,8 +38,11 @@
 #define IME_WO_XK_FAULT_1_TOLERANT_1	"IMe-WO-XK-ft1/1"
 
 #define IME_SV_ICO_OG					"IMe-SV-iCO-og"
+#define IME_SV_CO						"IMe-SV-CO"
 #define IME_SV_CO_OG					"IMe-SV-CO-og"
-#define IME_SV_CO_OG_NOIND				"IMe-SV-CO-og-noind"
+#define IME_SV_CO_OG_NOIND_2PASS		"IMe-SV-CO-og-noind-2pass"
+#define IME_SV_CO_OG_NOIND_SMALLER		"IMe-SV-CO-og-noind-smaller"
+#define IME_SV_CO_OG_NOIND_SMALLEST		"IMe-SV-CO-og-noind-smallest"
 
 #define SPK_SV						"SPK-SV"
 #define SPK_SV_FAULT_0_TOLERANT_1	"SPK-SV-ft1/0"

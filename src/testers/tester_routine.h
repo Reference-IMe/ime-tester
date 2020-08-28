@@ -44,7 +44,8 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 {
 	test_result info;
 
-	     if	( strcmp( routine_name, IME_SV_WO_OAE ) 				== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-oae", verbosity, routine_input, rank);
+	     if	( strcmp( routine_name, IME_SV_WO )						== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_WO_OAE ) 				== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-oae", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_WO_OA ) 					== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-oa", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_WO_OGE ) 				== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-oge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_WO_OG ) 					== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-og", verbosity, routine_input, rank);
@@ -64,9 +65,12 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_SV_WO_U3GE ) 				== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-u3ge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_WO_U3G ) 				== 0 )	info = test_IMe_pDGESV(check, routine_name, "WO-u3g", verbosity, routine_input, rank);
 
+	else if	( strcmp( routine_name, IME_SV_CO ) 					== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_ICO_OG ) 				== 0 )	info = test_IMe_pDGESV(check, routine_name, "iCO-og", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_CO_OG ) 					== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-og", verbosity, routine_input, rank);
-	else if	( strcmp( routine_name, IME_SV_CO_OG_NOIND )			== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-og-noind", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_CO_OG_NOIND_2PASS )		== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-og-noind-2pass", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_CO_OG_NOIND_SMALLER )	== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-og-noind-smaller", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_CO_OG_NOIND_SMALLEST )	== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-og-noind-smallest", verbosity, routine_input, rank);
 
 //	else if	( strcmp( routine_name, IME_SV_WO_CHECKSUMMED ) 		== 0 )	info = test_IMe_pDGESV_cs(routine_name, verbosity, rows, cols, 1, rank, sprocs);
 /*	else if	( strcmp( routine_name, IME_SV_WO_FAULT_0_TOLERANT_1 ) == 0 )	info = test_IMe_pDGESV_ft1_sim(routine_name, verbosity, rows, cols, 1, rank, sprocs, -1, -1);
