@@ -215,11 +215,13 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] =  IME_SV_WO_U3GE;
 		versionname_all[versions_all++] =  IME_SV_WO_U3G;
 
-		versionname_all[versions_all++] =  IME_SV_ICO_OG;
-		versionname_all[versions_all++] =  IME_SV_CO_OG;
-		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND_2PASS;
-		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND_SMALLER;
-		versionname_all[versions_all++] =  IME_SV_CO_OG_NOIND_SMALLEST;
+		versionname_all[versions_all++] =  IME_SV_ICO_G;
+		versionname_all[versions_all++] =  IME_SV_CO_G_IND;
+		versionname_all[versions_all++] =  IME_SV_CO_G_2PASS;
+		versionname_all[versions_all++] =  IME_SV_CO_G_SMALLER;
+		versionname_all[versions_all++] =  IME_SV_CO_G_SMALLEST;
+		versionname_all[versions_all++] =  IME_SV_CO_A_SMALLER;
+		versionname_all[versions_all++] =  IME_SV_CO_A_SMALLEST;
 
 		//versionname_all[versions_all++] = IME_SV_WO_CHECKSUMMED;
 		//versionname_all[versions_all++] = IME_SV_WO_FAULT_0_TOLERANT_1;

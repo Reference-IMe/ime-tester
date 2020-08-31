@@ -26,12 +26,13 @@
 #include "../pviDGESV_WO.unordered3.gather.early.h"
 #include "../pviDGESV_WO.unordered3.gather.h"
 
-#include "../pviDGESV_CO.ordered.gather.h"
+#include "../pviDGESV_CO.gather.h"
 #include "../pvDGESV_CO.h"
-#include "../pvDGESV_CO.ordered.gather.h"
-#include "../pvDGESV_CO.ordered.gather.noind.2pass.h"
-#include "../pvDGESV_CO.ordered.gather.noind.smallerchunk.h"
-#include "../pvDGESV_CO.ordered.gather.noind.smallestchunk.h"
+#include "../pvDGESV_CO.gather.2pass.h"
+#include "../pvDGESV_CO.gather.ind.h"
+#include "../pvDGESV_CO.gather.smallerchunk.h"
+#include "../pvDGESV_CO.gather.smallestchunk.h"
+#include "../pvDGESV_CO.allgather.smallestchunk.h"
 
 test_result test_IMe_pDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
 {
@@ -153,13 +154,19 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 			else if ( strcmp( variant, "WO-u3ge" )     == 0) output = pviDGESV_WO_u3ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "WO-u3g"  )     == 0) output = pviDGESV_WO_u3g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "iCO-og"  )     == 0) output = pviDGESV_CO_og   (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "iCO-g"  )      == 0) output = pviDGESV_CO_g    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			//TODO: create a separate test launcher for non-interleaved routines or rename this launcher
-			else if ( strcmp( variant, "CO"      )             == 0) output = pvDGESV_CO_default  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-og"   )             == 0) output = pvDGESV_CO_og       (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-og-noind-2pass")    == 0) output = pvDGESV_CO_og_noind_2pass    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-og-noind-smaller")  == 0) output = pvDGESV_CO_og_noind_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-og-noind-smallest") == 0) output = pvDGESV_CO_og_noind_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO"        )    == 0) output = pvDGESV_CO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-g-ind"  )    == 0) output = pvDGESV_CO_g_ind      (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-g-2pass")    == 0) output = pvDGESV_CO_g_2pass    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-g-smaller" ) == 0) output = pvDGESV_CO_g_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-g-smallest") == 0) output = pvDGESV_CO_g_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+//			else if ( strcmp( variant, "CO-a-smaller" ) == 0) output = pvDGESV_CO_a_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-a-smallest") == 0) output = pvDGESV_CO_a_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else
+			{
+				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
+			}
 
 			if (rank==0)
 			{
