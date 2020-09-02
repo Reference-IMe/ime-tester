@@ -43,6 +43,7 @@
 #define IME_SV_CO_G_2PASS				"IMe-SV-CO-g-2pass"
 #define IME_SV_CO_G_SMALLER				"IMe-SV-CO-g-smaller"
 #define IME_SV_CO_G_SMALLEST			"IMe-SV-CO-g-smallest"
+#define IME_SV_CO_A_SMALL				"IMe-SV-CO-a-small"
 #define IME_SV_CO_A_SMALLER				"IMe-SV-CO-a-smaller"
 #define IME_SV_CO_A_SMALLEST			"IMe-SV-CO-a-smallest"
 

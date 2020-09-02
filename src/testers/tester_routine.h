@@ -71,6 +71,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_SV_CO_G_2PASS )				== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-g-2pass", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_CO_G_SMALLER )			== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-g-smaller", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_CO_G_SMALLEST )			== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-g-smallest", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_SV_CO_A_SMALL )				== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-a-small", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_CO_A_SMALLER )			== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-a-smaller", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_SV_CO_A_SMALLEST )			== 0 )	info = test_IMe_pDGESV(check, routine_name, "CO-a-smallest", verbosity, routine_input, rank);
 

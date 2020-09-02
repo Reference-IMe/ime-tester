@@ -220,6 +220,7 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] =  IME_SV_CO_G_2PASS;
 		versionname_all[versions_all++] =  IME_SV_CO_G_SMALLER;
 		versionname_all[versions_all++] =  IME_SV_CO_G_SMALLEST;
+		versionname_all[versions_all++] =  IME_SV_CO_A_SMALL;
 		versionname_all[versions_all++] =  IME_SV_CO_A_SMALLER;
 		versionname_all[versions_all++] =  IME_SV_CO_A_SMALLEST;
 
@@ -912,7 +913,7 @@ int main(int argc, char **argv)
 						versiontot[i].norm_rel_err	+= versionrun[i][rep].norm_rel_err;
 						if (verbose>0)
 						{
-							printf("%-30s    call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
+							printf("%-30s    Call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
 																							versionrun[i][rep].total_time,	\
 																							versionrun[i][rep].core_time,	\
 																							versionrun[i][rep].norm_rel_err	\

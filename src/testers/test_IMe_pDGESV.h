@@ -30,9 +30,12 @@
 #include "../pvDGESV_CO.h"
 #include "../pvDGESV_CO.gather.2pass.h"
 #include "../pvDGESV_CO.gather.ind.h"
-#include "../pvDGESV_CO.gather.smallerchunk.h"
-#include "../pvDGESV_CO.gather.smallestchunk.h"
-#include "../pvDGESV_CO.allgather.smallestchunk.h"
+#include "../pvDGESV_CO.allgather.small.h"
+#include "../pvDGESV_CO.allgather.smaller.h"
+#include "../pvDGESV_CO.allgather.smallest.h"
+#include "../pvDGESV_CO.gather.smaller.h"
+#include "../pvDGESV_CO.gather.smallest.h"
+
 
 test_result test_IMe_pDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
 {
@@ -161,7 +164,8 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 			else if ( strcmp( variant, "CO-g-2pass")    == 0) output = pvDGESV_CO_g_2pass    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "CO-g-smaller" ) == 0) output = pvDGESV_CO_g_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "CO-g-smallest") == 0) output = pvDGESV_CO_g_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-//			else if ( strcmp( variant, "CO-a-smaller" ) == 0) output = pvDGESV_CO_a_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-a-small" )   == 0) output = pvDGESV_CO_a_small    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "CO-a-smaller" ) == 0) output = pvDGESV_CO_a_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "CO-a-smallest") == 0) output = pvDGESV_CO_a_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
