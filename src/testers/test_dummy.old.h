@@ -11,27 +11,8 @@ void test_dummy(const char* label, int verbosity, test_input input, int rank, MP
 	double** xx;
 	double x;
 
-
-	if (rank==0)
-	{
-		if (verbosity>1)
-		{
-			printf("\n\n     Opening MPI communication channels..\n");
-		}
-	}
-
-	xx=AllocateMatrix2D(1, input.calc_procs+input.spare_procs, CONTIGUOUS);
-	MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, comm_world);
-	DeallocateMatrix2D(xx, 1, CONTIGUOUS);
-	if (rank==0)
-	{
-		if (verbosity>1)
-		{
-			printf("     ..comm_world\n");
-		}
-	}
-
 	MPI_Comm comm_calc;
+
 	int i_calc; // participating in ime calc = 1, checksumming = 0
 
 	if (rank >= input.calc_procs)
@@ -48,20 +29,33 @@ void test_dummy(const char* label, int verbosity, test_input input, int rank, MP
 	if (i_calc)
 	{
 		xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
-		MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, comm_calc);
-		DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
+
 		if (rank==0)
 		{
 			if (verbosity>1)
 			{
-				printf("     ..comm_calc\n");
+				printf("\n\n     Opening MPI communication channels..\n");
 			}
 		}
+
+		MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, comm_world);
+
+		if (rank==0)
+		{
+			if (verbosity>1)
+			{
+				printf("     ..opened\n");
+			}
+		}
+
+		//cleanup
+		DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
 	}
 	else
 	{
 		xx=NULL;
 	}
+
 
 	if (input.spare_procs>0)
 	{
@@ -70,13 +64,4 @@ void test_dummy(const char* label, int verbosity, test_input input, int rank, MP
 			MPI_Comm_free(&comm_calc);
 		}
 	}
-
-	if (rank==0)
-	{
-		if (verbosity>1)
-		{
-			printf("     ..done\n");
-		}
-	}
-
 }
