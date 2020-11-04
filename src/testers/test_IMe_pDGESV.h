@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <time.h>
+#include <unistd.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
@@ -190,7 +191,6 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 					printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
 				}
 			}
-
 			//cleanup
 			if (rank==0)
 			{
@@ -213,7 +213,6 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 			rank_result.total_time=0;
 			rank_result.core_time=0;
 		}
-
 
 		if (input.spare_procs>0)
 		{
