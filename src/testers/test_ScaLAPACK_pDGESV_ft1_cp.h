@@ -9,10 +9,10 @@
 #include <time.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
-#include "ScaLAPACK/ScaLAPACK_pDGESV_ft1.h"
+#include "ScaLAPACK/ScaLAPACK_pDGESV_ft1_cp.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGESV_ft1(const char check, const char* label, int verbosity, parallel_env env, test_input input, int failing_level, int checkpoint_freq)
+test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, int verbosity, parallel_env env, test_input input, int failing_level, int checkpoint_freq)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -90,7 +90,7 @@ test_result test_ScaLAPACK_pDGESV_ft1(const char check, const char* label, int v
 			xx_ref = NULL;
 		}
 
-		output = ScaLAPACK_pDGESV_ft1(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs,
+		output = ScaLAPACK_pDGESV_ft1_cp(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs,
 										failing_level, checkpoint_freq,
 										env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 										env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare);

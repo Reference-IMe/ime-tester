@@ -233,8 +233,10 @@ int main(int argc, char **argv)
 		//versionname_all[versions_all++] = IME_XK_WO_FAULT_1_TOLERANT_1;
 
 		versionname_all[versions_all++] = SPK_SV;
-		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1;
-		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
+		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1_CP;
+
+		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CS;
 
 		versionname_all[versions_all++] = SPK_LU;
 		versionname_all[versions_all++] = SPK_LU_FAULT_0_TOLERANT_1;

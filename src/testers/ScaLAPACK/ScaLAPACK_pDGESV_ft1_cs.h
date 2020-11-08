@@ -15,7 +15,7 @@
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_global, int nb,
+test_output ScaLAPACK_pDGESV_ft1_cs(	int n, double* A_global, int m, double* B_global, int nb,
 									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,
 									int nprow, int npcol, int myrow, int mycol,
 									int context, int context_global, int context_all, int context_cp)
@@ -65,6 +65,7 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
 	nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
 	lld = MAX( 1 , nr );
+
 	MPI_Allreduce( MPI_IN_PLACE, &lld, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 	nipiv = (lld+nb);
@@ -140,10 +141,10 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	}
 	else								// spare node
 	{
-		// Allocation not needed
+		// Allocation almost not needed
 		A  = NULL;
 		B  = NULL;
-		At = NULL;
+		At = malloc(nr*nc*sizeof(double)); // needed for mpi_reduce
 		Bt = NULL;
 
 		// Descriptors
@@ -168,6 +169,8 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 		descAt[4]=nb;
 		descAt[5]=nb;
 
+		descAt[8]=lld; // needed for mpi_reduce
+
 		descBt[1]=-1;
 		descBt[4]=nb;
 		descBt[5]=nb;
@@ -190,7 +193,7 @@ test_output ScaLAPACK_pDGESV_ft1(	int n, double* A_global, int m, double* B_glob
 	// Linear system equations solver
 	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
 	// checkpointed factorization called by everyone
-	pdgetrf_cp_( &n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
+	pdgetrf_cs_( &n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, descA_cp, ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &info );
 	// solve called by non-spare nodes only
 	if (mpi_rank < cprocs)
 	{

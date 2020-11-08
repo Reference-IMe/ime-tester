@@ -24,14 +24,20 @@
 #include "tester_structures.h"
 
 #include "test_ScaLAPACK_pDGESV.h"
-#include "test_ScaLAPACK_pDGESV_ft1.h"
+#include "test_ScaLAPACK_pDGESV_ft1_cp.h"
+#include "test_ScaLAPACK_pDGESV_ft1_cs.h"
+
 #include "test_ScaLAPACK_pDGETRF.h"
-#include "test_ScaLAPACK_pDGETRF_ft1.h"
+#include "test_ScaLAPACK_pDGETRF_ft1_cp.h"
+
 #include "test_ScaLAPACK_pDGEQRF.h"
-#include "test_ScaLAPACK_pDGEQRF_ft1.h"
+#include "test_ScaLAPACK_pDGEQRF_ft1_cp.h"
+
 #include "test_FTLA_pDGETRF.h"
 #include "test_FTLA_pDGEQRF.h"
 #include "test_IMe_pDGESV.h"
+
+
 
 /*
 #include "test_IMe_pviDGESV_cs.h"
@@ -82,9 +88,10 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_WO_XK_FAULT_0_TOLERANT_1 ) == 0 )	info = test_IMe_pDGEF_ft1_sim(routine_name, verbosity, rows, cols, rank, sprocs, -1, -1);
 	else if	( strcmp( routine_name, IME_WO_XK_FAULT_1_TOLERANT_1 ) == 0 )	info = test_IMe_pDGEF_ft1_sim(routine_name, verbosity, rows, cols, rank, sprocs, failing_rank, failing_level);
 */
-	else if	( strcmp( routine_name, SPK_SV ) 					== 0 )	info = test_ScaLAPACK_pDGESV    (check, routine_name, verbosity, routine_env, routine_input);
-	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGESV_ft1(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
-	else if	( strcmp( routine_name, SPK_SV_FAULT_1_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGESV_ft1(check, routine_name, verbosity, routine_env, routine_input, failing_level, checkpoint_skip_interval);
+	else if	( strcmp( routine_name, SPK_SV ) 						== 0 )	info = test_ScaLAPACK_pDGESV       (check, routine_name, verbosity, routine_env, routine_input);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_1_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, failing_level, checkpoint_skip_interval);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CS ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cs(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
 
 	else if	( strcmp( routine_name, SPK_LU ) 					== 0 )	info = test_ScaLAPACK_pDGETRF    (check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_LU_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGETRF_ft1(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);

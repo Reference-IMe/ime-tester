@@ -27,6 +27,8 @@ extern void pdgeqrf_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, 
 // ScaLAPACK modified
 extern void pdgetrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *ipivcp, int *nipiv, int *cpfreq, int *jfault, int* ictxt, int *info );
 extern void pdgeqrf_cp_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, double *tau, double *taucp, int* ltau, double *work, double *workcp, int *lwork, int *cpfreq, int *jfault, int* ictxt, int *info );
+
+extern void pdgetrf_cs_ ( int *m, int *n, double *A, int *ia, int *ja, int *descA, double *Acp, int *iacp, int *jacp, int *descAcp, int *ipiv, int *ipivcp, int *nipiv, int *cpfreq, int *jfault, int* ictxt, int *info );
 //extern void pdgetf2_cp_ (int *m, int *n, double *A, int *ia, int *ja, int *descA, int *ipiv, int *info );
 
 // FTLA

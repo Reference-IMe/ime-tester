@@ -47,9 +47,10 @@
 #define IME_SV_CO_A_SMALLER				"IMe-SV-CO-a-smaller"
 #define IME_SV_CO_A_SMALLEST			"IMe-SV-CO-a-smallest"
 
-#define SPK_SV						"SPK-SV"
-#define SPK_SV_FAULT_0_TOLERANT_1	"SPK-SV-ft1/0"
-#define SPK_SV_FAULT_1_TOLERANT_1	"SPK-SV-ft1/1"
+#define SPK_SV							"SPK-SV"
+#define SPK_SV_FAULT_0_TOLERANT_1_CP	"SPK-SV-ft1/0-cp"
+#define SPK_SV_FAULT_1_TOLERANT_1_CP	"SPK-SV-ft1/1-cp"
+#define SPK_SV_FAULT_0_TOLERANT_1_CS	"SPK-SV-ft1/0-cs"
 
 #define SPK_LU						"SPK-LU"
 #define SPK_LU_FAULT_0_TOLERANT_1	"SPK-LU-ft1/0"
