@@ -7,6 +7,7 @@
 #include "matrix.h"
 #include "vector.h"
 #include "lapack.h"
+#include "scalapack.h"
 #include "types.h"
 
 #ifndef SRC_HELPERS_MATRIX_ADVANCED_H_
@@ -76,6 +77,123 @@ void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 	DeallocateMatrix1D(mat1);
 	DeallocateMatrix1D(mat2);
 }
+
+void pRandomSquareMatrix1D_cnd(int n, double* mat, int seed, double cnd, int nb, int mpi_rank, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+{
+	// general
+	int i;
+	int i0 = 0;
+	int i1 = 1;
+	double d0 = 0.0;
+	double d1 = 1.0;
+
+	double* A1;
+	double* A2;
+	double* S;
+
+	int descA1[9];
+	int descA2[9];
+	int descS[9];
+	int descmat[9];
+
+	int nr, nc;
+	int lld;
+	int info;
+
+	double Smax = log10(cnd)/2;
+	double Smin = -Smax;
+
+	double gap = (Smax-Smin)/(n-1);
+
+	// Computation of local matrix size
+	nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
+	nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
+	A1 = malloc(nr*nc*sizeof(double));
+	A2 = malloc(nr*nc*sizeof(double));
+	S  = malloc(nr*nc*sizeof(double));
+	lld = MAX( 1 , nr );
+
+	// Descriptors (local)
+	descinit_( descA1, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+	descinit_( descA2, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+	descinit_( descS,  &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+	// Descriptors (global)
+	if (mpi_rank==0)
+	{
+		descinit_( descmat, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+	}
+	else
+	{
+		// Descriptors (global, for non-root nodes)
+		for (i=0; i<9; i++)
+		{
+			descmat[i]=0;
+		}
+		descmat[1]=-1;
+	}
+
+	int icol,irow,r,c;
+
+	// distributed init to 0
+	pdlaset_("A", &n, &n, &d0, &d0, S, &i1, &i1, descS);
+	// initialize in parallel the local parts of S
+	// https://info.gwdg.de/wiki/doku.php?id=wiki:hpc:scalapack
+	for (i=1; i<=n; i++)
+	{
+		r    = indxg2l_(&i,&nb,&i0,&i0,&nprow);
+		irow = indxg2p_(&i,&nb,&i0,&i0,&nprow);
+		c    = indxg2l_(&i,&nb,&i0,&i0,&npcol);
+		icol = indxg2p_(&i,&nb,&i0,&i0,&npcol);
+		if (myrow==irow && mycol==icol)
+		{
+			S[c-1+(r-1)*lld]=pow(10,Smin + (i-1)*gap);
+		}
+	}
+
+	// mat <- mat1.D.mat2 = (mat1.D).mat2
+
+	int local_seed = seed+myrow*npcol+mycol;
+	int lwork;
+	double lazywork;
+	double* work;
+	double* tau;
+
+	lwork=-1;
+	pdgeqrf_( &n, &n, A1, &i1, &i1, descA1, NULL, &lazywork, &lwork, &info );
+	lwork = (int)lazywork;
+	work = malloc( lwork*sizeof(double) );
+	tau = malloc( nc*sizeof(double) );
+
+	// create mat1 -> A1
+	RandomMatrix1D(A1, nr, nc, local_seed);
+
+	//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
+	pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+	pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+
+	// mat1.D = A1.S -> A2
+	pdgemm_("N", "N", &n, &n, &n, &d1, A1, &i1, &i1, descA1, S, &i1, &i1, descS, &d0, A2, &i1, &i1, descA2);
+
+	// create mat2 -> A1
+	RandomMatrix1D(A1, nr, nc, local_seed+npcol*nprow);
+
+	//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
+	pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+	pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+
+	// (mat1.D).mat2 = A2.A1 -> S
+	pdgemm_("N", "N", &n, &n, &n, &d1, A2, &i1, &i1, descA2, A1, &i1, &i1, descA1, &d0, S, &i1, &i1, descS);
+
+	// get back mat
+	pdgemr2d_ (&n, &n, S, &i1, &i1, descS, mat, &i1, &i1, descmat, &context);
+
+	DeallocateMatrix1D(A1);
+	DeallocateMatrix1D(A2);
+	DeallocateMatrix1D(S);
+	NULLFREE(work);
+	NULLFREE(tau);
+}
+
 
 double ConditionNumber1D(double* mat, int rows, int cols)
 {

@@ -662,15 +662,19 @@ int main(int argc, char **argv)
 		 */
 		else
 		{
+			pRandomSquareMatrix1D_cnd(n, A_ref, seed, cnd, 64, mpi_rank, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
+
+			//TODO: make a switch to select parallel or sequential generation
 			if (mpi_rank==0)
 			{
-				RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
+				//RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
 				read_cnd = round(ConditionNumber1D(A_ref, n, n));
 				if (read_cnd!=cnd && verbose>0)
 				{
 					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
 				}
 				FillVector(x_ref, n, 1);
+				//TODO: parallelize generation of rhs
 				dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
 			}
 		}
