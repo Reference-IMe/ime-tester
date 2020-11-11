@@ -16,7 +16,7 @@ void test_dummy(const char* label, int verbosity, test_input input, int rank, MP
 	{
 		if (verbosity>1)
 		{
-			printf("\n\n     Opening MPI communication channels..\n");
+			printf("     Opening MPI communication channels..\n");
 		}
 	}
 

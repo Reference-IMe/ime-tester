@@ -137,6 +137,7 @@ int main(int argc, char **argv)
     int failing_level_override;
     int checkpoint_skip_interval;
 
+    sds matrix_gen_type;
     sds matrix_output_base_name;
     sds matrix_output_file_name;
     sds matrix_input_base_name;
@@ -160,12 +161,14 @@ int main(int argc, char **argv)
 		/*
 		 * FIXED defaults
 		 */
+    	matrix_gen_type         = sdsnew("par"); // matrix generation type ( sequential (seq) /  parallel (par) )
 		matrix_output_base_name = NULL;
 		matrix_output_file_name = NULL;
 		matrix_input_base_name  = NULL;
 		matrix_input_file_name  = NULL;
 		test_output_file_name   = NULL;
 		fp = NULL;
+
 		output_to_file = 0;			// no output to file
 		input_from_file = 0;		// no input from file
 		command="null";
@@ -321,6 +324,10 @@ int main(int argc, char **argv)
 			}
 			if( strcmp( argv[i], "-no-nre" ) == 0 ) {
 				calc_nre = 0;
+				i++;
+			}
+			if( strcmp( argv[i], "-mat-gen" ) == 0 ) {
+				matrix_gen_type = sdscpy(matrix_gen_type,argv[i+1]);
 				i++;
 			}
 			if( strcmp( argv[i], "--run" ) == 0 ) {
@@ -662,22 +669,43 @@ int main(int argc, char **argv)
 		 */
 		else
 		{
-			pRandomSquareMatrix1D_cnd(n, A_ref, x_ref, b_ref, seed, cnd, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
+			if (strcmp(matrix_gen_type, "par" ) == 0)
+			{
+				if (mpi_rank==0)
+				{
+					printf("     Generating random input matrices in parallel with ScaLAPACK\n");
+				}
+				pRandomSquareMatrix1D_cnd(n, A_ref, x_ref, b_ref, seed, cnd, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
+			}
+			else if (strcmp(matrix_gen_type, "seq" ) == 0)
+			{
+				if (mpi_rank==0)
+				{
+					printf("     Generating random input matrices sequentially with LAPACK\n");
 
-			//TODO: make a switch to select parallel or sequential generation
+					RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
+					FillVector(x_ref, n, 1);
+					dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
+				}
+			}
+			else
+			{
+				if (mpi_rank==0)
+				{
+					printf("ERR: Unknown type of matrix generation %s\n\n",matrix_gen_type);
+				}
+				MAIN_CLEANUP(mpi_rank);
+				MPI_Finalize();
+				return 1;
+			}
 			if (mpi_rank==0)
 			{
-				//RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
 				read_cnd = round(ConditionNumber1D(A_ref, n, n));
 				if (read_cnd!=cnd && verbose>0)
 				{
 					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
 				}
-				//FillVector(x_ref, n, 1);
-				//TODO: parallelize generation of rhs
-				//dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
-				//printf("\nb_ref\n");
-				//PrintMatrix1D(b_ref, n, 1);
+
 			}
 		}
 		sdsfree(matrix_input_base_name);
