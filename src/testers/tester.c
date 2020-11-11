@@ -662,7 +662,7 @@ int main(int argc, char **argv)
 		 */
 		else
 		{
-			pRandomSquareMatrix1D_cnd(n, A_ref, seed, cnd, 64, mpi_rank, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
+			pRandomSquareMatrix1D_cnd(n, A_ref, x_ref, b_ref, seed, cnd, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
 
 			//TODO: make a switch to select parallel or sequential generation
 			if (mpi_rank==0)
@@ -673,9 +673,11 @@ int main(int argc, char **argv)
 				{
 					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
 				}
-				FillVector(x_ref, n, 1);
+				//FillVector(x_ref, n, 1);
 				//TODO: parallelize generation of rhs
-				dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
+				//dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
+				//printf("\nb_ref\n");
+				//PrintMatrix1D(b_ref, n, 1);
 			}
 		}
 		sdsfree(matrix_input_base_name);
@@ -683,6 +685,18 @@ int main(int argc, char **argv)
 		routine_input.A_ref = A_ref;
 		routine_input.x_ref = x_ref;
 		routine_input.b_ref = b_ref;
+
+		/*
+		if (mpi_rank==0)
+		{
+			printf("\nA_ref\n");
+			PrintMatrix1D(A_ref, n, n);
+			printf("\nx_ref\n");
+			PrintMatrix1D(x_ref, n, 1);
+			printf("\nb_ref\n");
+			PrintMatrix1D(b_ref, n, 1);
+		}
+		*/
 		/*
 		{
 				n,
