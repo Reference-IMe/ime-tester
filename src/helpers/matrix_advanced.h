@@ -79,7 +79,74 @@ void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 	DeallocateMatrix1D(mat2);
 }
 
-void pRandomSquareMatrix1D_cnd(int n, double* A, double* x, double* b, int seed, double cnd, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+double ConditionNumber1D(double* mat, int rows, int cols)
+{
+	// condition number calculated by definition:
+	// the ratio 'cnd' of the largest to smallest singular value in the singular value decomposition of a matrix 'mat'.
+	//
+	// example for SVD in:
+	// https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/dgesvd_ex.c.htm
+
+    int info, lwork, i;
+    double cnd;
+    double wkopt;
+    double* work;
+    double* u=NULL;
+//			u=AllocateMatrix1D(rows, rows);
+	double* vt=NULL;
+//			vt=AllocateMatrix1D(cols, cols);
+	double* s;
+			s=AllocateVector(cols);
+	double* mat_copy;									// SVD algorithm destroys input matrix mat
+			mat_copy=AllocateMatrix1D(rows, cols);		// http://www.netlib.org/lapack/explore-html/d1/d7e/group__double_g_esing_ga84fdf22a62b12ff364621e4713ce02f2.html
+
+	char nojob='N'; // no need of calculating u and vt
+
+	for (i=0;i<rows*cols;i++)
+	{
+		mat_copy[i]=mat[i];
+	}
+
+	lwork = -1;
+	dgesvd_( &nojob, &nojob, &rows, &cols, mat_copy, &rows, s, u, &rows, vt, &cols, &wkopt, &lwork, &info );
+	lwork = (int)wkopt;
+	work = AllocateVector(lwork);
+	dgesvd_( &nojob, &nojob, &rows, &cols, mat_copy, &rows, s, u, &rows, vt, &cols, work, &lwork, &info );
+    if( info > 0 )
+    {
+		printf( "The algorithm computing SVD failed to converge.\n" );
+		exit( 1 );
+    }
+    cnd = s[0]/s[cols-1];
+
+    DeallocateMatrix1D(mat_copy);
+	DeallocateVector(s);
+	DeallocateVector(work);
+	DeallocateMatrix1D(u);
+	DeallocateMatrix1D(vt);
+
+	return cnd;
+}
+
+double GenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback)
+{
+	int i1 = 1;
+	double d0 = 0.0;
+	double d1 = 1.0;
+	char transA = 'N', transx = 'N';
+	double read_cnd = -1;
+
+	RandomSquareMatrix1D_cnd(A, n, seed, cnd);
+	FillVector(x, n, 1);
+	dgemm_(&transA, &transx, &n, &i1, &n, &d1, A, &n, x, &n, &d0, b, &n);
+	if (cnd_readback)
+	{
+		read_cnd = round(ConditionNumber1D(A, n, n));
+	}
+	return read_cnd;
+}
+
+double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
 {
 	// general
 	int i;
@@ -113,6 +180,8 @@ void pRandomSquareMatrix1D_cnd(int n, double* A, double* x, double* b, int seed,
 	double Smin = -Smax;
 
 	double gap = (Smax-Smin)/(n-1);
+
+	double read_cnd = -1;
 
 	if (mpi_rank < cprocs)
 	{
@@ -250,63 +319,25 @@ void pRandomSquareMatrix1D_cnd(int n, double* A, double* x, double* b, int seed,
 		// get back B
 		pdgemr2d_ (&n, &i1, B, &i1, &i1, descB, b, &i1, &i1, descB_global, &context);
 
+		// use chunks in A1 to calc the condition number
+		NULLFREE(work);
+
+		if (cnd_readback && mpi_rank==0)
+		{
+			read_cnd = round(ConditionNumber1D(A, n, n));
+		}
+
 		DeallocateMatrix1D(A1);
 		DeallocateMatrix1D(A2);
 		DeallocateMatrix1D(S);
 		DeallocateMatrix1D(X);
 		DeallocateMatrix1D(B);
-		NULLFREE(work);
+
 		NULLFREE(tau);
 	}
+	return read_cnd;
 }
 
-
-double ConditionNumber1D(double* mat, int rows, int cols)
-{
-	// condition number calculated by definition:
-	// the ratio 'cnd' of the largest to smallest singular value in the singular value decomposition of a matrix 'mat'.
-	//
-	// example for SVD in:
-	// https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/dgesvd_ex.c.htm
-
-    int info, lwork, i;
-    double cnd;
-    double wkopt;
-    double* work;
-    double* u;
-			u=AllocateMatrix1D(rows, rows);
-	double* vt;
-			vt=AllocateMatrix1D(cols, cols);
-	double* s;
-			s=AllocateVector(cols);
-	double* mat_copy;									// SVD algorithm destroys input matrix mat
-			mat_copy=AllocateMatrix1D(rows, cols);		// http://www.netlib.org/lapack/explore-html/d1/d7e/group__double_g_esing_ga84fdf22a62b12ff364621e4713ce02f2.html
-
-	for (i=0;i<rows*cols;i++)
-	{
-		mat_copy[i]=mat[i];
-	}
-
-	lwork = -1;
-	dgesvd_( "All", "All", &rows, &cols, mat_copy, &rows, s, u, &rows, vt, &cols, &wkopt, &lwork, &info );
-	lwork = (int)wkopt;
-	work = AllocateVector(lwork);
-	dgesvd_( "All", "All", &rows, &cols, mat_copy, &rows, s, u, &rows, vt, &cols, work, &lwork, &info );
-    if( info > 0 )
-    {
-		printf( "The algorithm computing SVD failed to converge.\n" );
-		exit( 1 );
-    }
-    cnd = s[0]/s[cols-1];
-
-    DeallocateMatrix1D(mat_copy);
-	DeallocateVector(s);
-	DeallocateVector(work);
-	DeallocateMatrix1D(u);
-	DeallocateMatrix1D(vt);
-
-	return cnd;
-}
 
 double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 {

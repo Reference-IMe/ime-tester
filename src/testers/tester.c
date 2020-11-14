@@ -145,6 +145,7 @@ int main(int argc, char **argv)
     sds test_output_file_name;
 
     char calc_nre;
+    char cnd_readback;
     int output_to_file;
     int input_from_file;
 
@@ -183,6 +184,7 @@ int main(int argc, char **argv)
 		scalapack_nb=SCALAPACKNB;	// scalapack blocking factor, default defined in header
 		ime_nb=1;					// ime blocking factor
 		cnd=1;						// condition number for randomly generated matrices
+		cnd_readback=1;				// read back (1) cnd from generated matrix or not (0)
 		seed=1;						// seed for random generation
 		calc_nre=1;					// calc (1) normwise relative error or not (0)
 
@@ -316,6 +318,10 @@ int main(int argc, char **argv)
 			}
 			if( strcmp( argv[i], "-cnd" ) == 0 ) {
 				cnd = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-no-cnd-readback" ) == 0 ) {
+				cnd_readback = 0;
 				i++;
 			}
 			if( strcmp( argv[i], "-seed" ) == 0 ) {
@@ -607,10 +613,10 @@ int main(int argc, char **argv)
 	double* A_ref;
 	double* x_ref;
 	double* b_ref;
-	char transA = 'T', transx = 'N';
-	double d1 = 1.0;
-	double d0 = 0.0;
-	int m=1;
+	//char transA = 'T', transx = 'N';
+	//double d1 = 1.0;
+	//double d0 = 0.0;
+	//int m=1;
 	if (mpi_rank==0)
 	{
 		A_ref = AllocateMatrix1D(n, n);
@@ -671,21 +677,29 @@ int main(int argc, char **argv)
 		{
 			if (strcmp(matrix_gen_type, "par" ) == 0)
 			{
+				// init communication channels (generation uses blacs => mpi interference..)
+				test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+
 				if (mpi_rank==0)
 				{
 					printf("     Generating random input matrices in parallel with ScaLAPACK\n");
+					if (!cnd_readback)
+					{
+						printf("WRN: Condition number will not read back from generated matrix\n");
+					}
 				}
-				pRandomSquareMatrix1D_cnd(n, A_ref, x_ref, b_ref, seed, cnd, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
+				read_cnd = pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
 			}
 			else if (strcmp(matrix_gen_type, "seq" ) == 0)
 			{
 				if (mpi_rank==0)
 				{
 					printf("     Generating random input matrices sequentially with LAPACK\n");
-
-					RandomSquareMatrix1D_cnd(A_ref, n, seed, cnd);
-					FillVector(x_ref, n, 1);
-					dgemm_(&transA, &transx, &n, &m, &n, &d1, A_ref, &n, x_ref, &n, &d0, b_ref, &n);
+					if (!cnd_readback)
+					{
+						printf("WRN: Condition number will not read back from generated matrix\n");
+					}
+					read_cnd = GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback);
 				}
 			}
 			else
@@ -700,7 +714,6 @@ int main(int argc, char **argv)
 			}
 			if (mpi_rank==0)
 			{
-				read_cnd = round(ConditionNumber1D(A_ref, n, n));
 				if (read_cnd!=cnd && verbose>0)
 				{
 					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
