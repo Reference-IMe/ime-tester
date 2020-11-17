@@ -29,6 +29,7 @@ extern int  indxl2g_ (int* indxloc, int* nb, int* iproc, int* isrcproc, int* npr
 extern int  indxg2p_ (int* indxglob, int* nb, int* iproc, int* isrcproc, int* nprocs);
 extern void pdgemm_  (char* transa, char* transb, int* m, int* n, int* k, double* alpha, double* A, int* ia, int* ja, int* descA, double* B, int* ib, int* jb, int* descB, double* beta, double* C, int* ic, int* jc, int* desc_c);
 extern void pdorgqr_ (int* m, int* n, int* k, double* A, int* ia, int* ja, int* descA, double* tau, double* work, int* lwork, int* info);
+extern void pdgesvd_ (char* jobu, char* jobvt, int* m, int* n, double* A, int* ia, int* ja, int* desAa, double* S, double* U, int* iu, int* ju, int* descU, double* VT, int* ivt, int* jvt, int* descVT, double* work, int* lwork, int* info);
 
 // ScaLAPACK modified
 extern void pdgetrf_cp_ (int* m, int* n, double* A, int* ia, int* ja, int* descA, double* Acp, int* iacp, int* jacp, int* descAcp, int* ipiv, int* ipivcp, int* nipiv, int* cpfreq, int* jfault, int* ictxt, int* info);

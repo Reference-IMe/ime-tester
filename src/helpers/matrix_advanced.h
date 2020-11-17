@@ -141,7 +141,7 @@ double GenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, dou
 	dgemm_(&transA, &transx, &n, &i1, &n, &d1, A, &n, x, &n, &d0, b, &n);
 	if (cnd_readback)
 	{
-		read_cnd = round(ConditionNumber1D(A, n, n));
+		read_cnd = ConditionNumber1D(A, n, n);
 	}
 	return read_cnd;
 }
@@ -171,6 +171,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 	int descB_global[9];
 
 	char trans = 'T', notrans = 'N';
+	char nojob = 'N';
 
 	int nr, nc;
 	int lld;
@@ -180,6 +181,9 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 	double Smin = -Smax;
 
 	double gap = (Smax-Smin)/(n-1);
+
+	double* s;
+			s=AllocateVector(n);
 
 	double read_cnd = -1;
 
@@ -281,19 +285,6 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		// get back A (A1 -> A)
 		pdgemr2d_ (&n, &n, A1, &i1, &i1, descA1, A, &i1, &i1, descA_global, &context);
 
-		/*
-		for (i=0;i<cprocs;i++)
-		{
-			if (mpi_rank==i)
-			{
-				printf("\nA_ref on %d\n",i);
-				PrintMatrix1D(A1, nr, nc);
-				fflush(stdout);
-			}
-			MPI_Barrier(MPI_COMM_WORLD);
-		}
-		*/
-
 		// distributed init to 1 for vec X
 		pdlaset_("A", &n, &i1, &d1, &d1, X, &i1, &i1, descX);
 
@@ -303,28 +294,21 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		// A.X -> B  (S.X -> B)
 		pdgemm_(&trans, &notrans, &n, &i1, &n, &d1, A1, &i1, &i1, descA1, X, &i1, &i1, descX, &d0, B, &i1, &i1, descB);
 
-		/*
-		for (i=0;i<cprocs;i++)
-		{
-			if (mpi_rank==i)
-			{
-				printf("\nb_ref on %d\n",i);
-				PrintMatrix1D(B, nr, 1);
-				fflush(stdout);
-			}
-			MPI_Barrier(MPI_COMM_WORLD);
-		}
-		*/
-
 		// get back B
 		pdgemr2d_ (&n, &i1, B, &i1, &i1, descB, b, &i1, &i1, descB_global, &context);
 
 		// use chunks in A1 to calc the condition number
 		NULLFREE(work);
 
-		if (cnd_readback && mpi_rank==0)
+		if (cnd_readback)
 		{
-			read_cnd = round(ConditionNumber1D(A, n, n));
+			lwork = -1;
+			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, &lazywork, &lwork, &info);
+			lwork = (int)lazywork;
+			work = AllocateVector(lwork);
+			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, work, &lwork, &info);
+
+			read_cnd = s[0]/s[n-1];
 		}
 
 		DeallocateMatrix1D(A1);
@@ -332,7 +316,8 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		DeallocateMatrix1D(S);
 		DeallocateMatrix1D(X);
 		DeallocateMatrix1D(B);
-
+		NULLFREE(s);
+		NULLFREE(work);
 		NULLFREE(tau);
 	}
 	return read_cnd;

@@ -613,10 +613,7 @@ int main(int argc, char **argv)
 	double* A_ref;
 	double* x_ref;
 	double* b_ref;
-	//char transA = 'T', transx = 'N';
-	//double d1 = 1.0;
-	//double d0 = 0.0;
-	//int m=1;
+
 	if (mpi_rank==0)
 	{
 		A_ref = AllocateMatrix1D(n, n);
@@ -688,7 +685,17 @@ int main(int argc, char **argv)
 						printf("WRN: Condition number will not read back from generated matrix\n");
 					}
 				}
-				read_cnd = pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root);
+				if ( cnd_readback && (pow(floor(sqrt(cprocs)),2) != cprocs) )
+				{
+					if (mpi_rank==0)
+					{
+						printf("ERR: To read back the condition number the process grid must be square\n\n");
+					}
+					MAIN_CLEANUP(mpi_rank);
+					MPI_Finalize();
+					return 1;
+				}
+				read_cnd = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 			}
 			else if (strcmp(matrix_gen_type, "seq" ) == 0)
 			{
@@ -699,7 +706,7 @@ int main(int argc, char **argv)
 					{
 						printf("WRN: Condition number will not read back from generated matrix\n");
 					}
-					read_cnd = GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback);
+					read_cnd = round( GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback) );
 				}
 			}
 			else
@@ -714,7 +721,7 @@ int main(int argc, char **argv)
 			}
 			if (mpi_rank==0)
 			{
-				if (read_cnd!=cnd && verbose>0)
+				if (read_cnd!=cnd && cnd_readback && verbose>0)
 				{
 					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
 				}
