@@ -374,7 +374,7 @@ void MYblacs_scatter(int N, int M, double* A_glob, int nrows, int ncols, double*
 	}
 }
 
-void Myblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
+void MYblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
 {
 	/*
 	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
@@ -550,21 +550,21 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		pdtran_(&n, &n, &d1, S, &i1, &i1, descS, &d0, A1, &i1, &i1, descA1);
 		// get back A (A1 -> A)
 		//pdgemr2d_ (&n, &n, A1, &i1, &i1, descA1, A, &i1, &i1, descA_global, &context);
-		Myblacs_gather(n, n, A, nr, nc, A1, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+		MYblacs_gather(n, n, A, nr, nc, A1, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// distributed init to 1 for vec X
 		pdlaset_("A", &n, &i1, &d1, &d1, X, &i1, &i1, descX);
 
 		// get back X
 		//pdgemr2d_ (&n, &i1, X, &i1, &i1, descX, x, &i1, &i1, descX_global, &context);
-		Myblacs_gather(n, i1, x, nr, i1, X, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+		MYblacs_gather(n, i1, x, nr, i1, X, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// A.X -> B  (S.X -> B)
 		pdgemm_(&trans, &notrans, &n, &i1, &n, &d1, A1, &i1, &i1, descA1, X, &i1, &i1, descX, &d0, B, &i1, &i1, descB);
 
 		// get back B
 		//pdgemr2d_ (&n, &i1, B, &i1, &i1, descB, b, &i1, &i1, descB_global, &context);
-		Myblacs_gather(n, i1, b, nr, i1, B, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+		MYblacs_gather(n, i1, b, nr, i1, B, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// use chunks in A1 to calc the condition number
 		NULLFREE(work);
