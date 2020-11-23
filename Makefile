@@ -191,7 +191,6 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/pviDGESV*.h \
 				$(SRC_DIR)/pvDGESV*.h \
-				$(SRC_DIR)/ft-simulated/*.h \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \

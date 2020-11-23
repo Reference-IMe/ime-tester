@@ -146,8 +146,21 @@ double GenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, dou
 	return read_cnd;
 }
 
-double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
 {
+	/*
+	 * This version suffers from the pdgemr2d bug: out of memory
+	 *
+	 * first workaround not completely successful
+	 * https://icl.cs.utk.edu/lapack-forum/viewtopic.php?t=465
+	 *
+	 * final workaround suggested in
+	 * https://stackoverflow.com/questions/30167724/how-to-use-pdgemr2d-to-copy-distributed-matrix-in-total-to-all-processes
+	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
+	 * see "pGenSystemMatrices1D" below
+	 *
+	 */
+
 	// general
 	int i;
 	int i0 = 0;
@@ -296,6 +309,262 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 
 		// get back B
 		pdgemr2d_ (&n, &i1, B, &i1, &i1, descB, b, &i1, &i1, descB_global, &context);
+
+		// use chunks in A1 to calc the condition number
+		NULLFREE(work);
+
+		if (cnd_readback)
+		{
+			lwork = -1;
+			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, &lazywork, &lwork, &info);
+			lwork = (int)lazywork;
+			work = AllocateVector(lwork);
+			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, work, &lwork, &info);
+
+			read_cnd = s[0]/s[n-1];
+		}
+
+		DeallocateMatrix1D(A1);
+		DeallocateMatrix1D(A2);
+		DeallocateMatrix1D(S);
+		DeallocateMatrix1D(X);
+		DeallocateMatrix1D(B);
+		NULLFREE(s);
+		NULLFREE(work);
+		NULLFREE(tau);
+	}
+	return read_cnd;
+}
+
+void MYblacs_scatter(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
+{
+	/*
+	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
+	 */
+	int sendr = 0, sendc = 0, recvr = 0, recvc = 0;
+	for (int r = 0; r < N; r += Nb, sendr=(sendr+1)%procrows) {
+		sendc = 0;
+		// Number of rows to be sent
+		// Is this the last row block?
+		int nr = Nb;
+		if (N-r < Nb)
+			nr = N-r;
+
+		for (int c = 0; c < M; c += Mb, sendc=(sendc+1)%proccols) {
+			// Number of cols to be sent
+			// Is this the last col block?
+			int nc = Mb;
+			if (M-c < Mb)
+				nc = M-c;
+
+			if (mpi_rank==0) {
+				// Send a nr-by-nc submatrix to process (sendr, sendc)
+				Cdgesd2d(ctxt, nr, nc, A_glob+N*c+r, N, sendr, sendc);
+			}
+
+			if (myrow == sendr && mycol == sendc) {
+				// Receive the same data
+				// The leading dimension of the local matrix is nrows!
+				Cdgerv2d(ctxt, nr, nc, A_loc+nrows*recvc+recvr, nrows, 0, 0);
+				recvc = (recvc+nc)%ncols;
+			}
+		}
+		if (myrow == sendr)
+			recvr = (recvr+nr)%nrows;
+	}
+}
+
+void Myblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
+{
+	/*
+	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
+	 */
+	int sendr = 0, sendc = 0, recvr = 0, recvc = 0;
+	for (int r = 0; r < N; r += Nb, sendr=(sendr+1)%procrows) {
+		sendc = 0;
+		// Number of rows to be sent
+		// Is this the last row block?
+		int nr = Nb;
+		if (N-r < Nb)
+			nr = N-r;
+
+		for (int c = 0; c < M; c += Mb, sendc=(sendc+1)%proccols) {
+			// Number of cols to be sent
+			// Is this the last col block?
+			int nc = Mb;
+			if (M-c < Mb)
+				nc = M-c;
+
+			if (myrow == sendr && mycol == sendc) {
+				// Send a nr-by-nc submatrix to process (sendr, sendc)
+				Cdgesd2d(ctxt, nr, nc, A_loc+nrows*recvc+recvr, nrows, 0, 0);
+				recvc = (recvc+nc)%ncols;
+			}
+
+			if (mpi_rank==0) {
+				// Receive the same data
+				// The leading dimension of the local matrix is nrows!
+				Cdgerv2d(ctxt, nr, nc, A_glob+N*c+r, N, sendr, sendc);
+			}
+		}
+		if (myrow == sendr)
+			recvr = (recvr+nr)%nrows;
+	}
+}
+
+double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+{
+	// general
+	int i;
+	int i0 = 0;
+	int i1 = 1;
+	double d0 = 0.0;
+	double d1 = 1.0;
+
+	double* A1;
+	double* A2;
+	double* S;
+	double* X;
+	double* B;
+
+	int descA1[9];
+	int descA2[9];
+	int descS[9];
+	int descA_global[9];
+	int descX[9];
+	int descX_global[9];
+	int descB[9];
+	int descB_global[9];
+
+	char trans = 'T', notrans = 'N';
+	char nojob = 'N';
+
+	int nr, nc;
+	int lld;
+	int info;
+
+	double Smax = log10(cnd)/2;
+	double Smin = -Smax;
+
+	double gap = (Smax-Smin)/(n-1);
+
+	double* s;
+			s=AllocateVector(n);
+
+	double read_cnd = -1;
+
+	if (mpi_rank < cprocs)
+	{
+		// Computation of local matrix size
+		nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
+		nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
+		A1 = malloc(nr*nc*sizeof(double));
+		A2 = malloc(nr*nc*sizeof(double));
+		S  = malloc(nr*nc*sizeof(double));
+		lld = MAX( 1 , nr );
+
+		X = malloc(nr*1*sizeof(double));
+		B = malloc(nr*1*sizeof(double));
+
+		// Descriptors (local)
+		descinit_( descA1, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descA2, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descS,  &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descX,  &n, &i1, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descB,  &n, &i1, &nb, &nb, &i0, &i0, &context, &lld, &info );
+
+		// Descriptors (global)
+		if (mpi_rank==0)
+		{
+			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+			descinit_( descX_global, &n, &i1, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+			descinit_( descB_global, &n, &i1, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+		}
+		else
+		{
+			// Descriptors (global, for non-root nodes)
+			for (i=0; i<9; i++)
+			{
+				descA_global[i]=0;
+				descX_global[i]=0;
+				descB_global[i]=0;
+			}
+			descA_global[1]=-1;
+			descX_global[1]=-1;
+			descB_global[1]=-1;
+		}
+
+		int icol,irow,r,c;
+
+		// distributed init to 0 for mat S
+		pdlaset_("A", &n, &n, &d0, &d0, S, &i1, &i1, descS);
+		// initialize in parallel the local parts of S
+		// https://info.gwdg.de/wiki/doku.php?id=wiki:hpc:scalapack
+		for (i=1; i<=n; i++)
+		{
+			r    = indxg2l_(&i,&nb,&i0,&i0,&nprow);
+			irow = indxg2p_(&i,&nb,&i0,&i0,&nprow);
+			c    = indxg2l_(&i,&nb,&i0,&i0,&npcol);
+			icol = indxg2p_(&i,&nb,&i0,&i0,&npcol);
+			if (myrow==irow && mycol==icol)
+			{
+				S[c-1+(r-1)*lld]=pow(10,Smin + (i-1)*gap);
+			}
+		}
+
+		// A <- mat1.D.mat2 = (mat1.D).mat2
+
+		int local_seed = seed+myrow*npcol+mycol;
+		int lwork;
+		double lazywork;
+		double* work;
+		double* tau;
+
+		lwork=-1;
+		pdgeqrf_( &n, &n, A1, &i1, &i1, descA1, NULL, &lazywork, &lwork, &info );
+		lwork = (int)lazywork;
+		work = malloc( lwork*sizeof(double) );
+		tau = malloc( nc*sizeof(double) );
+
+		// create mat1 -> A1
+		RandomMatrix1D(A1, nr, nc, local_seed);
+
+		//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
+		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+		pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+
+		// mat1.D = A1.S -> A2
+		pdgemm_("N", "N", &n, &n, &n, &d1, A1, &i1, &i1, descA1, S, &i1, &i1, descS, &d0, A2, &i1, &i1, descA2);
+
+		// create mat2 -> A1
+		RandomMatrix1D(A1, nr, nc, local_seed+npcol*nprow);
+
+		//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
+		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+		pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+
+		// (mat1.D).mat2 = A2.A1 -> S
+		pdgemm_("N", "N", &n, &n, &n, &d1, A2, &i1, &i1, descA2, A1, &i1, &i1, descA1, &d0, S, &i1, &i1, descS);
+
+		// transpose result S -> A1
+		pdtran_(&n, &n, &d1, S, &i1, &i1, descS, &d0, A1, &i1, &i1, descA1);
+		// get back A (A1 -> A)
+		//pdgemr2d_ (&n, &n, A1, &i1, &i1, descA1, A, &i1, &i1, descA_global, &context);
+		Myblacs_gather(n, n, A, nr, nc, A1, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+
+		// distributed init to 1 for vec X
+		pdlaset_("A", &n, &i1, &d1, &d1, X, &i1, &i1, descX);
+
+		// get back X
+		//pdgemr2d_ (&n, &i1, X, &i1, &i1, descX, x, &i1, &i1, descX_global, &context);
+		Myblacs_gather(n, i1, x, nr, i1, X, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+
+		// A.X -> B  (S.X -> B)
+		pdgemm_(&trans, &notrans, &n, &i1, &n, &d1, A1, &i1, &i1, descA1, X, &i1, &i1, descX, &d0, B, &i1, &i1, descB);
+
+		// get back B
+		//pdgemr2d_ (&n, &i1, B, &i1, &i1, descB, b, &i1, &i1, descB_global, &context);
+		Myblacs_gather(n, i1, b, nr, i1, B, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// use chunks in A1 to calc the condition number
 		NULLFREE(work);
