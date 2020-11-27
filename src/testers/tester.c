@@ -197,45 +197,40 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy";
 
-		versionname_all[versions_all++] =  IME_SV_WO;
-		versionname_all[versions_all++] =  IME_SV_CO;
+		versionname_all[versions_all++] =  IME_PV_SV_WO;
+		versionname_all[versions_all++] =  IME_PV_SV_CO;
+		versionname_all[versions_all++] =  IME_PB_SV_CO;
 
-		versionname_all[versions_all++] =  IME_SV_WO_OAE;
-		versionname_all[versions_all++] =  IME_SV_WO_OA;
-		versionname_all[versions_all++] =  IME_SV_WO_OGE;
-		versionname_all[versions_all++] =  IME_SV_WO_OG;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_OAE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_OA;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_OGE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_OG;
 
-		versionname_all[versions_all++] =  IME_SV_WO_U1AE;
-		versionname_all[versions_all++] =  IME_SV_WO_U1A;
-		versionname_all[versions_all++] =  IME_SV_WO_U1GE;
-		versionname_all[versions_all++] =  IME_SV_WO_U1G;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U1AE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U1A;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U1GE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U1G;
 
-		versionname_all[versions_all++] =  IME_SV_WO_U2AE;
-		versionname_all[versions_all++] =  IME_SV_WO_U2A;
-		versionname_all[versions_all++] =  IME_SV_WO_U2GE;
-		versionname_all[versions_all++] =  IME_SV_WO_U2G;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U2AE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U2A;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U2GE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U2G;
 
-		versionname_all[versions_all++] =  IME_SV_WO_U3AE;
-		versionname_all[versions_all++] =  IME_SV_WO_U3A;
-		versionname_all[versions_all++] =  IME_SV_WO_U3GE;
-		versionname_all[versions_all++] =  IME_SV_WO_U3G;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U3AE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U3A;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U3GE;
+		versionname_all[versions_all++] =  IME_PV_SV_WO_U3G;
 
-		versionname_all[versions_all++] =  IME_SV_ICO_G;
-		versionname_all[versions_all++] =  IME_SV_CO_G_IND;
-		versionname_all[versions_all++] =  IME_SV_CO_G_2PASS;
-		versionname_all[versions_all++] =  IME_SV_CO_G_SMALLER;
-		versionname_all[versions_all++] =  IME_SV_CO_G_SMALLEST;
-		versionname_all[versions_all++] =  IME_SV_CO_A_SMALL;
-		versionname_all[versions_all++] =  IME_SV_CO_A_SMALLER;
-		versionname_all[versions_all++] =  IME_SV_CO_A_SMALLEST;
+		versionname_all[versions_all++] =  IME_PV_SV_ICO_G;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_G_IND;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_G_2PASS;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_G_SMALLER;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_G_SMALLEST;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALL;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALLER;
+		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALLEST;
 
-		//versionname_all[versions_all++] = IME_SV_WO_CHECKSUMMED;
-		//versionname_all[versions_all++] = IME_SV_WO_FAULT_0_TOLERANT_1;
-		//versionname_all[versions_all++] = IME_SV_WO_FAULT_1_TOLERANT_1;
-
-		//versionname_all[versions_all++] = IME_XK_WO;
-		//versionname_all[versions_all++] = IME_XK_WO_FAULT_0_TOLERANT_1;
-		//versionname_all[versions_all++] = IME_XK_WO_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] =  IME_PB_SV_CO_G_SMALLEST;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;

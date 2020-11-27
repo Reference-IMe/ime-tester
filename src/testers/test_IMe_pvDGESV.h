@@ -38,7 +38,7 @@
 #include "../pvDGESV_CO.gather.smallest.h"
 
 
-test_result test_IMe_pDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
+test_result test_IMe_pvDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -137,37 +137,37 @@ test_result test_IMe_pDGESV(const char check, const char* label, const char* var
 				A2=AllocateMatrix2D(1, 1, CONTIGUOUS);
 				xx_ref=NULL;
 			}
-			     if ( strcmp( variant, "WO"      )     == 0) output = pviDGESV_WO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-oae"  )     == 0) output = pviDGESV_WO_oae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-oa"   )     == 0) output = pviDGESV_WO_oa  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-oge"  )     == 0) output = pviDGESV_WO_oge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-og"   )     == 0) output = pviDGESV_WO_og  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			     if ( strcmp( variant, "PV-WO"      )     == 0) output = pviDGESV_WO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-oae"  )     == 0) output = pviDGESV_WO_oae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-oa"   )     == 0) output = pviDGESV_WO_oa  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-oge"  )     == 0) output = pviDGESV_WO_oge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-og"   )     == 0) output = pviDGESV_WO_og  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "WO-u1ae" )     == 0) output = pviDGESV_WO_u1ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u1a"  )     == 0) output = pviDGESV_WO_u1a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u1ge" )     == 0) output = pviDGESV_WO_u1ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u1g"  )     == 0) output = pviDGESV_WO_u1g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u1ae" )     == 0) output = pviDGESV_WO_u1ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u1a"  )     == 0) output = pviDGESV_WO_u1a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u1ge" )     == 0) output = pviDGESV_WO_u1ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u1g"  )     == 0) output = pviDGESV_WO_u1g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "WO-u2ae" )     == 0) output = pviDGESV_WO_u2ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u2a"  )     == 0) output = pviDGESV_WO_u2a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u2ge" )     == 0) output = pviDGESV_WO_u2ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u2g"  )     == 0) output = pviDGESV_WO_u2g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u2ae" )     == 0) output = pviDGESV_WO_u2ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u2a"  )     == 0) output = pviDGESV_WO_u2a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u2ge" )     == 0) output = pviDGESV_WO_u2ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u2g"  )     == 0) output = pviDGESV_WO_u2g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "WO-u3ae" )     == 0) output = pviDGESV_WO_u3ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u3a"  )     == 0) output = pviDGESV_WO_u3a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u3ge" )     == 0) output = pviDGESV_WO_u3ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "WO-u3g"  )     == 0) output = pviDGESV_WO_u3g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u3ae" )     == 0) output = pviDGESV_WO_u3ae (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u3a"  )     == 0) output = pviDGESV_WO_u3a  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u3ge" )     == 0) output = pviDGESV_WO_u3ge (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-WO-u3g"  )     == 0) output = pviDGESV_WO_u3g  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 
-			else if ( strcmp( variant, "iCO-g"  )      == 0) output = pviDGESV_CO_g    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-iCO-g"        ) == 0) output = pviDGESV_CO_g (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			//TODO: create a separate test launcher for non-interleaved routines or rename this launcher
-			else if ( strcmp( variant, "CO"        )    == 0) output = pvDGESV_CO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-g-ind"  )    == 0) output = pvDGESV_CO_g_ind      (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-g-2pass")    == 0) output = pvDGESV_CO_g_2pass    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-g-smaller" ) == 0) output = pvDGESV_CO_g_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-g-smallest") == 0) output = pvDGESV_CO_g_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-a-small" )   == 0) output = pvDGESV_CO_a_small    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-a-smaller" ) == 0) output = pvDGESV_CO_a_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "CO-a-smallest") == 0) output = pvDGESV_CO_a_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO"           ) == 0) output = pvDGESV_CO_default    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-g-ind"     ) == 0) output = pvDGESV_CO_g_ind      (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-g-2pass"   ) == 0) output = pvDGESV_CO_g_2pass    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-g-smaller" ) == 0) output = pvDGESV_CO_g_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-g-smallest") == 0) output = pvDGESV_CO_g_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-a-small"   ) == 0) output = pvDGESV_CO_a_small    (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-a-smaller" ) == 0) output = pvDGESV_CO_a_smaller  (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PV-CO-a-smallest") == 0) output = pvDGESV_CO_a_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
