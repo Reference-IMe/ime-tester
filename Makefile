@@ -133,7 +133,7 @@ SEQ_EXE = # compare_solve
 PAR_EXE = tester
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
-PAR_STD_DEP = $(SRC_DIR)/pDGEIT_WX.h $(TST_DIR)/test_*.h $(SRC_DIR)/helpers/*.h
+PAR_STD_DEP = $(SRC_DIR)/pvDGEIT_WX.h $(TST_DIR)/test_*.h $(SRC_DIR)/helpers/*.h
 SEQ_STD_DEP = $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
 
 all: $(LAPACK_LIB_DIR)/librefblas.a \

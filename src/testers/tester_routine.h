@@ -50,7 +50,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 {
 	test_result info;
 
-	     if	( strcmp( routine_name, IME_PV_SV_WO )						== 0 )	info = test_IMe_pvDGESV(check, routine_name, "WO", verbosity, routine_input, rank);
+	     if	( strcmp( routine_name, IME_PV_SV_WO )						== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-WO", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_WO_OAE ) 					== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-WO-oae", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_WO_OA ) 					== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-WO-oa", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_WO_OGE ) 					== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-WO-oge", verbosity, routine_input, rank);
@@ -71,7 +71,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_PV_SV_WO_U3GE ) 				== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-WO-u3ge", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_WO_U3G ) 					== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-WO-u3g", verbosity, routine_input, rank);
 
-	else if	( strcmp( routine_name, IME_PV_SV_CO ) 						== 0 )	info = test_IMe_pvDGESV(check, routine_name, "CO", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_PV_SV_CO ) 						== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-CO", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_ICO_G ) 					== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-iCO-g", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_CO_G_IND ) 				== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-CO-g-ind", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PV_SV_CO_G_2PASS )				== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-CO-g-2pass", verbosity, routine_input, rank);
