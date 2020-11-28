@@ -342,7 +342,8 @@ void MYblacs_scatter(int N, int M, double* A_glob, int nrows, int ncols, double*
 	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
 	 */
 	int sendr = 0, sendc = 0, recvr = 0, recvc = 0;
-	for (int r = 0; r < N; r += Nb, sendr=(sendr+1)%procrows) {
+	int r,c;
+	for (r = 0; r < N; r += Nb, sendr=(sendr+1)%procrows) {
 		sendc = 0;
 		// Number of rows to be sent
 		// Is this the last row block?
@@ -350,7 +351,7 @@ void MYblacs_scatter(int N, int M, double* A_glob, int nrows, int ncols, double*
 		if (N-r < Nb)
 			nr = N-r;
 
-		for (int c = 0; c < M; c += Mb, sendc=(sendc+1)%proccols) {
+		for (c = 0; c < M; c += Mb, sendc=(sendc+1)%proccols) {
 			// Number of cols to be sent
 			// Is this the last col block?
 			int nc = Mb;
@@ -380,7 +381,8 @@ void MYblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* 
 	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
 	 */
 	int sendr = 0, sendc = 0, recvr = 0, recvc = 0;
-	for (int r = 0; r < N; r += Nb, sendr=(sendr+1)%procrows) {
+	int r,c;
+	for (r = 0; r < N; r += Nb, sendr=(sendr+1)%procrows) {
 		sendc = 0;
 		// Number of rows to be sent
 		// Is this the last row block?
@@ -388,7 +390,7 @@ void MYblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* 
 		if (N-r < Nb)
 			nr = N-r;
 
-		for (int c = 0; c < M; c += Mb, sendc=(sendc+1)%proccols) {
+		for (c = 0; c < M; c += Mb, sendc=(sendc+1)%proccols) {
 			// Number of cols to be sent
 			// Is this the last col block?
 			int nc = Mb;
@@ -412,7 +414,7 @@ void MYblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* 
 	}
 }
 
-double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char calc_cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
 {
 	// general
 	int i;
@@ -495,59 +497,67 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		}
 
 		int icol,irow,r,c;
-
-		// distributed init to 0 for mat S
-		pdlaset_("A", &n, &n, &d0, &d0, S, &i1, &i1, descS);
-		// initialize in parallel the local parts of S
-		// https://info.gwdg.de/wiki/doku.php?id=wiki:hpc:scalapack
-		for (i=1; i<=n; i++)
-		{
-			r    = indxg2l_(&i,&nb,&i0,&i0,&nprow);
-			irow = indxg2p_(&i,&nb,&i0,&i0,&nprow);
-			c    = indxg2l_(&i,&nb,&i0,&i0,&npcol);
-			icol = indxg2p_(&i,&nb,&i0,&i0,&npcol);
-			if (myrow==irow && mycol==icol)
-			{
-				S[c-1+(r-1)*lld]=pow(10,Smin + (i-1)*gap);
-			}
-		}
-
-		// A <- mat1.D.mat2 = (mat1.D).mat2
-
 		int local_seed = seed+myrow*npcol+mycol;
 		int lwork;
 		double lazywork;
 		double* work;
 		double* tau;
 
-		lwork=-1;
-		pdgeqrf_( &n, &n, A1, &i1, &i1, descA1, NULL, &lazywork, &lwork, &info );
-		lwork = (int)lazywork;
-		work = malloc( lwork*sizeof(double) );
-		tau = malloc( nc*sizeof(double) );
+		if (calc_cnd)
+		{
+			// distributed init to 0 for mat S
+			pdlaset_("A", &n, &n, &d0, &d0, S, &i1, &i1, descS);
+			// initialize in parallel the local parts of S
+			// https://info.gwdg.de/wiki/doku.php?id=wiki:hpc:scalapack
+			for (i=1; i<=n; i++)
+			{
+				r    = indxg2l_(&i,&nb,&i0,&i0,&nprow);
+				irow = indxg2p_(&i,&nb,&i0,&i0,&nprow);
+				c    = indxg2l_(&i,&nb,&i0,&i0,&npcol);
+				icol = indxg2p_(&i,&nb,&i0,&i0,&npcol);
+				if (myrow==irow && mycol==icol)
+				{
+					S[c-1+(r-1)*lld]=pow(10,Smin + (i-1)*gap);
+				}
+			}
 
-		// create mat1 -> A1
-		RandomMatrix1D(A1, nr, nc, local_seed);
+			// A <- mat1.D.mat2 = (mat1.D).mat2
+			lwork=-1;
+			pdgeqrf_( &n, &n, A1, &i1, &i1, descA1, NULL, &lazywork, &lwork, &info );
+			lwork = (int)lazywork;
+			work = malloc( lwork*sizeof(double) );
+			tau = malloc( nc*sizeof(double) );
 
-		//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
-		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
-		pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+			// create mat1 -> A1
+			RandomMatrix1D(A1, nr, nc, local_seed);
 
-		// mat1.D = A1.S -> A2
-		pdgemm_("N", "N", &n, &n, &n, &d1, A1, &i1, &i1, descA1, S, &i1, &i1, descS, &d0, A2, &i1, &i1, descA2);
+			//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
+			pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+			pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 
-		// create mat2 -> A1
-		RandomMatrix1D(A1, nr, nc, local_seed+npcol*nprow);
+			// mat1.D = A1.S -> A2
+			pdgemm_("N", "N", &n, &n, &n, &d1, A1, &i1, &i1, descA1, S, &i1, &i1, descS, &d0, A2, &i1, &i1, descA2);
 
-		//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
-		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
-		pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+			// create mat2 -> A1
+			RandomMatrix1D(A1, nr, nc, local_seed+npcol*nprow);
 
-		// (mat1.D).mat2 = A2.A1 -> S
-		pdgemm_("N", "N", &n, &n, &n, &d1, A2, &i1, &i1, descA2, A1, &i1, &i1, descA1, &d0, S, &i1, &i1, descS);
+			//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
+			pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
+			pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 
-		// transpose result S -> A1
-		pdtran_(&n, &n, &d1, S, &i1, &i1, descS, &d0, A1, &i1, &i1, descA1);
+			// (mat1.D).mat2 = A2.A1 -> S
+			pdgemm_("N", "N", &n, &n, &n, &d1, A2, &i1, &i1, descA2, A1, &i1, &i1, descA1, &d0, S, &i1, &i1, descS);
+
+			// transpose result S -> A1
+			pdtran_(&n, &n, &d1, S, &i1, &i1, descS, &d0, A1, &i1, &i1, descA1);
+		}
+		else
+		{
+			// create mat1 -> A1
+			RandomMatrix1D(A1, nr, nc, local_seed);
+			tau = NULL;
+			work = NULL;
+		}
 		// get back A (A1 -> A)
 		//pdgemr2d_ (&n, &n, A1, &i1, &i1, descA1, A, &i1, &i1, descA_global, &context);
 		MYblacs_gather(n, n, A, nr, nc, A1, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);

@@ -145,6 +145,7 @@ int main(int argc, char **argv)
     sds test_output_file_name;
 
     char calc_nre;
+    char calc_cnd;
     char cnd_readback;
     int output_to_file;
     int input_from_file;
@@ -187,6 +188,7 @@ int main(int argc, char **argv)
 		cnd_readback=1;				// read back (1) cnd from generated matrix or not (0)
 		seed=1;						// seed for random generation
 		calc_nre=1;					// calc (1) normwise relative error or not (0)
+		calc_cnd=1;					// pre-conditioning (1) of the matrix  or not (0)
 
 		/*
 		 * list of testable routines (see tester_labels.h)
@@ -317,6 +319,10 @@ int main(int argc, char **argv)
 			}
 			if( strcmp( argv[i], "-no-cnd-readback" ) == 0 ) {
 				cnd_readback = 0;
+				i++;
+			}
+			if( strcmp( argv[i], "-no-cnd" ) == 0 ) {
+				calc_cnd = 0;
 				i++;
 			}
 			if( strcmp( argv[i], "-seed" ) == 0 ) {
@@ -679,6 +685,10 @@ int main(int argc, char **argv)
 					{
 						printf("WRN: Condition number will not read back from generated matrix\n");
 					}
+					if (!calc_cnd)
+					{
+						printf("WRN: Matrix will not be pre-conditioned\n");
+					}
 				}
 				if ( cnd_readback && (pow(floor(sqrt(cprocs)),2) != cprocs) )
 				{
@@ -690,7 +700,7 @@ int main(int argc, char **argv)
 					MPI_Finalize();
 					return 1;
 				}
-				read_cnd = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+				read_cnd = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, calc_cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 			}
 			else if (strcmp(matrix_gen_type, "seq" ) == 0)
 			{
@@ -764,6 +774,7 @@ int main(int argc, char **argv)
 	{
 		if (mpi_rank==0)
 		{
+			printf("\n");
 			printf("Usage: tester [OPTION] command [TEST ROUTINE(S)]\n\n");
 			printf("Commands are:\n");
 			printf("  --help \t\t print this help\n");
@@ -773,8 +784,24 @@ int main(int argc, char **argv)
 			printf("        \t\t tests are specified by a space-separated list of testable routines\n");
 			printf("\n");
 			printf("Options are:\n");
-			printf("..to be written..\n\n");
-			// TODO: help summary
+			printf("  -v    <integer number>     : verbosity level [0-3] (0=quiet)\n" );
+			printf("  -n    <integer number>     : input matrix rank\n" );
+			printf("  -nrhs <integer number>     : r.h.s. columns\n" );
+			printf("  -seed <integer number>     : seed of the random generation\n" );
+			printf("  -cnd  <integer number>     : condition number of the input matrix\n" );
+			printf("  -no-cnd                    : disable matrix pre-conditioning\n" );
+			printf("  -no-cnd-readback           : disable condition number checking after generation\n" );
+			printf("  -no-nre                    : disable normwise relative error checking\n" );
+			printf("  -mat-gen <string>          : type of the random generation [par|ser] (parallel or sequential)\n" );
+			printf("  -r    <integer number>     : run repetitions\n" );
+			printf("  -o    <file path>          : output to CSV file\n" );
+			printf("  -i    <file path>          : input matrices base name file path (.A, .X, .B auto appended)\n" );
+			printf("  -ft   <integer number>     : fault-tolerance level [0-..] (0=none)\n" );
+			printf("  -fr   <integer number>     : simulated faulty mpi rank\n" );
+			printf("  -fl   <integer number>     : simulated faulty IMe inhibition level\n" );
+			printf("  -cp   <integer number>     : checkpointing interval\n" );
+			printf("  -spk-nb <integer number>   : ScaLAPACK blocking factor\n" );
+			printf("  -ime-nb <integer number>   : IMe blocking factor\n\n" );
 		}
 		MAIN_CLEANUP(mpi_rank);
 		MPI_Finalize();
