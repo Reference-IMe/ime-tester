@@ -50,6 +50,8 @@
 #define IME_PB_SV_CO						"IMe-PB-SV-CO"
 #define IME_PB_SV_CO_G_SMALLEST				"IMe-PB-SV-CO-g-smallest"
 
+#define IME_BLACS_SV_CO						"IMe-blacs-SV-CO"
+
 #define SPK_SV								"SPK-SV"
 #define SPK_SV_FAULT_0_TOLERANT_1_CP		"SPK-SV-ft1/0-cp"
 #define SPK_SV_FAULT_1_TOLERANT_1_CP		"SPK-SV-ft1/1-cp"

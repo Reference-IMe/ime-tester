@@ -38,6 +38,7 @@
 #include "test_IMe_pvDGESV.h"
 #include "test_IMe_pbDGESV.h"
 
+#include "test_IMe_blacsDGESV.h"
 
 /*
 #include "test_IMe_pviDGESV_cs.h"
@@ -83,6 +84,8 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 
 	else if	( strcmp( routine_name, IME_PB_SV_CO )						== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PB_SV_CO_G_SMALLEST )			== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO-g-smallest", verbosity, routine_input, rank);
+
+	else if	( strcmp( routine_name, IME_BLACS_SV_CO )					== 0 )	info = test_IMe_blacsDGESV(check, routine_name, verbosity, routine_env, routine_input);
 
 	else if	( strcmp( routine_name, SPK_SV ) 						== 0 )	info = test_ScaLAPACK_pDGESV       (check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
