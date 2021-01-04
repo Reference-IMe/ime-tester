@@ -134,7 +134,7 @@ test_result test_IMe_pvDGESV(const char check, const char* label, const char* va
 			}
 			else
 			{
-				A2=AllocateMatrix2D(1, 1, CONTIGUOUS);
+				A2=AllocateMatrix2D(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
 				xx_ref=NULL;
 			}
 			     if ( strcmp( variant, "PV-WO"      )     == 0) output = pviDGESV_WO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
