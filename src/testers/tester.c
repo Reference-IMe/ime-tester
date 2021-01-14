@@ -154,6 +154,11 @@ int main(int argc, char **argv)
 
     char* command;
 
+	int read_cnd = -99;
+	double* A_ref;
+	double* x_ref;
+	double* b_ref;
+
     /*
      * ************
      * input values
@@ -509,6 +514,7 @@ int main(int argc, char **argv)
 		printf("     Total processes:               %d\n",np);
 		printf("     OMP threads:                   %d\n",omp_threads);
 		printf("     MPI ranks:                     %d\n",mpi_procs);
+		printf("     BLACS grid:                    %dx%d\n",blacs_nprow,blacs_npcol);
 		printf("     Matrix condition number:       %d\n",cnd);
 		printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
@@ -572,56 +578,180 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/*
-	 * ********
-	 * checking
-	 * ********
-	 */
-
-	// check list of selected routines
-	for (i=0; i<versions_selected; i++)
+	if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip checkings and preparation
 	{
-		versionnumber_selected[i]=versionnumber_in(versions_all, versionname_all, versionname_selected[i]);
-		if (versionnumber_selected[i]<0)
+		/*
+		 * ********
+		 * checking
+		 * ********
+		 */
+
+		// check list of selected routines
+		for (i=0; i<versions_selected; i++)
 		{
-	    	if (mpi_rank==0)
-	    	{
-	    		printf("ERR: Routine '%s' is unknown\n",versionname_selected[i]);
-	    	}
-	    	MPI_Finalize();
-	        return 3;
+			versionnumber_selected[i]=versionnumber_in(versions_all, versionname_all, versionname_selected[i]);
+			if (versionnumber_selected[i]<0)
+			{
+				if (mpi_rank==0)
+				{
+					printf("ERR: Routine '%s' is unknown\n",versionname_selected[i]);
+				}
+				MPI_Finalize();
+				return 3;
+			}
 		}
-	}
 
-	// check specific condition for every selected routine
-	j=0; // error accumulation
-	for (i=0; i<versions_selected; i++)
-	{
-		j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval)).exit_code;
-	}
-	MPI_Bcast(&j,1,MPI_INT,0,MPI_COMM_WORLD);
-	if (j != 0)
-	{
-    	MPI_Finalize();
-        return 4;
-	}
-	// continue if no errors
+		// check specific condition for every selected routine
+		j=0; // error accumulation
+		for (i=0; i<versions_selected; i++)
+		{
+			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval)).exit_code;
+		}
+		MPI_Bcast(&j,1,MPI_INT,0,MPI_COMM_WORLD);
+		if (j != 0)
+		{
+			MPI_Finalize();
+			return 4;
+		}
+		// continue if no errors
 
-	/*
-	 * **********************
-	 * prepare input matrices
-	 * **********************
-	 */
-	int read_cnd = -99;
-	double* A_ref;
-	double* x_ref;
-	double* b_ref;
+		/*
+		 * **********************
+		 * prepare input matrices
+		 * **********************
+		 */
+		if (mpi_rank==0)
+		{
+			A_ref = AllocateMatrix1D(n, n);
+			x_ref = AllocateVector(n);
+			b_ref = AllocateVector(n);
+		}
+		else
+		{
+			A_ref = NULL;
+			x_ref = NULL;
+			b_ref = NULL;
+		}
+			/*
+			 * matrices from file
+			 */
+			if (input_from_file)
+			{
+				if ( strcmp(command, "--save" ) == 0 )
+				{
+					if (mpi_rank == 0) printf("ERR: Cannot take input matrices with '--save' command.\n");
+					MPI_Finalize();
+					return 1;
+				}
+				if (mpi_rank==0)
+				{
+					if (verbose > 0) printf("     Loading reference matrices from binary files..\n");
 
-	if (mpi_rank==0)
-	{
-		A_ref = AllocateMatrix1D(n, n);
-		x_ref = AllocateVector(n);
-		b_ref = AllocateVector(n);
+					matrix_input_file_name = sdsdup(matrix_input_base_name);
+					matrix_input_file_name = sdscat(matrix_input_file_name, ".X");
+					fp=fopen(matrix_input_file_name,"rb");
+					fread(x_ref,sizeof(double),n,fp);
+					fclose(fp);
+					sdsfree(matrix_input_file_name);
+					if (verbose > 0) printf("     ..X\n");
+
+					matrix_input_file_name = sdsdup(matrix_input_base_name);
+					matrix_input_file_name = sdscat(matrix_input_file_name, ".B");
+					fp=fopen(matrix_input_file_name,"rb");
+					fread(b_ref,sizeof(double),n,fp);
+					fclose(fp);
+					sdsfree(matrix_input_file_name);
+					if (verbose > 0) printf("     ..B\n");
+
+					matrix_input_file_name = sdsdup(matrix_input_base_name);
+					matrix_input_file_name = sdscat(matrix_input_file_name, ".A");
+					fp=fopen(matrix_input_file_name,"rb");
+					fread(A_ref,sizeof(double),n*n,fp);
+					fclose(fp);
+					fp=NULL;
+					sdsfree(matrix_input_file_name);
+					if (verbose > 0) printf("     ..A\n");
+				}
+			}
+			/*
+			 * generated matrices
+			 */
+			else
+			{
+				if (strcmp(matrix_gen_type, "par" ) == 0)
+				{
+					// init communication channels (generation uses blacs => mpi interference..)
+					test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+
+					if (mpi_rank==0)
+					{
+						printf("     Generating random input matrices in parallel with ScaLAPACK\n");
+						if (!cnd_readback)
+						{
+							printf("WRN: Condition number will not read back from generated matrix\n");
+						}
+						if (!calc_cnd)
+						{
+							printf("WRN: Matrix will not be pre-conditioned\n");
+						}
+					}
+					if ( cnd_readback && (pow(floor(sqrt(cprocs)),2) != cprocs) )
+					{
+						if (mpi_rank==0)
+						{
+							printf("ERR: To read back the condition number the process grid must be square\n\n");
+						}
+						MAIN_CLEANUP(mpi_rank);
+						MPI_Finalize();
+						return 1;
+					}
+					read_cnd = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, calc_cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+				}
+				else if (strcmp(matrix_gen_type, "seq" ) == 0)
+				{
+					if (mpi_rank==0)
+					{
+						printf("     Generating random input matrices sequentially with LAPACK\n");
+						if (!cnd_readback)
+						{
+							printf("WRN: Condition number will not read back from generated matrix\n");
+						}
+						read_cnd = round( GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback) );
+					}
+				}
+				else
+				{
+					if (mpi_rank==0)
+					{
+						printf("ERR: Unknown type of matrix generation %s\n\n",matrix_gen_type);
+					}
+					MAIN_CLEANUP(mpi_rank);
+					MPI_Finalize();
+					return 1;
+				}
+				if (mpi_rank==0)
+				{
+					if (read_cnd!=cnd && cnd_readback && verbose>0)
+					{
+						printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
+					}
+
+				}
+			}
+			sdsfree(matrix_input_base_name);
+
+			// matrix for debugging purposes
+			/*
+			if (mpi_rank==0)
+			{
+				FillMatrix1D(A_ref, n, n);
+				OneMatrix1D(b_ref, n, 1);
+			}
+			*/
+
+			routine_input.A_ref = A_ref;
+			routine_input.x_ref = x_ref;
+			routine_input.b_ref = b_ref;
 	}
 	else
 	{
@@ -629,144 +759,6 @@ int main(int argc, char **argv)
 		x_ref = NULL;
 		b_ref = NULL;
 	}
-		/*
-		 * matrices from file
-		 */
-		if (input_from_file)
-		{
-			if ( strcmp(command, "--save" ) == 0 )
-			{
-				if (mpi_rank == 0) printf("ERR: Cannot take input matrices with '--save' command.\n");
-				MPI_Finalize();
-				return 1;
-			}
-			if (mpi_rank==0)
-			{
-				if (verbose > 0) printf("     Loading reference matrices from binary files..\n");
-
-				matrix_input_file_name = sdsdup(matrix_input_base_name);
-				matrix_input_file_name = sdscat(matrix_input_file_name, ".X");
-				fp=fopen(matrix_input_file_name,"rb");
-				fread(x_ref,sizeof(double),n,fp);
-				fclose(fp);
-				sdsfree(matrix_input_file_name);
-				if (verbose > 0) printf("     ..X\n");
-
-				matrix_input_file_name = sdsdup(matrix_input_base_name);
-				matrix_input_file_name = sdscat(matrix_input_file_name, ".B");
-				fp=fopen(matrix_input_file_name,"rb");
-				fread(b_ref,sizeof(double),n,fp);
-				fclose(fp);
-				sdsfree(matrix_input_file_name);
-				if (verbose > 0) printf("     ..B\n");
-
-				matrix_input_file_name = sdsdup(matrix_input_base_name);
-				matrix_input_file_name = sdscat(matrix_input_file_name, ".A");
-				fp=fopen(matrix_input_file_name,"rb");
-				fread(A_ref,sizeof(double),n*n,fp);
-				fclose(fp);
-				fp=NULL;
-				sdsfree(matrix_input_file_name);
-				if (verbose > 0) printf("     ..A\n");
-			}
-		}
-		/*
-		 * generated matrices
-		 */
-		else
-		{
-			if (strcmp(matrix_gen_type, "par" ) == 0)
-			{
-				// init communication channels (generation uses blacs => mpi interference..)
-				test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
-
-				if (mpi_rank==0)
-				{
-					printf("     Generating random input matrices in parallel with ScaLAPACK\n");
-					if (!cnd_readback)
-					{
-						printf("WRN: Condition number will not read back from generated matrix\n");
-					}
-					if (!calc_cnd)
-					{
-						printf("WRN: Matrix will not be pre-conditioned\n");
-					}
-				}
-				if ( cnd_readback && (pow(floor(sqrt(cprocs)),2) != cprocs) )
-				{
-					if (mpi_rank==0)
-					{
-						printf("ERR: To read back the condition number the process grid must be square\n\n");
-					}
-					MAIN_CLEANUP(mpi_rank);
-					MPI_Finalize();
-					return 1;
-				}
-				read_cnd = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, calc_cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
-			}
-			else if (strcmp(matrix_gen_type, "seq" ) == 0)
-			{
-				if (mpi_rank==0)
-				{
-					printf("     Generating random input matrices sequentially with LAPACK\n");
-					if (!cnd_readback)
-					{
-						printf("WRN: Condition number will not read back from generated matrix\n");
-					}
-					read_cnd = round( GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback) );
-				}
-			}
-			else
-			{
-				if (mpi_rank==0)
-				{
-					printf("ERR: Unknown type of matrix generation %s\n\n",matrix_gen_type);
-				}
-				MAIN_CLEANUP(mpi_rank);
-				MPI_Finalize();
-				return 1;
-			}
-			if (mpi_rank==0)
-			{
-				if (read_cnd!=cnd && cnd_readback && verbose>0)
-				{
-					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
-				}
-
-			}
-		}
-		sdsfree(matrix_input_base_name);
-
-		routine_input.A_ref = A_ref;
-		routine_input.x_ref = x_ref;
-		routine_input.b_ref = b_ref;
-
-		/*
-		if (mpi_rank==0)
-		{
-			printf("\nA_ref\n");
-			PrintMatrix1D(A_ref, n, n);
-			printf("\nx_ref\n");
-			PrintMatrix1D(x_ref, n, 1);
-			printf("\nb_ref\n");
-			PrintMatrix1D(b_ref, n, 1);
-		}
-		*/
-		/*
-		{
-				n,
-				A_ref,
-				x_ref,
-				b_ref,
-				nrhs,
-				cprocs,
-				sprocs,
-				ime_nb,
-				scalapack_nb,
-				calc_nre
-		};
-		*/
-
 	/*
 	 * ********
 	 * commands
@@ -944,6 +936,8 @@ int main(int argc, char **argv)
 				fpinfo("second",readtime->tm_sec);
 				fpinfo("number of MPI ranks",cprocs);
 				fpinfo("number of OMP threads",omp_threads);
+				fpinfo("number of BLACS rows",blacs_nprow);
+				fpinfo("number of BLACS columns",blacs_npcol);
 				fpinfo("number of processes",np);
 				fpinfo("fault tolerance",sprocs);
 				fpinfo("failing rank",failing_rank);
