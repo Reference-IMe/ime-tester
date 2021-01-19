@@ -13,7 +13,7 @@
 #include "tester_structures.h"
 #include "../blacsDGESV_CO.h"
 
-test_result test_IMe_blacsDGESV(const char check, const char* label, int verbosity, parallel_env env, test_input input)
+test_result test_IMe_blacsDGESV(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -74,9 +74,9 @@ test_result test_IMe_blacsDGESV(const char check, const char* label, int verbosi
 			xx_ref = NULL;
 		}
 
-		output = blacsDGESV_CO(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs,
-									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
-									env.blacs_ctxt_grid, env.blacs_ctxt_root);
+		if ( strcmp( variant, "BLACS-CO-2" ) == 0) output = blacsDGESV_CO_2(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs,
+																			env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
+																			env.blacs_ctxt_grid, env.blacs_ctxt_root);
 
 		if (env.mpi_rank==0)
 		{

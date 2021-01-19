@@ -239,7 +239,8 @@ int main(int argc, char **argv)
 
 		versionname_all[versions_all++] =  IME_PB_SV_CO_G_SMALLEST;
 
-		versionname_all[versions_all++] =  IME_BLACS_SV_CO;
+		versionname_all[versions_all++] =  IME_BLACS_SV_CO_1;
+		versionname_all[versions_all++] =  IME_BLACS_SV_CO_2;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
