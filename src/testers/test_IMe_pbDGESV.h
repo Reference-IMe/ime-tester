@@ -4,10 +4,10 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../pbDGESV_CO.bf1.h"
 #include "tester_structures.h"
 
 #include "../pbDGESV_CO.h"
-#include "../pbDGESV_CO.gather.smallest.h"
 
 
 test_result test_IMe_pbDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
@@ -112,8 +112,8 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 				A2=AllocateMatrix2D(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
 				xx_ref=NULL;
 			}
-			     if ( strcmp( variant, "PB-CO"           ) == 0) output = pbDGESV_CO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else if ( strcmp( variant, "PB-CO-g-smallest") == 0) output = pbDGESV_CO_g_smallest (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			     if ( strcmp( variant, "PB-CO"    ) == 0) output = pbDGESV_CO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			else if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");

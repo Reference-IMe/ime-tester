@@ -48,7 +48,7 @@
 #define IME_PV_SV_CO_A_SMALLEST				"IMe-PV-SV-CO-a-smallest"
 
 #define IME_PB_SV_CO						"IMe-PB-SV-CO"
-#define IME_PB_SV_CO_G_SMALLEST				"IMe-PB-SV-CO-g-smallest"
+#define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
 
 #define IME_BLACS_SV_CO_1					"IMe-blacs-SV-CO-1"
 #define IME_BLACS_SV_CO_2					"IMe-blacs-SV-CO-2"

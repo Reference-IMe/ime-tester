@@ -83,7 +83,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_PV_SV_CO_A_SMALLEST )			== 0 )	info = test_IMe_pvDGESV(check, routine_name, "PV-CO-a-smallest", verbosity, routine_input, rank);
 
 	else if	( strcmp( routine_name, IME_PB_SV_CO )						== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO", verbosity, routine_input, rank);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_G_SMALLEST )			== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO-g-smallest", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1 )					== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO-bf1", verbosity, routine_input, rank);
 
 	else if	( strcmp( routine_name, IME_BLACS_SV_CO_1 )					== 0 )	info = test_IMe_blacsDGESV(check, routine_name, "BLACS-CO-1", verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, IME_BLACS_SV_CO_2 )					== 0 )	info = test_IMe_blacsDGESV(check, routine_name, "BLACS-CO-2", verbosity, routine_env, routine_input);
