@@ -4,9 +4,9 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
-#include "../pbDGESV_CO.bf1.h"
 #include "tester_structures.h"
 
+#include "../pbDGESV_CO.bf1.h"
 #include "../pbDGESV_CO.h"
 
 
