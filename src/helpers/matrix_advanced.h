@@ -602,6 +602,84 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 	return read_cnd;
 }
 
+double pCheckSystemMatrices1D(int n, double* A, double* x, double* b, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+{
+	// general
+	int i;
+	int i0 = 0;
+	int i1 = 1;
+	double d0 = 0.0;
+	double d1 = 1.0;
+
+	double* A1;
+	double* A2;
+
+	int descA1[9];
+	int descA2[9];
+	int descA_global[9];
+
+	char nojob = 'N';
+
+	int nr, nc;
+	int lld;
+	int info;
+
+	double* s;
+			s=AllocateVector(n);
+
+	double read_cnd = -1;
+
+	if (mpi_rank < cprocs)
+	{
+		// Computation of local matrix size
+		nc = numroc_( &n, &nb, &mycol, &i0, &npcol );
+		nr = numroc_( &n, &nb, &myrow, &i0, &nprow );
+		A1 = malloc(nr*nc*sizeof(double));
+		A2 = malloc(nr*nc*sizeof(double));
+		lld = MAX( 1 , nr );
+
+		// Descriptors (local)
+		descinit_( descA1, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+		descinit_( descA2, &n, &n, &nb, &nb, &i0, &i0, &context, &lld, &info );
+
+		// Descriptors (global)
+		if (mpi_rank==0)
+		{
+			descinit_( descA_global, &n, &n, &i1, &i1, &i0, &i0, &context_global, &n, &info );
+		}
+		else
+		{
+			// Descriptors (global, for non-root nodes)
+			for (i=0; i<9; i++)
+			{
+				descA_global[i]=0;
+			}
+			descA_global[1]=-1;
+		}
+
+		int lwork;
+		double lazywork;
+		double* work;
+
+		pdgemr2d_ (&n, &n, A, &i1, &i1, descA_global, A2, &i1, &i1, descA2, &context);
+		pdtran_(&n, &n, &d1, A2, &i1, &i1, descA2, &d0, A1, &i1, &i1, descA1);
+
+		lwork = -1;
+		pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, &lazywork, &lwork, &info);
+		lwork = (int)lazywork;
+		work = AllocateVector(lwork);
+		pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, work, &lwork, &info);
+
+		read_cnd = s[0]/s[n-1];
+
+		DeallocateMatrix1D(A1);
+		DeallocateMatrix1D(A2);
+
+		NULLFREE(s);
+		NULLFREE(work);
+	}
+	return read_cnd;
+}
 
 double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 {

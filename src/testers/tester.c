@@ -507,7 +507,7 @@ int main(int argc, char **argv)
 
 	/*
 	 * ******************************
-	 * print initial summary to video
+	 * starting summary to video
 	 * ******************************
 	 */
 	if (mpi_rank==0 && verbose>0)
@@ -516,9 +516,6 @@ int main(int argc, char **argv)
 		printf("     OMP threads:                   %d\n",omp_threads);
 		printf("     MPI ranks:                     %d\n",mpi_procs);
 		printf("     BLACS grid:                    %dx%d\n",blacs_nprow,blacs_npcol);
-		printf("     Matrix condition number:       %d\n",cnd);
-		printf("     Matrix random generation seed: %d\n",seed);
-		printf("     Matrix size:                   %dx%d\n",rows,cols);
 		printf("     Calculate n.r.e.:              ");
 			if (calc_nre)	{printf("yes\n");}
 			else			{printf("no\n");}
@@ -646,8 +643,15 @@ int main(int argc, char **argv)
 				}
 				if (mpi_rank==0)
 				{
-					if (verbose > 0) printf("     Loading reference matrices from binary files..\n");
+					if (verbose > 0)
+					{
+						printf("     Loading reference matrices from binary files..\n");
 
+						if (!cnd_readback)
+						{
+							printf("WRN: Condition number will not read back from loaded matrix\n");
+						}
+					}
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".X");
 					fp=fopen(matrix_input_file_name,"rb");
@@ -672,6 +676,23 @@ int main(int argc, char **argv)
 					fp=NULL;
 					sdsfree(matrix_input_file_name);
 					if (verbose > 0) printf("     ..A\n");
+				}
+				if ( cnd_readback )
+				{
+					if (pow(floor(sqrt(cprocs)),2) != cprocs)
+					{
+						if (mpi_rank==0)
+						{
+							printf("ERR: To read back the condition number the process grid must be square\n\n");
+						}
+						MAIN_CLEANUP(mpi_rank);
+						MPI_Finalize();
+						return 1;
+					}
+					else
+					{
+						read_cnd = round( pCheckSystemMatrices1D(n, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+					}
 				}
 			}
 			/*
@@ -730,14 +751,6 @@ int main(int argc, char **argv)
 					MPI_Finalize();
 					return 1;
 				}
-				if (mpi_rank==0)
-				{
-					if (read_cnd!=cnd && cnd_readback && verbose>0)
-					{
-						printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
-					}
-
-				}
 			}
 			sdsfree(matrix_input_base_name);
 
@@ -760,6 +773,24 @@ int main(int argc, char **argv)
 		x_ref = NULL;
 		b_ref = NULL;
 	}
+
+	/*
+	 * ******************************
+	 * continuing summary to video
+	 * ******************************
+	 */
+	if (mpi_rank==0 && verbose>0)
+	{
+		printf("     Matrix random generation seed: %d\n",seed);
+		printf("     Matrix size:                   %dx%d\n",rows,cols);
+		printf("     Matrix condition number set:   %d\n",cnd);
+		printf("     Matrix condition number got:   %d\n",read_cnd);
+		if (read_cnd!=cnd)
+		{
+			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
+		}
+	}
+
 	/*
 	 * ********
 	 * commands
