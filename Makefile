@@ -203,17 +203,19 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 #	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 #	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 #	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cs.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
-	$(MPICC) $(CFLAGS) -o $(BIN_DIR)/tester	$(TST_DIR)/tester.c \
-											$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
-											$(TST_DIR)/ScaLAPACK/pdgetrf_cs.o \
-											$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
-											$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
-											$(FTLA_LIB_DIR)/libftla.a \
-											$(FTLA_LIB_DIR)/helpersftla.a \
-											$(SCALAPACK_LIB_DIR)/libscalapack.a \
-											$(LAPACK_LIB_DIR)/librefblas.a \
-											$(LAPACK_LIB_DIR)/liblapack.a \
-											-L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+	$(MPICC) $(CFLAGS) -o $(BIN_DIR)/tester \
+		$(TST_DIR)/tester.c \
+		$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
+		$(TST_DIR)/ScaLAPACK/pdgetrf_cs.o \
+		$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
+		$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
+		$(FTLA_LIB_DIR)/libftla.a \
+		$(FTLA_LIB_DIR)/helpersftla.a \
+		$(SCALAPACK_LIB_DIR)/libscalapack.a \
+		$(LAPACK_LIB_DIR)/librefblas.a \
+		$(LAPACK_LIB_DIR)/liblapack.a \
+		-L$(TST_DIR)/ScaLAPACK \
+		$(PAR_MACHINEFLAGS)
 
 # cleanup
 #
