@@ -144,9 +144,9 @@ int main(int argc, char **argv)
     sds matrix_input_file_name;
     sds test_output_file_name;
 
-    char calc_nre;
-    char calc_cnd;
-    char cnd_readback;
+    char get_nre;
+    char set_cnd;
+    char get_cnd;
     int output_to_file;
     int input_from_file;
 
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 
     char* command;
 
-	int read_cnd = -99;
+	int cnd_readback;
 	double* A_ref;
 	double* x_ref;
 	double* b_ref;
@@ -176,24 +176,25 @@ int main(int argc, char **argv)
 		test_output_file_name   = NULL;
 		fp = NULL;
 
-		output_to_file = 0;			// no output to file
-		input_from_file = 0;		// no input from file
-		command="null";
-		n=8;
-		nrhs=1;
-		verbose=1;					// minimum output verbosity (0 = none)
-		repetitions=1;				// how many calls for each routine
-		sprocs=0;					// no fault tolerance enabled
-		failing_rank=2;				// process 2 will fail
-		failing_level_override=-1;
-		checkpoint_skip_interval=-1;// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
-		scalapack_nb=SCALAPACKNB;	// scalapack blocking factor, default defined in header
-		ime_nb=1;					// ime blocking factor
-		cnd=1;						// condition number for randomly generated matrices
-		cnd_readback=1;				// read back (1) cnd from generated matrix or not (0)
-		seed=1;						// seed for random generation
-		calc_nre=1;					// calc (1) normwise relative error or not (0)
-		calc_cnd=1;					// pre-conditioning (1) of the matrix  or not (0)
+		output_to_file			 = 0;		// no output to file
+		input_from_file			 = 0;		// no input from file
+		command					 = "null";
+		n						 = 8;
+		nrhs					 = 1;
+		verbose					 = 1;		// minimum output verbosity (0 = none)
+		repetitions				 = 1;		// how many calls for each routine
+		sprocs					 = 0;		// no fault tolerance enabled
+		failing_rank			 = 2;		// process 2 will fail
+		failing_level_override   = -1;		// failing level automatically set
+		checkpoint_skip_interval = -1;		// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
+		cnd						 = 1;		// condition number for randomly generated matrices
+		cnd_readback			 = -1;		// condition number read back from generated or file matrices (-1=value not read back)
+		set_cnd					 = 1;		// pre-conditioning (1) of the matrix  or not (0)
+		get_cnd					 = 1;		// read back (1) cnd from generated matrix or not (0)
+		seed					 = 1;		// seed for random generation
+		get_nre					 = 1;		// calc (1) normwise relative error or not (0)
+		scalapack_nb			 = SCALAPACKNB;	// scalapack blocking factor, default defined in header
+		ime_nb					 = 1;			// ime blocking factor
 
 		/*
 		 * list of testable routines (see tester_labels.h)
@@ -326,20 +327,20 @@ int main(int argc, char **argv)
 				i++;
 			}
 			if( strcmp( argv[i], "-no-cnd-readback" ) == 0 ) {
-				cnd_readback = 0;
-				i++;
+				get_cnd = 0;
+				//i++; // no parameter value, no inc
 			}
-			if( strcmp( argv[i], "-no-cnd" ) == 0 ) {
-				calc_cnd = 0;
-				i++;
+			if( strcmp( argv[i], "-no-cnd-set" ) == 0 ) {
+				set_cnd = 0;
+				//i++; // no parameter value, no inc
 			}
 			if( strcmp( argv[i], "-seed" ) == 0 ) {
 				seed = atoi(argv[i+1]);
 				i++;
 			}
-			if( strcmp( argv[i], "-no-nre" ) == 0 ) {
-				calc_nre = 0;
-				i++;
+			if( strcmp( argv[i], "-no-nre-readback" ) == 0 ) {
+				get_nre = 0;
+				//i++; // no parameter value, no inc
 			}
 			if( strcmp( argv[i], "-mat-gen" ) == 0 ) {
 				matrix_gen_type = sdscpy(matrix_gen_type,argv[i+1]);
@@ -493,16 +494,16 @@ int main(int argc, char **argv)
 		};
 
 		test_input routine_input = {
-				n,
-				NULL,
-				NULL,
-				NULL,
-				nrhs,
-				cprocs,
-				sprocs,
-				ime_nb,
-				scalapack_nb,
-				calc_nre
+			n,
+			NULL,
+			NULL,
+			NULL,
+			nrhs,
+			cprocs,
+			sprocs,
+			ime_nb,
+			scalapack_nb,
+			get_nre
 		};
 
 	/*
@@ -517,7 +518,7 @@ int main(int argc, char **argv)
 		printf("     MPI ranks:                     %d\n",mpi_procs);
 		printf("     BLACS grid:                    %dx%d\n",blacs_nprow,blacs_npcol);
 		printf("     Calculate n.r.e.:              ");
-			if (calc_nre)	{printf("yes\n");}
+			if (get_nre)	{printf("yes\n");}
 			else			{printf("no\n");}
 		printf("     IMe iterations:                %d\n",rows);
 		printf("     IMe blocking factor:           %d\n",ime_nb);
@@ -647,7 +648,7 @@ int main(int argc, char **argv)
 					{
 						printf("     Loading reference matrices from binary files..\n");
 
-						if (!cnd_readback)
+						if (!get_cnd)
 						{
 							printf("WRN: Condition number will not read back from loaded matrix\n");
 						}
@@ -677,7 +678,7 @@ int main(int argc, char **argv)
 					sdsfree(matrix_input_file_name);
 					if (verbose > 0) printf("     ..A\n");
 				}
-				if ( cnd_readback )
+				if ( get_cnd )
 				{
 					if (pow(floor(sqrt(cprocs)),2) != cprocs)
 					{
@@ -691,7 +692,7 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						read_cnd = round( pCheckSystemMatrices1D(n, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+						cnd_readback = round( pCheckSystemMatrices1D(n, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 					}
 				}
 			}
@@ -708,16 +709,16 @@ int main(int argc, char **argv)
 					if (mpi_rank==0)
 					{
 						printf("     Generating random input matrices in parallel with ScaLAPACK\n");
-						if (!cnd_readback)
+						if (!get_cnd)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
 						}
-						if (!calc_cnd)
+						if (!set_cnd)
 						{
 							printf("WRN: Matrix will not be pre-conditioned\n");
 						}
 					}
-					if ( cnd_readback && (pow(floor(sqrt(cprocs)),2) != cprocs) )
+					if ( get_cnd && (pow(floor(sqrt(cprocs)),2) != cprocs) )
 					{
 						if (mpi_rank==0)
 						{
@@ -727,18 +728,18 @@ int main(int argc, char **argv)
 						MPI_Finalize();
 						return 1;
 					}
-					read_cnd = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, calc_cnd, cnd_readback, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+					cnd_readback = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 				}
 				else if (strcmp(matrix_gen_type, "seq" ) == 0)
 				{
 					if (mpi_rank==0)
 					{
 						printf("     Generating random input matrices sequentially with LAPACK\n");
-						if (!cnd_readback)
+						if (!get_cnd)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
 						}
-						read_cnd = round( GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, cnd_readback) );
+						cnd_readback = round( GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, get_cnd) );
 					}
 				}
 				else
@@ -784,10 +785,10 @@ int main(int argc, char **argv)
 		printf("     Matrix random generation seed: %d\n",seed);
 		printf("     Matrix size:                   %dx%d\n",rows,cols);
 		printf("     Matrix condition number set:   %d\n",cnd);
-		printf("     Matrix condition number got:   %d\n",read_cnd);
-		if (read_cnd!=cnd)
+		printf("     Matrix condition number got:   %d\n",cnd_readback);
+		if (cnd_readback!=cnd)
 		{
-			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,read_cnd);
+			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,cnd_readback);
 		}
 	}
 
@@ -815,9 +816,9 @@ int main(int argc, char **argv)
 			printf("  -nrhs <integer number>     : r.h.s. columns\n" );
 			printf("  -seed <integer number>     : seed of the random generation\n" );
 			printf("  -cnd  <integer number>     : condition number of the input matrix\n" );
-			printf("  -no-cnd                    : disable matrix pre-conditioning\n" );
+			printf("  -no-cnd-set                : disable matrix pre-conditioning\n" );
 			printf("  -no-cnd-readback           : disable condition number checking after generation\n" );
-			printf("  -no-nre                    : disable normwise relative error checking\n" );
+			printf("  -no-nre-readback           : disable normwise relative error checking\n" );
 			printf("  -mat-gen <string>          : type of the random generation [par|ser] (parallel or sequential)\n" );
 			printf("  -r    <integer number>     : run repetitions\n" );
 			printf("  -o    <file path>          : output to CSV file\n" );
@@ -977,7 +978,7 @@ int main(int argc, char **argv)
 				fpinfo("checkpoint skip interval",checkpoint_skip_interval);
 				fpinfo("seed",seed);
 				fpinfo("condition number set",cnd);
-				fpinfo("condition number got",read_cnd);
+				fpinfo("condition number got",cnd_readback);
 				fpinfo("matrix size",n);
 				fpinfo("scalapack blocking factor",scalapack_nb);
 				fpinfo("ime blocking factor",ime_nb);
@@ -1032,9 +1033,9 @@ int main(int argc, char **argv)
 						if (verbose>0)
 						{
 							printf("%-30s    Call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
-																							versionrun[i][rep].total_time,	\
-																							versionrun[i][rep].core_time,	\
-																							versionrun[i][rep].norm_rel_err	\
+																								versionrun[i][rep].total_time,	\
+																								versionrun[i][rep].core_time,	\
+																								versionrun[i][rep].norm_rel_err	\
 							);
 						}
 					}

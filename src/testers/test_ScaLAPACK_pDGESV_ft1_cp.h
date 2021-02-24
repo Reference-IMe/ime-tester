@@ -24,6 +24,10 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 	double* bb;
 	double* xx_ref;
 
+	int rank_calc_procs;
+
+	rank_calc_procs=sqrt(input.calc_procs);
+
 	if (check)
 	{
 		if (env.mpi_rank==0)
@@ -34,21 +38,28 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 			}
 			if (input.spare_procs > 0)
 			{
-				if (IS_MULT(input.n, input.calc_procs))
+				if (IS_SQUARE(input.calc_procs))
 				{
-					if (IS_MULT(input.n / input.calc_procs, input.scalapack_bf))
+					if (IS_MULT(input.n, rank_calc_procs))
 					{
-						DISPLAY_MSG(label,"OK");
-						output.exit_code = 0;
+						if (IS_MULT(input.n / rank_calc_procs, input.scalapack_bf))
+						{
+							DISPLAY_MSG(label,"OK");
+							output.exit_code = 0;
+						}
+						else
+						{
+							DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
+						}
 					}
 					else
 					{
-						DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
+						DISPLAY_ERR(label,"the matrix size has to be a multiple of the calc. processes per rank");
 					}
 				}
 				else
 				{
-					DISPLAY_ERR(label,"the matrix size has to be a multiple of the calc. processes");
+					DISPLAY_ERR(label,"the number of the calc. processes must be square");
 				}
 			}
 			else
