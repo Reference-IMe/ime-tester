@@ -49,6 +49,7 @@
 
 #define IME_PB_SV_CO						"IMe-PB-SV-CO"
 #define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
+#define IME_PB_SV_CO_BFX					"IMe-PB-SV-CO-bfx"
 
 #define IME_BLACS_SV_CO_1					"IMe-blacs-SV-CO-1"
 #define IME_BLACS_SV_CO_2					"IMe-blacs-SV-CO-2"

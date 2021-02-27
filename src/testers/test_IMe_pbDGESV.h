@@ -6,6 +6,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "tester_structures.h"
 
+//#include "../pbDGESV_CO.bfx.h"
 #include "../pbDGESV_CO.bf1.h"
 #include "../pbDGESV_CO.h"
 
@@ -114,6 +115,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 			}
 			     if ( strcmp( variant, "PB-CO"    ) == 0) output = pbDGESV_CO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+//			else if ( strcmp( variant, "PB-CO-bfx") == 0) output = pbDGESV_CO_bfx (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");

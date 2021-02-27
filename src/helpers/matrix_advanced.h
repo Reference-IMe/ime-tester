@@ -686,7 +686,7 @@ double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 	// errors clearly explained: https://www.cs.cornell.edu/~bindel/class/cs6210-f16/lec/2016-09-02.pdf
 	// in LAPACK: https://www.netlib.org/lapack/lug/node78.html
 	int i,j;
-	double nre;
+	double nre = 0;	// used also to signal if input matrix contains NaN (0=no, -1=yes)
 	double* diffmat;
 			diffmat = AllocateMatrix1D(rows, cols);
 	double* work;
@@ -696,11 +696,22 @@ double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 	{
 		for (j=0;j<cols;j++)
 		{
-			diffmat[i*cols+j] = mat[i*cols+j] - refmat[i*cols+j];
+			if (isnan(mat[i*cols+j]))
+			{
+				nre=-1; // err. cannot be calculated
+				i=rows; // prepares exit from loop i
+				break;  // exits from loop j
+			}
+			else
+			{
+				diffmat[i*cols+j] = mat[i*cols+j] - refmat[i*cols+j];
+			}
 		}
 	}
-	nre = dlange_(&norm, &rows, &cols, diffmat, &rows, work) / dlange_(&norm, &rows, &cols, refmat, &rows, work);
-
+	if (nre==0) // input matrix does not contain NaN, then calc. err.
+	{
+		nre = dlange_(&norm, &rows, &cols, diffmat, &rows, work) / dlange_(&norm, &rows, &cols, refmat, &rows, work);
+	}
 
 	DeallocateMatrix1D(diffmat);
 	DeallocateVector(work);

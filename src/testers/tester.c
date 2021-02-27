@@ -239,6 +239,7 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALLEST;
 
 		versionname_all[versions_all++] =  IME_PB_SV_CO_BF1;
+//		versionname_all[versions_all++] =  IME_PB_SV_CO_BFX;
 
 		versionname_all[versions_all++] =  IME_BLACS_SV_CO_1;
 		versionname_all[versions_all++] =  IME_BLACS_SV_CO_2;
