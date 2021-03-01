@@ -239,6 +239,7 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALLEST;
 
 		versionname_all[versions_all++] =  IME_PB_SV_CO_BF1;
+		versionname_all[versions_all++] =  IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
 //		versionname_all[versions_all++] =  IME_PB_SV_CO_BFX;
 
 		versionname_all[versions_all++] =  IME_BLACS_SV_CO_1;
@@ -247,8 +248,8 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
 		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1_CP;
-
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CS;
+		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_X_CP;
 
 		versionname_all[versions_all++] = SPK_LU;
 		versionname_all[versions_all++] = SPK_LU_FAULT_0_TOLERANT_1;
@@ -457,25 +458,46 @@ int main(int argc, char **argv)
 		Cblacs_get( ic, i0, &blacs_ctxt_root );
 		Cblacs_gridinit( &blacs_ctxt_root, &order, i1, i1 );
 
-		int blacs_ctxt_cp;
+		int* blacs_ctxt_cp;
 		int blacs_row;
 		int blacs_col;
+		int map_cp[1];
 
-		if (sprocs>0) // fault tolerance enabled
+		if (sprocs>0)
 		{
-			// context for the checkpointing node
-			Cblacs_get( ic, i0, &blacs_ctxt_cp );
-			int map_cp[1];
-			map_cp[0]=cprocs;
-			Cblacs_gridmap( &blacs_ctxt_cp, map_cp, i1, i1, i1);
+			blacs_ctxt_cp=malloc(sprocs*sizeof(int));
+			for (i=0; i<sprocs; i++) // fault tolerance enabled
+			{
+				// context for the checkpointing node
+				Cblacs_get( ic, i0, &blacs_ctxt_cp[i] );
+				map_cp[0]=cprocs+i;
+				Cblacs_gridmap( &blacs_ctxt_cp[i], map_cp, i1, i1, i1);
+			}
 		}
 		else
 		{
-			blacs_ctxt_cp = -1;
+			//blacs_ctxt_cp = -1;
+			blacs_ctxt_cp = NULL;
 		}
 
 		// get coords in general grid context
 		Cblacs_gridinfo( blacs_ctxt, &blacs_nprow, &blacs_npcol, &blacs_row, &blacs_col );
+
+		/*
+		 * check grid ranking
+		 */
+
+			for (i=0; i<mpi_procs; i++)
+			{
+				MPI_Barrier(MPI_COMM_WORLD);
+				if (mpi_rank==i)
+				{
+					printf("%d@(%d,%d)\n",i,blacs_row,blacs_col);
+					fflush(stdout);
+				}
+				MPI_Barrier(MPI_COMM_WORLD);
+			}
+
 
 	/*
 	 * ****************************

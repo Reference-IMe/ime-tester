@@ -69,7 +69,7 @@ test_result test_ScaLAPACK_pDGEQRF_ft1(const char check, const char* label, int 
 		output = ScaLAPACK_pDGEQRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs,
 										failing_level, checkpoint_freq,
 										env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
-										env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare);
+										env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare[0]);
 
 		if (env.mpi_rank==0)
 		{

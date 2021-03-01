@@ -22,7 +22,7 @@ typedef struct parallel_env
 	int blacs_ctxt_onerow;
 	int blacs_ctxt_grid;
 	int blacs_ctxt_root;
-	int blacs_ctxt_spare;
+	int* blacs_ctxt_spare;
 } parallel_env;
 
 typedef struct test_input
