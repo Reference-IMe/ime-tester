@@ -4,6 +4,9 @@
      $                      IPIV, IPIVCP, MIPIV,
      $                      CPF, JFAULT, ICTXTALL, CALCPROCS, INFO)
 *
+*       Modified to perform X>1 checkpoints to different X processes
+*           (restore not working)
+*
 *  -- ScaLAPACK routine (version 1.7) --
 *     University of Tennessee, Knoxville, Oak Ridge National Laboratory,
 *     and University of California, Berkeley.
@@ -153,6 +156,8 @@
      $                   MN, MYCOL, MYROW, NPCOL, NPROW, P,
      $                   NPROCS, MYPNUM, JCP, FAULTOCCURRED,
      $                   LASTCP, IERR, CPAFTERFAULT, RECOVERABLE
+     $                   COMM_SPARE, COMM_CALC_FIRST_SPARE,
+     $                   GROUPING, FIRST_SPARE
 *     ..
 *     .. Local Arrays ..
       INTEGER            IDUM1( 1 ), IDUM2( 1 )
@@ -173,8 +178,29 @@
 *     .. my Executable Statements ..
 *
       INCLUDE "mpif.h"
-      CALL MPI_COMM_RANK (MPI_COMM_WORLD, MYPNUM, IERR)
-      CALL BLACS_PINFO( MYPNUM, NPROCS )
+      CALL MPI_COMM_RANK ( MPI_COMM_WORLD, MYPNUM, IERR )
+      CALL BLACS_PINFO ( MYPNUM, NPROCS )
+
+*     mpi rank of the first spare process
+      FIRST_SPARE=CALCPROCS
+
+*     make proper communicators:
+*       all calc procs with the first spare
+      IF (MYPNUM.LE.FIRST_SPARE) THEN
+        GROUPING=1
+      ELSE
+        GROUPING=0
+      END IF
+      CALL MPI_COMM_SPLIT ( MPI_COMM_WORLD, GROUPING, MYPNUM,
+     $                       COMM_CALC_FIRST_SPARE, IERR )
+*       only the spare procs
+      IF (MYPNUM.GE.FIRST_SPARE) THEN
+        GROUPING=1
+      ELSE
+        GROUPING=0
+      END IF
+      CALL MPI_COMM_SPLIT ( MPI_COMM_WORLD, GROUPING, MYPNUM,
+     $                       COMM_SPARE, IERR )
 *
 *     init counters for checkpointing
       IF (CPF.LT.0) THEN
@@ -191,7 +217,7 @@
 *      CPAFTERFAULT=1
       CPAFTERFAULT=-1
 *
-      IF (MYPNUM.GE.CALCPROCS) THEN
+      IF (MYPNUM.GE.FIRST_SPARE) THEN
 *       PRINT*, "spare procs, doing"
         MN = MIN( M, N )
         IN = MIN( ICEIL( IA, DESCA( MB_ ) )*DESCA( MB_ ), IA+M-1 )
@@ -205,12 +231,14 @@
              IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
 *              do checkpointing
+*               iterate on spare procs (one checkpoint per spare proc)
                P=1
   202          IF (MYPNUM.EQ.(P+CALCPROCS-1)) THEN
                  PRINT '(A16,I0.5,A9,I0.5,A6,I0.5,A21)',
      $                "## pgetrf_cpx: (", MYPNUM, ") @ iter ",
      $                J," with ", FAULTOCCURRED," fault(s): checkpoint"
                END IF
+*               checkpoint matrix
                CALL PDGEMR2D(M, N,
      $                  A, IA, JA, DESCA,
      $                  ACP, IACP, JACP, DESCACP(:,P),
@@ -219,8 +247,19 @@
                 IF (P.LE.(NPROCS-CALCPROCS)) THEN
                   GO TO 202
                 END IF
-*               CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
-*     $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
+*               checkpoint work space
+                IF (MYPNUM.EQ.FIRST_SPARE) THEN
+*                 checkpoint on first spare proc
+                  CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
+     $                  MIPIV, MPI_INTEGER, FIRST_SPARE,
+     $                  COMM_CALC_FIRST_SPARE, IERR)
+*                 and broadcasts to the other spare procs
+                  CALL MPI_BCAST(IPIVCP, MIPIV*CALCPROCS, MPI_INTEGER,
+     $                  FIRST_SPARE-CALCPROCS, COMM_SPARE, IERROR)
+                ELSE
+                  CALL MPI_BCAST(IPIVCP, MIPIV*CALCPROCS, MPI_INTEGER,
+     $                  FIRST_SPARE-CALCPROCS, COMM_SPARE, IERROR)
+                END IF
 *              save checkpoint instant
                LASTCP=J
 *              reset counter for checkpointing
@@ -401,7 +440,9 @@
              IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
 *              do checkpointing
+*               iterate on spare procs (one checkpoint per spare proc)
                P=1
+*               checkpoint matrix
   200          CALL PDGEMR2D(M, N,
      $                  A, IA, JA, DESCA,
      $                  ACP, IACP, JACP, DESCACP(:,P),
@@ -410,8 +451,10 @@
                 IF (P.LE.(NPROCS-CALCPROCS)) THEN
                   GO TO 200
                   END IF
-*               CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
-*     $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
+*               checkpoint work space (to first spare, only)
+               CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
+     $              MIPIV, MPI_INTEGER, FIRST_SPARE,
+     $              COMM_CALC_FIRST_SPARE, IERR)
 *              save checkpoint instant
                LASTCP=J
 *              reset counter for checkpointing
