@@ -486,7 +486,7 @@ int main(int argc, char **argv)
 		/*
 		 * check grid ranking
 		 */
-
+			/*
 			for (i=0; i<mpi_procs; i++)
 			{
 				MPI_Barrier(MPI_COMM_WORLD);
@@ -497,7 +497,7 @@ int main(int argc, char **argv)
 				}
 				MPI_Barrier(MPI_COMM_WORLD);
 			}
-
+			*/
 
 	/*
 	 * ****************************
