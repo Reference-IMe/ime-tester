@@ -6,12 +6,10 @@
 #include "../helpers/matrix_advanced.h"
 #include "tester_structures.h"
 
-//#include "../pbDGESV_CO.bfx.h"
-//#include "../pbDGESV_CO.bf1.h"
-//#include "../pbDGESV_CO.h"
+#include "../pbDGESV_CO.dev.h"
 
 
-test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
+test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, test_input input, parallel_env env, MPI_Comm comm)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -24,8 +22,6 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	double** bb;
 	double** xx;
 	double*  xx_ref;
-
-	MPI_Comm comm_calc;
 
 	int i_calc; // participating in ime calc = 1, checksumming = 0
 
@@ -68,15 +64,13 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	}
 	else
 	{
-		if (rank >= input.calc_procs)
+		if (env.mpi_rank >= input.calc_procs)
 		{
 			i_calc=0;
-			MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, MPI_UNDEFINED, &comm_calc); // checksumming procs don't belong to calc communicator
 		}
 		else
 		{
 			i_calc=1;
-			MPI_Comm_split(MPI_COMM_WORLD, i_calc, rank, &comm_calc); // calc procs belong to calc communicator
 		}
 
 		if (i_calc)
@@ -84,7 +78,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
 			bb=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
 
-			if (rank==0)
+			if (env.mpi_rank==0)
 			{
 				xx_ref=AllocateMatrix1D(input.n, input.nrhs);
 				A2=AllocateMatrix2D(input.n, input.n, CONTIGUOUS);
@@ -113,46 +107,11 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 				A2=AllocateMatrix2D(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
 				xx_ref=NULL;
 			}
-			if (1==0) {} //( strcmp( variant, "PB-CO-bf1-ftx") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			else
-			{
-				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
-			}
-
-			if (rank==0)
-			{
-				// check exit condition
-				if (output.exit_code!=0)
-				{
-					printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
-				}
-				// calc error
-				if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(&xx[0][0], xx_ref, input.n, input.nrhs);
-
-				if (verbosity>1)
-				{
-					printf("\nThe %s solution is:\n",label);
-					PrintMatrix2D(xx, input.n, input.nrhs);
-					printf("\n with exit code     %d\n",output.exit_code);
-					printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
-				}
-			}
-			//cleanup
-			if (rank==0)
-			{
-				DeallocateMatrix2D(A2, input.n, CONTIGUOUS);
-			}
-			else
-			{
-				DeallocateMatrix2D(A2, 1, CONTIGUOUS);
-			}
-			DeallocateMatrix1D(xx_ref);
-			DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
-			DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
-
 		}
 		else
 		{
+			A2=AllocateMatrix2D(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
+			xx_ref=NULL;
 			xx=NULL;
 			bb=NULL;
 
@@ -160,13 +119,48 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			rank_result.core_time=0;
 		}
 
-		if (input.spare_procs>0)
+
+		if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, comm);
+		else
 		{
-			if (comm_calc != MPI_COMM_NULL)
+			DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
+		}
+
+		if (env.mpi_rank==0)
+		{
+			// check exit condition
+			if (output.exit_code!=0)
 			{
-				MPI_Comm_free(&comm_calc);
+				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
+			}
+			// calc error
+			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(&xx[0][0], xx_ref, input.n, input.nrhs);
+
+			if (verbosity>1)
+			{
+				printf("\nThe %s solution is:\n",label);
+				PrintMatrix2D(xx, input.n, input.nrhs);
+				printf("\n with exit code     %d\n",output.exit_code);
+				printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
 			}
 		}
+		//cleanup
+		if (env.mpi_rank==0)
+		{
+			DeallocateMatrix2D(A2, input.n, CONTIGUOUS);
+			DeallocateMatrix1D(xx_ref);
+		}
+		else
+		{
+			DeallocateMatrix2D(A2, 1, CONTIGUOUS);
+		}
+		if (i_calc)
+		{
+			DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
+			DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
+		}
+
+
 	}
 	TEST_END(output, rank_result, team_result);
 }

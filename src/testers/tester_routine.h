@@ -86,7 +86,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 
 	else if	( strcmp( routine_name, IME_PB_SV_CO )						== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO", verbosity, routine_input, rank);
 	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1 )					== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO-bf1", verbosity, routine_input, rank);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_input, rank);
+	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_input, routine_env, MPI_COMM_WORLD);
 //	else if	( strcmp( routine_name, IME_PB_SV_CO_BFX )					== 0 )	info = test_IMe_pbDGESV(check, routine_name, "PB-CO-bfx", verbosity, routine_input, rank);
 
 	else if	( strcmp( routine_name, IME_BLACS_SV_CO_1 )					== 0 )	info = test_IMe_blacsDGESV(check, routine_name, "BLACS-CO-1", verbosity, routine_env, routine_input);

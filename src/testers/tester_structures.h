@@ -8,6 +8,7 @@
  */
 
 #include <time.h>
+#include <mpi.h>
 
 #ifndef __TESTER_STRUCTURES_H__
 #define __TESTER_STRUCTURES_H__
@@ -15,6 +16,7 @@
 typedef struct parallel_env
 {
 	int mpi_rank;
+	MPI_Comm mpi_comm;
 	int blacs_nprow;
 	int blacs_npcol;
 	int blacs_row;

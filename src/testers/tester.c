@@ -506,6 +506,7 @@ int main(int argc, char **argv)
 	 */
 		parallel_env routine_env = {
 			mpi_rank,
+			MPI_COMM_WORLD,
 			blacs_nprow,
 			blacs_npcol,
 			blacs_row,
