@@ -1,15 +1,15 @@
 #include <mpi.h>
 #include <time.h>
 #include <unistd.h>
+#include "tester_structures.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
-#include "tester_structures.h"
 
-#include "../pbDGESV_CO.dev.h"
+#include "../pbDGESV_CO.bf1.ftx.h"
 
 
-test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, test_input input, parallel_env env, MPI_Comm comm)
+test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -22,8 +22,6 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	double** bb;
 	double** xx;
 	double*  xx_ref;
-
-	int i_calc; // participating in ime calc = 1, checksumming = 0
 
 	if (check)
 	{
@@ -64,16 +62,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	}
 	else
 	{
-		if (env.mpi_rank >= input.calc_procs)
-		{
-			i_calc=0;
-		}
-		else
-		{
-			i_calc=1;
-		}
-
-		if (i_calc)
+		if (env.mpi_rank < input.calc_procs)
 		{
 			xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
 			bb=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
@@ -114,13 +103,10 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			xx_ref=NULL;
 			xx=NULL;
 			bb=NULL;
-
-			rank_result.total_time=0;
-			rank_result.core_time=0;
 		}
 
 
-		if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, comm);
+		if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env);
 		else
 		{
 			DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
@@ -144,23 +130,22 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 				printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
 			}
 		}
+
 		//cleanup
-		if (env.mpi_rank==0)
+		if (env.mpi_rank < input.calc_procs)
 		{
-			DeallocateMatrix2D(A2, input.n, CONTIGUOUS);
-			DeallocateMatrix1D(xx_ref);
-		}
-		else
-		{
-			DeallocateMatrix2D(A2, 1, CONTIGUOUS);
-		}
-		if (i_calc)
-		{
+			if (env.mpi_rank==0)
+			{
+				DeallocateMatrix2D(A2, input.n, CONTIGUOUS);
+				DeallocateMatrix1D(xx_ref);
+			}
+			else
+			{
+				DeallocateMatrix2D(A2, 1, CONTIGUOUS);
+			}
 			DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
 			DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
 		}
-
-
 	}
 	TEST_END(output, rank_result, team_result);
 }

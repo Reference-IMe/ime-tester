@@ -231,6 +231,10 @@ test_output ScaLAPACK_pDGESV_ftx_cp(int n, double* A_global, int m, double* B_gl
 		// get matrix back
 		pdgemr2d_(&m, &n, Bt, &i1, &i1, descBt, B_global, &i1, &i1, descB_global, &context);
 	}
+	else
+	{
+		result.core_end_time = time(NULL);
+	}
 
 	// cleanup
 	NULLFREE(A);
