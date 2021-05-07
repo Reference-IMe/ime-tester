@@ -7,9 +7,9 @@
 #include "../helpers/matrix_advanced.h"
 
 #include "../pbDGESV_CO.bf1.ftx.h"
+#include "../pbDGESV_CO.dev.h"
 
-
-test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input)
+test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_protection, int fault_number, int failing_rank, int failing_level)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -23,45 +23,69 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	double** xx;
 	double*  xx_ref;
 
+	int sqrt_calc_procs;
+	sqrt_calc_procs=sqrt(input.calc_procs);
+
 	if (check)
 	{
-		//TODO: ckecking rules
-		/*
-		if (rank==0)
+		if (env.mpi_rank==0)
 		{
+			if (fault_protection*sqrt_calc_procs < input.spare_procs)
+			{
+				DISPLAY_ERR(label,"not enough spare processes for the requested fault tolerance level");
+			}
 			if (input.ime_bf < 1)
 			{
 				DISPLAY_ERR(label,"the blocking factor has to be greater than 0");
 			}
 			else
 			{
-				if (IS_MULT(input.n, input.calc_procs))
+				if (IS_SQUARE(input.calc_procs))
 				{
-					if (input.n / input.calc_procs > 0)
+					if (IS_MULT(input.n, sqrt_calc_procs))
 					{
-						if (input.spare_procs > 0)
+						if (input.n / sqrt_calc_procs > 0)
 						{
-							DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
+							if (failing_rank + fault_protection >= sqrt_calc_procs)
+							{
+								DISPLAY_WRN(label,"has first faulty rank too high: lowering..");
+								failing_rank=sqrt_calc_procs-fault_protection;
+							}
+							if (input.spare_procs > 0)
+							{
+								printf("     Faulty ranks:");
+								for (i=failing_rank; i<failing_rank+fault_protection; i++)
+								{
+									printf(" %d",i);
+								}
+								printf("\n");
+							}
+							if (IS_MULT(input.n / sqrt_calc_procs, input.ime_bf))
+							{
+								DISPLAY_MSG(label,"OK");
+								output.exit_code = 0;
+							}
+							else
+							{
+								DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
+							}
 						}
-						if (IS_MULT(input.n / input.calc_procs, input.ime_bf))
-						{
-							DISPLAY_MSG(label,"OK");
-							output.exit_code = 0;
-						}
-						else
-						{
-							DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
-						}
+						else DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be greater than 0");
 					}
-					else DISPLAY_ERR(label,"the number of columns per calc. process has to be greater than 0");
+					else DISPLAY_ERR(label,"the number of columns (rows) has to be a multiple of the square root of calc. processes");
 				}
-				else DISPLAY_ERR(label,"the number of columns has to be a multiple of the calc. processes");
+				else DISPLAY_ERR(label,"the number of calc. process has to be square");
 			}
 		}
-		*/ output.exit_code = 0;
 	}
 	else
 	{
+
+		if (failing_rank + fault_protection >= sqrt_calc_procs)
+		{
+			failing_rank=sqrt_calc_procs-fault_protection;
+		}
+
 		if (env.mpi_rank < input.calc_procs)
 		{
 			xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
@@ -105,8 +129,8 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			bb=NULL;
 		}
 
-
-		if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env);
+			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, failing_rank, failing_level);
+		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env);
 		else
 		{
 			DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");

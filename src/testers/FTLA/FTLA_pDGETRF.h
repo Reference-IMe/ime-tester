@@ -5,7 +5,7 @@
  *      Author: marcello
  */
 
-// code modified from ftdtr_main.c (create by Daniela in FTLA)
+// code modified from ftdtr_main.c (created by Daniela in FTLA)
 
 #include <mpi.h>
 #include <stdio.h>

@@ -12,7 +12,7 @@
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ft1_cp.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, int verbosity, parallel_env env, test_input input, int failing_level, int checkpoint_freq)
+test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, int verbosity, parallel_env env, test_input input, int fault_protection, int fault_number, int failing_level, int checkpoint_freq)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -32,39 +32,50 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 	{
 		if (env.mpi_rank==0)
 		{
-			if (input.scalapack_bf < 64)
+			if (fault_number > fault_protection)
 			{
-				DISPLAY_WRN(label,"blocking factor < 64");
+				DISPLAY_WRN(label,"requested fault occurrences greater than protection, ignoring");
 			}
-			if (input.spare_procs > 0)
+			if (fault_protection > 1)
 			{
-				if (IS_SQUARE(input.calc_procs))
+				DISPLAY_WRN(label,"requested fault protection too high (single fault routine)");
+			}
+			else
+			{
+				if (input.scalapack_bf < 64)
 				{
-					if (IS_MULT(input.n, rank_calc_procs))
+					DISPLAY_WRN(label,"blocking factor < 64");
+				}
+				if (input.spare_procs > 0)
+				{
+					if (IS_SQUARE(input.calc_procs))
 					{
-						if (IS_MULT(input.n / rank_calc_procs, input.scalapack_bf))
+						if (IS_MULT(input.n, rank_calc_procs))
 						{
-							DISPLAY_MSG(label,"OK");
-							output.exit_code = 0;
+							if (IS_MULT(input.n / rank_calc_procs, input.scalapack_bf))
+							{
+								DISPLAY_MSG(label,"OK");
+								output.exit_code = 0;
+							}
+							else
+							{
+								DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
+							}
 						}
 						else
 						{
-							DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
+							DISPLAY_ERR(label,"the matrix size has to be a multiple of the calc. processes per rank");
 						}
 					}
 					else
 					{
-						DISPLAY_ERR(label,"the matrix size has to be a multiple of the calc. processes per rank");
+						DISPLAY_ERR(label,"the number of the calc. processes must be square");
 					}
 				}
 				else
 				{
-					DISPLAY_ERR(label,"the number of the calc. processes must be square");
+					DISPLAY_ERR(label,"FT disabled ('-ft 0')");
 				}
-			}
-			else
-			{
-				DISPLAY_ERR(label,"FT disabled ('-ft 0')");
 			}
 		}
 	}

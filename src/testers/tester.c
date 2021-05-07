@@ -128,10 +128,12 @@ int main(int argc, char **argv)
     int scalapack_nb;		// scalapack blocking factor
     int ime_nb;				// ime blocking factor
 
-    int sprocs;				// number of processes to allocate for summing (0 = no fault tolerance)
-    int cprocs;				// number of processes for real IMe calc
+    int spare_procs;				// number of processes to allocate for summing (0 = no fault tolerance)
+    int calc_procs;				// number of processes for real IMe calc
     int repetitions;
     char verbose;
+	int fault_number;
+	int fault_protection;
     int failing_rank;
     int failing_level;
     int failing_level_override;
@@ -183,7 +185,9 @@ int main(int argc, char **argv)
 		nrhs					 = 1;
 		verbose					 = 1;		// minimum output verbosity (0 = none)
 		repetitions				 = 1;		// how many calls for each routine
-		sprocs					 = 0;		// no fault tolerance enabled
+		spare_procs					 = 0;		// no fault tolerance enabled
+		fault_number			 = 0;
+		fault_protection		 = 0;
 		failing_rank			 = 2;		// process 2 will fail
 		failing_level_override   = -1;		// failing level automatically set
 		checkpoint_skip_interval = -1;		// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
@@ -205,45 +209,51 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy";
 
-		versionname_all[versions_all++] =  IME_PV_SV_WO;
-		versionname_all[versions_all++] =  IME_PV_SV_CO;
-		versionname_all[versions_all++] =  IME_PB_SV_CO;
+		versionname_all[versions_all++] = IME_DEV;
+		// default version removed
 
-		versionname_all[versions_all++] =  IME_PV_SV_WO_OAE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_OA;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_OGE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_OG;
+		/*
+		 * obsolete versions, removed
+		 */
+		/*
+		versionname_all[versions_all++] = IME_PV_SV_WO;
+		versionname_all[versions_all++] = IME_PV_SV_CO;
 
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U1AE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U1A;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U1GE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U1G;
+		versionname_all[versions_all++] = IME_PV_SV_WO_OAE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_OA;
+		versionname_all[versions_all++] = IME_PV_SV_WO_OGE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_OG;
 
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U2AE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U2A;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U2GE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U2G;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U1AE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U1A;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U1GE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U1G;
 
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U3AE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U3A;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U3GE;
-		versionname_all[versions_all++] =  IME_PV_SV_WO_U3G;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U2AE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U2A;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U2GE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U2G;
 
-		versionname_all[versions_all++] =  IME_PV_SV_ICO_G;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_G_IND;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_G_2PASS;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_G_SMALLER;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_G_SMALLEST;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALL;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALLER;
-		versionname_all[versions_all++] =  IME_PV_SV_CO_A_SMALLEST;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U3AE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U3A;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U3GE;
+		versionname_all[versions_all++] = IME_PV_SV_WO_U3G;
 
-		versionname_all[versions_all++] =  IME_PB_SV_CO_BF1;
-		versionname_all[versions_all++] =  IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
-//		versionname_all[versions_all++] =  IME_PB_SV_CO_BFX;
+		versionname_all[versions_all++] = IME_PV_SV_ICO_G;
+		versionname_all[versions_all++] = IME_PV_SV_CO_G_IND;
+		versionname_all[versions_all++] = IME_PV_SV_CO_G_2PASS;
+		versionname_all[versions_all++] = IME_PV_SV_CO_G_SMALLER;
+		versionname_all[versions_all++] = IME_PV_SV_CO_G_SMALLEST;
+		versionname_all[versions_all++] = IME_PV_SV_CO_A_SMALL;
+		versionname_all[versions_all++] = IME_PV_SV_CO_A_SMALLER;
+		versionname_all[versions_all++] = IME_PV_SV_CO_A_SMALLEST;
+		*/
 
-		versionname_all[versions_all++] =  IME_BLACS_SV_CO_1;
-		versionname_all[versions_all++] =  IME_BLACS_SV_CO_2;
+		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
+		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
+
+		versionname_all[versions_all++] = IME_BLACS_SV_CO_1;
+		versionname_all[versions_all++] = IME_BLACS_SV_CO_2;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
@@ -289,10 +299,6 @@ int main(int argc, char **argv)
 				repetitions = atoi(argv[i+1]);
 				i++;
 			}
-			if( strcmp( argv[i], "-ft" ) == 0 ) {
-				sprocs = atoi(argv[i+1]);
-				i++;
-			}
 			if( strcmp( argv[i], "-o" ) == 0 ) {
 				output_to_file = 1;
 				test_output_file_name = sdsnew(argv[i+1]);
@@ -301,6 +307,21 @@ int main(int argc, char **argv)
 			if( strcmp( argv[i], "-i" ) == 0 ) {
 				input_from_file = 1;
 				matrix_input_base_name = sdsnew(argv[i+1]);
+				i++;
+			}
+			// number of spare procs
+			if( strcmp( argv[i], "-nps" ) == 0 ) {
+				spare_procs = atoi(argv[i+1]);
+				i++;
+			}
+			// number of faults to simulate
+			if( strcmp( argv[i], "-fn" ) == 0 ) {
+				fault_number = atoi(argv[i+1]);
+				i++;
+			}
+			// fault tolerance
+			if( strcmp( argv[i], "-ft" ) == 0 ) {
+				fault_protection = atoi(argv[i+1]);
 				i++;
 			}
 			if( strcmp( argv[i], "-fr" ) == 0 ) {
@@ -411,7 +432,7 @@ int main(int argc, char **argv)
 		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);									// get current process id
 		MPI_Comm_size(MPI_COMM_WORLD, &mpi_procs);									// get number of processes
 
-		cprocs=mpi_procs-sprocs;	// number of MPI processes for real calc
+		calc_procs=mpi_procs-spare_procs;	// number of MPI processes for real calc
 
 		// OpenMP
 		int omp_threads;			// number of OpenMP threads set with OMP_NUM_THREADS
@@ -429,10 +450,48 @@ int main(int argc, char **argv)
 		np=mpi_procs*omp_threads;
 
 		/*
+		 *******************
+		 * preliminary check
+		 *******************
+		 */
+		if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip check
+		{
+			// checking on some input parameters
+			if (mpi_rank==0 && verbose>0)
+			{
+				printf("\n IMe test suite\n================\n");
+			}
+			if (fault_protection == 0 && spare_procs > 0 )
+			{
+				if (mpi_rank==0) DISPLAY_WRN("\b","Some spare processes have been allocated, but no fault tolerance is enabled");
+			}
+			if (fault_protection > 0 && spare_procs == 0 )
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","If fault tolerance is enabled, some spare processes have to be allocated");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (spare_procs > calc_procs )
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","Spare processes must not be more than calc. processes");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (!IS_SQUARE(calc_procs))
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","The number of calc. processes has to be square");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+		}
+
+		/*
 		 * BLACS
 		 */
-		int ndims = 2, dims[2] = {0,0};
-		MPI_Dims_create(cprocs, ndims, dims);
+		int ndims = 2, dims[2];
+		dims[0] = (int)sqrt(calc_procs); //square grid as close as possible
+		dims[1] = 0;
+		MPI_Dims_create(calc_procs, ndims, dims);
 
 		int blacs_nprow, blacs_npcol;
 		blacs_nprow = dims[0];
@@ -463,14 +522,14 @@ int main(int argc, char **argv)
 		int blacs_col;
 		int map_cp[1];
 
-		if (sprocs>0)
+		if (spare_procs>0)
 		{
-			blacs_ctxt_cp=malloc(sprocs*sizeof(int));
-			for (i=0; i<sprocs; i++) // fault tolerance enabled
+			blacs_ctxt_cp=malloc(spare_procs*sizeof(int));
+			for (i=0; i<spare_procs; i++) // fault tolerance enabled
 			{
 				// context for the checkpointing node
 				Cblacs_get( ic, i0, &blacs_ctxt_cp[i] );
-				map_cp[0]=cprocs+i;
+				map_cp[0]=calc_procs+i;
 				Cblacs_gridmap( &blacs_ctxt_cp[i], map_cp, i1, i1, i1);
 			}
 		}
@@ -483,21 +542,6 @@ int main(int argc, char **argv)
 		// get coords in general grid context
 		Cblacs_gridinfo( blacs_ctxt, &blacs_nprow, &blacs_npcol, &blacs_row, &blacs_col );
 
-		/*
-		 * check grid ranking
-		 */
-			/*
-			for (i=0; i<mpi_procs; i++)
-			{
-				MPI_Barrier(MPI_COMM_WORLD);
-				if (mpi_rank==i)
-				{
-					printf("%d@(%d,%d)\n",i,blacs_row,blacs_col);
-					fflush(stdout);
-				}
-				MPI_Barrier(MPI_COMM_WORLD);
-			}
-			*/
 
 	/*
 	 * ****************************
@@ -523,8 +567,8 @@ int main(int argc, char **argv)
 			NULL,
 			NULL,
 			nrhs,
-			cprocs,
-			sprocs,
+			calc_procs,
+			spare_procs,
 			ime_nb,
 			scalapack_nb,
 			get_nre
@@ -541,6 +585,44 @@ int main(int argc, char **argv)
 		printf("     OMP threads:                   %d\n",omp_threads);
 		printf("     MPI ranks:                     %d\n",mpi_procs);
 		printf("     BLACS grid:                    %dx%d\n",blacs_nprow,blacs_npcol);
+	}
+	/*
+	 * check grid ranking
+	 */
+	if (verbose>2)
+	{
+		if (mpi_rank==0)
+		{
+			printf("     MPI ranks of calc. processes:\n");
+			printf("       Planned:\n");
+			for (i=0; i<blacs_nprow; i++)
+			{
+				printf("         ");
+				for (j=0; j<blacs_npcol; j++)
+				{
+					printf("%d\t",i*blacs_npcol+j);
+				}
+				printf("\n");
+			}
+			printf("       Allocated:\n");
+			fflush(stdout);
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		for (i=0; i<mpi_procs; i++)
+		{
+			if (mpi_rank==i)
+			{
+				printf("         %d @ (%d,%d)\n",i,blacs_row,blacs_col);
+				fflush(stdout);
+			}
+			MPI_Barrier(MPI_COMM_WORLD);
+		}
+	}
+	fflush(stdout);
+	MPI_Barrier(MPI_COMM_WORLD);
+	if (mpi_rank==0 && verbose>0)
+	{
 		printf("     Calculate n.r.e.:              ");
 			if (get_nre)	{printf("yes\n");}
 			else			{printf("no\n");}
@@ -550,11 +632,11 @@ int main(int argc, char **argv)
 		printf("     SPK-like blocking factor:      %d\n",scalapack_nb);
 
 		printf("     Fault tolerance:               ");
-		if (sprocs>0)
+		if (fault_protection > 0)
 		{
-			printf("enabled = %d\n",sprocs);
-			printf("       Calc. processes:             %d\n",cprocs);
-			printf("       Spare processes:             %d\n",sprocs);
+			printf("enabled = %d\n",fault_protection);
+			printf("       Calc. processes:             %d\n",calc_procs);
+			printf("       Spare processes:             %d\n",spare_procs);
 			printf("     IMe failing rank:              %d\n",failing_rank);
 			printf("     IMe failing level:             %d\n",failing_level);
 			printf("     SPK-like failing level:        %d\n",n-failing_level);
@@ -581,6 +663,7 @@ int main(int argc, char **argv)
 		else
 		{
 			printf("disabled\n");
+			printf("       Calc. processes:             %d\n",calc_procs);
 		}
 
 		printf("     Testing routines:\n");
@@ -601,12 +684,12 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip checkings and preparation
+	if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip checks and preparation
 	{
 		/*
-		 * ********
-		 * checking
-		 * ********
+		 * ******
+		 * checks
+		 * ******
 		 */
 
 		// check list of selected routines
@@ -620,7 +703,7 @@ int main(int argc, char **argv)
 					printf("ERR: Routine '%s' is unknown\n",versionname_selected[i]);
 				}
 				MPI_Finalize();
-				return 3;
+				return ERR_ROUTINE_UNKNOWN;
 			}
 		}
 
@@ -628,13 +711,13 @@ int main(int argc, char **argv)
 		j=0; // error accumulation
 		for (i=0; i<versions_selected; i++)
 		{
-			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval)).exit_code;
+			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, fault_protection, fault_number, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval)).exit_code;
 		}
 		MPI_Bcast(&j,1,MPI_INT,0,MPI_COMM_WORLD);
 		if (j != 0)
 		{
 			MPI_Finalize();
-			return 4;
+			return ERR_ROUTINE_MISCONFIG;
 		}
 		// continue if no errors
 
@@ -664,7 +747,7 @@ int main(int argc, char **argv)
 				{
 					if (mpi_rank == 0) printf("ERR: Cannot take input matrices with '--save' command.\n");
 					MPI_Finalize();
-					return 1;
+					return ERR_INPUT_ARG;
 				}
 				if (mpi_rank==0)
 				{
@@ -704,7 +787,7 @@ int main(int argc, char **argv)
 				}
 				if ( get_cnd )
 				{
-					if (pow(floor(sqrt(cprocs)),2) != cprocs)
+					if (!IS_SQUARE(calc_procs))
 					{
 						if (mpi_rank==0)
 						{
@@ -712,11 +795,11 @@ int main(int argc, char **argv)
 						}
 						MAIN_CLEANUP(mpi_rank);
 						MPI_Finalize();
-						return 1;
+						return ERR_INPUT_ARG;
 					}
 					else
 					{
-						cnd_readback = round( pCheckSystemMatrices1D(n, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+						cnd_readback = round( pCheckSystemMatrices1D(n, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 					}
 				}
 			}
@@ -742,7 +825,7 @@ int main(int argc, char **argv)
 							printf("WRN: Matrix will not be pre-conditioned\n");
 						}
 					}
-					if ( get_cnd && (pow(floor(sqrt(cprocs)),2) != cprocs) )
+					if ( get_cnd && !IS_SQUARE(calc_procs) )
 					{
 						if (mpi_rank==0)
 						{
@@ -750,9 +833,9 @@ int main(int argc, char **argv)
 						}
 						MAIN_CLEANUP(mpi_rank);
 						MPI_Finalize();
-						return 1;
+						return ERR_INPUT_ARG;
 					}
-					cnd_readback = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, cprocs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+					cnd_readback = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 				}
 				else if (strcmp(matrix_gen_type, "seq" ) == 0)
 				{
@@ -774,7 +857,7 @@ int main(int argc, char **argv)
 					}
 					MAIN_CLEANUP(mpi_rank);
 					MPI_Finalize();
-					return 1;
+					return ERR_INPUT_ARG;
 				}
 			}
 			sdsfree(matrix_input_base_name);
@@ -848,8 +931,10 @@ int main(int argc, char **argv)
 			printf("  -o    <file path>          : output to CSV file\n" );
 			printf("  -i    <file path>          : input matrices base name file path (.A, .X, .B auto appended)\n" );
 			printf("  -ft   <integer number>     : fault-tolerance level [0-..] (0=none)\n" );
+			printf("  -fn   <integer number>     : number of simulated faults [0-..] (0=none)\n" );
 			printf("  -fr   <integer number>     : simulated faulty mpi rank\n" );
 			printf("  -fl   <integer number>     : simulated faulty IMe inhibition level\n" );
+			printf("  -nps  <integer number>     : number of spare processes [0-..] (0=none)\n" );
 			printf("  -cp   <integer number>     : checkpointing interval\n" );
 			printf("  -spk-nb <integer number>   : ScaLAPACK blocking factor\n" );
 			printf("  -ime-nb <integer number>   : IMe blocking factor\n\n" );
@@ -883,7 +968,7 @@ int main(int argc, char **argv)
 			}
 			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
-			return 1;
+			return ERR_INPUT_ARG;
 		}
 		else
 		{
@@ -931,7 +1016,7 @@ int main(int argc, char **argv)
 		}
 		MAIN_CLEANUP(mpi_rank);
 		MPI_Finalize();
-		return 1;
+		return ERR_INPUT_ARG;
 	}
 	else if ( strcmp(command, "--run" ) == 0 )		// run tests
 	{
@@ -943,7 +1028,7 @@ int main(int argc, char **argv)
 			}
 			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
-			return 1;
+			return ERR_INPUT_ARG;
 		}
 		else
 		{
@@ -991,12 +1076,12 @@ int main(int argc, char **argv)
 				fpinfo("hour",readtime->tm_hour);
 				fpinfo("minute",readtime->tm_min);
 				fpinfo("second",readtime->tm_sec);
-				fpinfo("number of MPI ranks",cprocs);
+				fpinfo("number of MPI ranks",calc_procs);
 				fpinfo("number of OMP threads",omp_threads);
 				fpinfo("number of BLACS rows",blacs_nprow);
 				fpinfo("number of BLACS columns",blacs_npcol);
 				fpinfo("number of processes",np);
-				fpinfo("fault tolerance",sprocs);
+				fpinfo("number of spare processes",spare_procs);
 				fpinfo("failing rank",failing_rank);
 				fpinfo("failing level",failing_level);
 				fpinfo("checkpoint skip interval",checkpoint_skip_interval);
@@ -1028,8 +1113,8 @@ int main(int argc, char **argv)
 				versiontot[i].exit_code    = -1;
 			}
 
-			// init communication channels
-			test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+			// init communication channels if not done during matrix generation
+			if (strcmp(matrix_gen_type, "par" ) != 0) test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
 
 			/*
 			 * main loop
@@ -1043,7 +1128,7 @@ int main(int argc, char **argv)
 				// every run calls some selected routines
 				for (i=0; i<versions_selected; i++)
 				{
-					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
+					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, fault_protection, fault_number, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
 				}
 
 				if (mpi_rank==0)

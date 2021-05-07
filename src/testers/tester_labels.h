@@ -8,6 +8,11 @@
 #ifndef __TESTER_LABELS_H__
 #define __TESTER_LABELS_H__
 
+#define ERR_INPUT_ARG						1
+#define ERR_ROUTINE_UNKNOWN					3
+#define ERR_ROUTINE_MISCONFIG				4
+
+
 #define IME_PV_SV_WO						"IMe-PV-SV-WO"
 #define IME_PV_SV_WO_OAE					"IMe-PV-SV-WO-oae"
 #define IME_PV_SV_WO_OA						"IMe-PV-SV-WO-oa"
@@ -47,10 +52,11 @@
 #define IME_PV_SV_CO_A_SMALLER				"IMe-PV-SV-CO-a-smaller"
 #define IME_PV_SV_CO_A_SMALLEST				"IMe-PV-SV-CO-a-smallest"
 
-#define IME_PB_SV_CO						"IMe-PB-SV-CO"
-#define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
+#define IME_DEV								"IMe-dev"
 #define IME_PB_SV_CO_BFX					"IMe-PB-SV-CO-bfx"
+#define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
 #define IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X	"IMe-PB-SV-CO-bf1-ftx/0"
+#define IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X	"IMe-PB-SV-CO-bf1-ftx/x"
 
 #define IME_BLACS_SV_CO_1					"IMe-blacs-SV-CO-1"
 #define IME_BLACS_SV_CO_2					"IMe-blacs-SV-CO-2"

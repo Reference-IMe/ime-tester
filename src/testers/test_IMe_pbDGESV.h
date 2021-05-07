@@ -6,9 +6,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "tester_structures.h"
 
-//#include "../pbDGESV_CO.bfx.h"
 #include "../pbDGESV_CO.bf1.h"
-//#include "../pbDGESV_CO.h"
 
 
 test_result test_IMe_pbDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
@@ -25,14 +23,14 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 	double** xx;
 	double*  xx_ref;
 
+	int sqrt_calc_procs;
+
 	MPI_Comm comm_calc;
 
 	int i_calc; // participating in ime calc = 1, checksumming = 0
 
 	if (check)
 	{
-		//TODO: ckecking rules
-		/*
 		if (rank==0)
 		{
 			if (input.ime_bf < 1)
@@ -41,30 +39,35 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 			}
 			else
 			{
-				if (IS_MULT(input.n, input.calc_procs))
+				if (IS_SQUARE(input.calc_procs))
 				{
-					if (input.n / input.calc_procs > 0)
+					sqrt_calc_procs=sqrt(input.calc_procs);
+
+					if (IS_MULT(input.n, sqrt_calc_procs))
 					{
-						if (input.spare_procs > 0)
+						if (input.n / sqrt_calc_procs > 0)
 						{
-							DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
+							if (input.spare_procs > 0)
+							{
+								DISPLAY_WRN(label,"can run also with FT enabled or spare processes allocated, but calc. processes will differ from total processes")
+							}
+							if (IS_MULT(input.n / sqrt_calc_procs, input.ime_bf))
+							{
+								DISPLAY_MSG(label,"OK");
+								output.exit_code = 0;
+							}
+							else
+							{
+								DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
+							}
 						}
-						if (IS_MULT(input.n / input.calc_procs, input.ime_bf))
-						{
-							DISPLAY_MSG(label,"OK");
-							output.exit_code = 0;
-						}
-						else
-						{
-							DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
-						}
+						else DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be greater than 0");
 					}
-					else DISPLAY_ERR(label,"the number of columns per calc. process has to be greater than 0");
+					else DISPLAY_ERR(label,"the number of columns (rows) has to be a multiple of the square root of calc. processes");
 				}
-				else DISPLAY_ERR(label,"the number of columns has to be a multiple of the calc. processes");
+				else DISPLAY_ERR(label,"the number of calc. process has to be square");
 			}
 		}
-		*/ output.exit_code = 0;
 	}
 	else
 	{
@@ -113,10 +116,10 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 				A2=AllocateMatrix2D(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
 				xx_ref=NULL;
 			}
-			     //if ( strcmp( variant, "PB-CO"    ) == 0) output = pbDGESV_CO_default (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-			//else
-				if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+
+				 if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 //			else if ( strcmp( variant, "PB-CO-bfx") == 0) output = pbDGESV_CO_bfx (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+//			else if ( strcmp( variant, "dev"      ) == 0) output = pbDGESV_CO_dev (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
