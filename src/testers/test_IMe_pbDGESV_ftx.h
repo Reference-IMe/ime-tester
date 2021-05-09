@@ -9,7 +9,7 @@
 #include "../pbDGESV_CO.bf1.ftx.h"
 #include "../pbDGESV_CO.dev.h"
 
-test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_protection, int fault_number, int failing_rank, int failing_level)
+test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_protection, int fault_number, int failing_rank, int failing_level, int recovery)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -25,6 +25,8 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 
 	int sqrt_calc_procs;
 	sqrt_calc_procs=sqrt(input.calc_procs);
+
+	int* failing_rank_list;
 
 	if (check)
 	{
@@ -46,10 +48,10 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 					{
 						if (input.n / sqrt_calc_procs > 0)
 						{
-							if (failing_rank + fault_protection >= sqrt_calc_procs)
+							if (sqrt_calc_procs - (failing_rank % sqrt_calc_procs) < fault_protection)
 							{
 								DISPLAY_WRN(label,"has first faulty rank too high: lowering..");
-								failing_rank=sqrt_calc_procs-fault_protection;
+								failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_protection;
 							}
 							if (input.spare_procs > 0)
 							{
@@ -81,9 +83,16 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	else
 	{
 
-		if (failing_rank + fault_protection >= sqrt_calc_procs)
+		// failure list
+		if (sqrt_calc_procs - (failing_rank % sqrt_calc_procs) < fault_protection)
 		{
-			failing_rank=sqrt_calc_procs-fault_protection;
+			failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_protection;
+		}
+		failing_rank_list = malloc(fault_protection*sizeof(int));
+
+		for (i=failing_rank; i<failing_rank+fault_protection; i++)
+		{
+			failing_rank_list[i-failing_rank]=i;
 		}
 
 		if (env.mpi_rank < input.calc_procs)
@@ -129,7 +138,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			bb=NULL;
 		}
 
-			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, failing_rank, failing_level);
+			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, fault_protection, fault_number, failing_rank_list, failing_level, recovery);
 		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env);
 		else
 		{

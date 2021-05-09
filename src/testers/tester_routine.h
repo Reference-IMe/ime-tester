@@ -91,9 +91,9 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else */
 
 	     if	( strcmp( routine_name, IME_PB_SV_CO_BF1 )					== 0 )	info = test_IMe_pbDGESV    (check, routine_name, "PB-CO-bf1",       verbosity, routine_input, rank);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level);
+	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level, 0);
 	//else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level);
-	else if	( strcmp( routine_name, IME_DEV )							== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "dev",             verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level);
+	else if	( strcmp( routine_name, IME_DEV )							== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "dev",             verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level, 0);
 
 	else if	( strcmp( routine_name, IME_BLACS_SV_CO_1 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-1", verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, IME_BLACS_SV_CO_2 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-2", verbosity, routine_env, routine_input);

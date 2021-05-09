@@ -138,6 +138,7 @@ int main(int argc, char **argv)
     int failing_level;
     int failing_level_override;
     int checkpoint_skip_interval;
+    int scalapack_failing_level;
 
     sds matrix_gen_type;
     sds matrix_output_base_name;
@@ -411,11 +412,6 @@ int main(int argc, char **argv)
 		cols=n;
 		scalapack_iter=(int)ceil(rows/scalapack_nb);
 
-		if (failing_level_override<0) 	// if faulty level NOT set on command line
-		{
-			failing_level=n/2;			// faulty level/iteration, -1=none
-		}
-
 	/*
 	 * **************************
 	 * parallel environment setup
@@ -460,6 +456,17 @@ int main(int argc, char **argv)
 			if (mpi_rank==0 && verbose>0)
 			{
 				printf("\n IMe test suite\n================\n");
+			}
+			if (failing_level_override < 0 ) 	// if faulty level NOT set on command line
+			{
+				failing_level=n/2;			// faulty level/iteration, -1=none
+			}
+			scalapack_failing_level=(int)ceil((n-failing_level)/scalapack_nb);
+			if (failing_level >= n )
+			{
+				if (mpi_rank==0) DISPLAY_WRN("\b","Failing level grater than greatest level: never failing!");
+				failing_level=-1;
+				scalapack_failing_level=-1;
 			}
 			if (fault_protection == 0 && spare_procs > 0 )
 			{
@@ -607,20 +614,20 @@ int main(int argc, char **argv)
 			printf("       Allocated:\n");
 			fflush(stdout);
 		}
-		MPI_Barrier(MPI_COMM_WORLD);
 
 		for (i=0; i<mpi_procs; i++)
 		{
+			MPI_Barrier(MPI_COMM_WORLD);
 			if (mpi_rank==i)
 			{
 				printf("         %d @ (%d,%d)\n",i,blacs_row,blacs_col);
-				fflush(stdout);
 			}
 			MPI_Barrier(MPI_COMM_WORLD);
+			fflush(stdout);
 		}
 	}
-	fflush(stdout);
 	MPI_Barrier(MPI_COMM_WORLD);
+
 	if (mpi_rank==0 && verbose>0)
 	{
 		printf("     Calculate n.r.e.:              ");
@@ -638,9 +645,15 @@ int main(int argc, char **argv)
 			printf("       Calc. processes:             %d\n",calc_procs);
 			printf("       Spare processes:             %d\n",spare_procs);
 			printf("     IMe failing rank:              %d\n",failing_rank);
-			printf("     IMe failing level:             %d\n",failing_level);
-			printf("     SPK-like failing level:        %d\n",n-failing_level);
-			printf("     SPK-like failing iteration:    %d\n",(int)ceil((n-failing_level)/scalapack_nb));
+			printf("     IMe failing level:             ");
+				if (failing_level<0) {printf("never = ");}
+				printf("%d\n",failing_level);
+			printf("     SPK-like failing level:        ");
+				if (failing_level<0) {printf("never = -1\n");}
+				else {printf("%d\n",n-failing_level);}
+			printf("     SPK-like failing iteration:    ");
+				if (failing_level<0) {printf("never = ");}
+				printf("%d\n",scalapack_failing_level);
 			printf("     Checkpoint skip interval:      %d\n",checkpoint_skip_interval);
 
 			printf("     Checkpoint freq.:              ");
