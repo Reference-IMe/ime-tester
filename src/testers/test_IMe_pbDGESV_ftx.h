@@ -179,6 +179,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
 			DeallocateMatrix2D(bb, input.n, CONTIGUOUS);
 		}
+		NULLFREE(failing_rank_list);
 	}
 	TEST_END(output, rank_result, team_result);
 }
