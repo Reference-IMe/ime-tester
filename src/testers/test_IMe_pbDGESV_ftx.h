@@ -139,7 +139,9 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 		}
 
 			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
-		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env);
+		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
+		else if ( strcmp( variant, "PB-CO-bf1-ftx/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
+		else if ( strcmp( variant, "PB-CO-bf1-ft0/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
 		else
 		{
 			DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");

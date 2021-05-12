@@ -190,7 +190,8 @@ int main(int argc, char **argv)
 		fault_number			 = 0;
 		fault_protection		 = 0;
 		failing_rank			 = 2;		// process 2 will fail
-		failing_level_override   = -1;		// failing level automatically set
+		failing_level			 = -1;		// failing level
+		failing_level_override	 = -1;		// failing level automatically set
 		checkpoint_skip_interval = -1;		// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
 		cnd						 = 1;		// condition number for randomly generated matrices
 		cnd_readback			 = -1;		// condition number read back from generated or file matrices (-1=value not read back)
@@ -199,6 +200,7 @@ int main(int argc, char **argv)
 		seed					 = 1;		// seed for random generation
 		get_nre					 = 1;		// calc (1) normwise relative error or not (0)
 		scalapack_nb			 = SCALAPACKNB;	// scalapack blocking factor, default defined in header
+		scalapack_failing_level  = -1;
 		ime_nb					 = 1;			// ime blocking factor
 
 		/*
@@ -252,6 +254,8 @@ int main(int argc, char **argv)
 
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
+		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
+		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
 
 		versionname_all[versions_all++] = IME_BLACS_SV_CO_1;
 		versionname_all[versions_all++] = IME_BLACS_SV_CO_2;
@@ -459,14 +463,17 @@ int main(int argc, char **argv)
 			}
 			if (failing_level_override < 0 ) 	// if faulty level NOT set on command line
 			{
-				failing_level=n/2;			// faulty level/iteration, -1=none
+				failing_level = n/2;			// faulty level/iteration, -1=none
 			}
-			scalapack_failing_level=(int)ceil((n-failing_level)/scalapack_nb);
-			if (failing_level >= n )
+			if (failing_level < 0 || failing_level >= n )
 			{
 				if (mpi_rank==0) DISPLAY_WRN("\b","Failing level grater than greatest level: never failing!");
 				failing_level=-1;
 				scalapack_failing_level=-1;
+			}
+			else
+			{
+				scalapack_failing_level=(int)ceil((n-failing_level)/scalapack_nb);
 			}
 			if (fault_protection == 0 && spare_procs > 0 )
 			{

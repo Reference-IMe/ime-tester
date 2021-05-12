@@ -57,6 +57,7 @@
 #define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
 #define IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X	"IMe-PB-SV-CO-bf1-ftx/0"
 #define IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X	"IMe-PB-SV-CO-bf1-ftx/x"
+#define IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0	"IMe-PB-SV-CO-bf1-ft0/x"
 
 #define IME_BLACS_SV_CO_1					"IMe-blacs-SV-CO-1"
 #define IME_BLACS_SV_CO_2					"IMe-blacs-SV-CO-2"
