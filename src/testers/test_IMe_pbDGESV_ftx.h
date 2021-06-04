@@ -53,6 +53,16 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 								DISPLAY_WRN(label,"has first faulty rank too high: lowering..");
 								failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_protection;
 							}
+							if (failing_level == 0)
+							{
+								DISPLAY_WRN(label,"has failing level at last one, not allowed, correcting to last-but-one..");
+								failing_level = 1;
+							}
+							else if (failing_level >= (input.n - 1) )
+							{
+								DISPLAY_WRN(label,"has failing level at first one, not allowed, correcting to second one..");
+								failing_level = input.n - 2;
+							}
 							if (input.spare_procs > 0)
 							{
 								printf("     Faulty ranks:");
@@ -93,6 +103,15 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 		for (i=failing_rank; i<failing_rank+fault_protection; i++)
 		{
 			failing_rank_list[i-failing_rank]=i;
+		}
+
+		if (failing_level == 0)
+		{
+			failing_level = 1;
+		}
+		else if (failing_level >= (input.n - 1) )
+		{
+			failing_level = input.n - 2;
 		}
 
 		if (env.mpi_rank < input.calc_procs)
