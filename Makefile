@@ -21,9 +21,9 @@ CFLAGS_cineca_open  = -lgfortran
 CFLAGS_cineca_spectrum = -I$(MPI_ROOT)/include
 
 CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
-CFLAGS_enea_open    = -lgfortran -Wno-unknown-pragmas
+CFLAGS_enea_open    = -lgfortran #-Wno-unknown-pragmas
 
-CFLAGS_ubuntu_open    = -lgfortran -Wno-unknown-pragmas
+CFLAGS_ubuntu_open    = -lgfortran #-Wno-unknown-pragmas
 
 
 CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
