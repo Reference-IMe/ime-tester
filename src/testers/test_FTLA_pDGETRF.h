@@ -22,37 +22,50 @@ test_result test_FTLA_pDGETRF(const char check, const char* label, int verbosity
 	double* bb;
 	int i;
 
+	int sqrt_calc_procs;
+
 	if (check)
 	{
 		if (env.mpi_rank==0)
 		{
-			if (input.spare_procs > 0)
+			if (input.scalapack_bf < 1)
 			{
-				DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
-			}
-			if (input.scalapack_bf < 64)
-			{
-				DISPLAY_WRN(label,"blocking factor < 64")
-			}
-			if (IS_MULT(input.n, input.calc_procs))
-			{
-				if (IS_MULT(input.n / input.calc_procs, input.scalapack_bf))
-				{
-					DISPLAY_MSG(label,"OK");
-					output.exit_code = 0;
-				}
-				else
-				{
-					DISPLAY_ERR(label,"the number of columns per calc. process has to be a multiple of the blocking factor");
-				}
+				DISPLAY_ERR(label,"the blocking factor has to be greater than 0");
 			}
 			else
 			{
-				DISPLAY_ERR(label,"the matrix size has to be a multiple of the calc. processes");
+				if (input.scalapack_bf < 64)
+				{
+					DISPLAY_WRN(label,"blocking factor < 64")
+				}
+				if (IS_SQUARE(input.calc_procs))
+				{
+					sqrt_calc_procs=sqrt(input.calc_procs);
+
+					if (IS_MULT(input.n, sqrt_calc_procs))
+					{
+						if (input.n / sqrt_calc_procs > 0)
+						{
+							if (input.spare_procs > 0)
+							{
+								DISPLAY_WRN(label,"can run also with FT enabled or spare processes allocated, but calc. processes will differ from total processes")
+							}
+							if (IS_MULT(input.n / sqrt_calc_procs, input.scalapack_bf))
+							{
+								DISPLAY_MSG(label,"OK");
+								output.exit_code = 0;
+							}
+							else
+							{
+								DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
+							}
+						}
+						else DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be greater than 0");
+					}
+					else DISPLAY_ERR(label,"the number of columns (rows) has to be a multiple of the square root of calc. processes");
+				}
+				else DISPLAY_ERR(label,"the number of calc. process has to be square");
 			}
-			//////
-			printf("**  Run ANYWAY\n");
-			output.exit_code = 0;
 		}
 	}
 	else

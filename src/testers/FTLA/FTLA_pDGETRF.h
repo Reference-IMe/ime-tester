@@ -32,7 +32,7 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
 						int nprow, int npcol, int myrow, int mycol,
 						int ctxt, int ctxt_root)
 {
-	test_output result;
+	test_output result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 
@@ -57,9 +57,13 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
 
 	// faults
 	int Fstrat = 'e', F;
-	int Fmin, Fmax;
-	Fmin = Fmax = sprocs;
-	int Finc = 1;
+	/*
+	int Fmin, Fmax, Finc;
+
+	Fmin = 0;
+	Fmax = sprocs;
+	Finc = 1;
+	*/
 
 	// matrices
 	int nc, nr, ne;
@@ -159,13 +163,15 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
 		if (mpi_rank < cprocs)
 		{
 			int err=0;
+
 			ipiv = (int*)malloc(ne*sizeof(int) );
 
 			result.core_start_time = time(NULL);
 
 #ifdef 	INJECT
-			for( F = Fmin; F<=Fmax; F+=Finc )
+			//for( F = Fmin; F<=Fmax; F+=Finc )
 			{
+				F=sprocs;
 				errors = create_error_list( n, nb, F, Fstrat );
 #endif
 
@@ -185,15 +191,6 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
 
 				} while(err);
 
-				result.core_end_time = time(NULL);
-				result.exit_code = info;
-
-				// transpose back
-				pdtran_(&n, &n, &d1, At, &i1, &i1, descAt, &d0, A, &i1, &i1, descA);
-
-				// collect matrices
-				pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt);
-
 				// cleanup
 				Cftla_cof_cleanup( &ftwork );
 				Cftla_work_destruct( &ftwork );
@@ -202,6 +199,15 @@ test_output FTLA_ftdtr(int n, double* A_global, double* B_global, int nb,
 #ifdef INJECT
 			}
 #endif
+
+			result.core_end_time = time(NULL);
+			result.exit_code = info;
+
+			// transpose back
+			pdtran_(&n, &n, &d1, At, &i1, &i1, descAt, &d0, A, &i1, &i1, descA);
+
+			// collect matrices
+			pdgemr2d_ (&n, &n, A, &i1, &i1, descA, A_global, &i1, &i1, descA_global, &ctxt);
 
 			//free(ipiv); // do NOT clear, as ipiv is used in n.r.e. estimation
 		}

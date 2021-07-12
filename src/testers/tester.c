@@ -276,9 +276,11 @@ int main(int argc, char **argv)
 
 		versionname_all[versions_all++] = FTLA_LU_FAULT_0_TOLERANT_1;
 		versionname_all[versions_all++] = FTLA_LU_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_LU_FAULT_X_TOLERANT_X;
 
 		versionname_all[versions_all++] = FTLA_QR_FAULT_0_TOLERANT_1;
 		versionname_all[versions_all++] = FTLA_QR_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_QR_FAULT_X_TOLERANT_X;
 
 		versions_selected = 0;
 
@@ -1274,6 +1276,7 @@ int main(int argc, char **argv)
 	//Cblacs_barrier( context_all, &order_all);
 
 	// MPI
+	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
 	return 0;
 }

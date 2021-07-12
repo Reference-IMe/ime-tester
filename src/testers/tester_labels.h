@@ -79,8 +79,10 @@
 
 #define FTLA_LU_FAULT_0_TOLERANT_1			"FTLA-LU-ft1/0"
 #define FTLA_LU_FAULT_1_TOLERANT_1			"FTLA-LU-ft1/1"
+#define FTLA_LU_FAULT_X_TOLERANT_X			"FTLA-LU-ftx/x"
 
 #define FTLA_QR_FAULT_0_TOLERANT_1			"FTLA-QR-ft1/0"
 #define FTLA_QR_FAULT_1_TOLERANT_1			"FTLA-QR-ft1/1"
+#define FTLA_QR_FAULT_X_TOLERANT_X			"FTLA-QR-ftx/x"
 
 #endif
