@@ -243,6 +243,8 @@
      $                  A, IA, JA, DESCA,
      $                  ACP, IACP, JACP, DESCACP(:,P),
      $                  ICTXTALL)
+*               barrier to flush the communication buffer
+                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                 P=P+1
                 IF (P.LE.(NPROCS-CALCPROCS)) THEN
                   GO TO 202
@@ -447,6 +449,8 @@
      $                  A, IA, JA, DESCA,
      $                  ACP, IACP, JACP, DESCACP(:,P),
      $                  ICTXTALL)
+*               barrier to flush the communication buffer
+                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
                 P=P+1
                 IF (P.LE.(NPROCS-CALCPROCS)) THEN
                   GO TO 200

@@ -38,7 +38,7 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 			}
 			if (fault_protection > 1)
 			{
-				DISPLAY_WRN(label,"requested fault protection too high (single fault routine)");
+				DISPLAY_ERR(label,"requested fault protection too high (single fault routine)");
 			}
 			else
 			{
