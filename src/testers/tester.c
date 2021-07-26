@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     test_result	versionrun[MAX_VERSIONS][MAX_RUNS];
     test_result	versiontot[MAX_VERSIONS];
 
-    int n;					// matrix size
+    int nmat;				// matrix size
     int nrhs;				// num. of r.h.s
     int cnd;				// condition number
     int seed;				// seed for random matrix generation
@@ -128,16 +128,16 @@ int main(int argc, char **argv)
     int scalapack_nb;		// scalapack blocking factor
     int ime_nb;				// ime blocking factor
 
-    int spare_procs;				// number of processes to allocate for summing (0 = no fault tolerance)
-    int calc_procs;				// number of processes for real IMe calc
     int repetitions;
     char verbose;
-	int fault_number;
-	int fault_protection;
+    int spare_procs;		// number of processes to allocate for summing (0 = no fault tolerance)
+    int calc_procs;			// number of processes for real IMe calc
+	int faulty_procs;
+	int fault_tolerance;
     int failing_rank;
     int failing_level;
     int failing_level_override;
-    int checkpoint_skip_interval;
+    int scalapack_checkpoint_interval;
     int scalapack_failing_level;
 
     sds matrix_gen_type;
@@ -182,17 +182,17 @@ int main(int argc, char **argv)
 		output_to_file			 = 0;		// no output to file
 		input_from_file			 = 0;		// no input from file
 		command					 = "null";
-		n						 = 8;
+		nmat					 = 8;
 		nrhs					 = 1;
 		verbose					 = 1;		// minimum output verbosity (0 = none)
 		repetitions				 = 1;		// how many calls for each routine
-		spare_procs					 = 0;		// no fault tolerance enabled
-		fault_number			 = 0;
-		fault_protection		 = 0;
+		spare_procs				 = 0;		// no fault tolerance enabled
+		faulty_procs			 = 0;
+		fault_tolerance			 = 0;
 		failing_rank			 = 2;		// process 2 will fail
 		failing_level			 = -1;		// failing level
 		failing_level_override	 = -1;		// failing level automatically set
-		checkpoint_skip_interval = -1;		// -1=never, otherwise do at every (checkpoint_skip_interval+1) iteration
+		scalapack_checkpoint_interval = -1;		// -1=never, otherwise do at every (scalapack_checkpoint_interval+1) iteration
 		cnd						 = 1;		// condition number for randomly generated matrices
 		cnd_readback			 = -1;		// condition number read back from generated or file matrices (-1=value not read back)
 		set_cnd					 = 1;		// pre-conditioning (1) of the matrix  or not (0)
@@ -290,8 +290,8 @@ int main(int argc, char **argv)
 		// TODO: checking for valid arguments
 		for( i = 1; i < argc; i++ )
 		{
-			if( strcmp( argv[i], "-n" ) == 0 ) {
-				n = atoi(argv[i+1]);
+			if( strcmp( argv[i], "-nm" ) == 0 ) {
+				nmat = atoi(argv[i+1]);
 				i++;
 			}
 			if( strcmp( argv[i], "-nrhs" ) == 0 ) {
@@ -321,14 +321,14 @@ int main(int argc, char **argv)
 				spare_procs = atoi(argv[i+1]);
 				i++;
 			}
-			// number of faults to simulate
-			if( strcmp( argv[i], "-fn" ) == 0 ) {
-				fault_number = atoi(argv[i+1]);
+			// number of procs faulted
+			if( strcmp( argv[i], "-npf" ) == 0 ) {
+				faulty_procs = atoi(argv[i+1]);
 				i++;
 			}
 			// fault tolerance
 			if( strcmp( argv[i], "-ft" ) == 0 ) {
-				fault_protection = atoi(argv[i+1]);
+				fault_tolerance = atoi(argv[i+1]);
 				i++;
 			}
 			if( strcmp( argv[i], "-fr" ) == 0 ) {
@@ -341,7 +341,7 @@ int main(int argc, char **argv)
 				i++;
 			}
 			if( strcmp( argv[i], "-cp" ) == 0 ) {
-				checkpoint_skip_interval = atoi(argv[i+1]);
+				scalapack_checkpoint_interval = atoi(argv[i+1]);
 				i++;
 			}
 			if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
@@ -414,8 +414,8 @@ int main(int argc, char **argv)
 		/*
 		 * CALCULATED defaults (depending on command line inputs)
 		 */
-		rows=n;
-		cols=n;
+		rows=nmat;
+		cols=nmat;
 		scalapack_iter=(int)ceil(rows/scalapack_nb);
 
 	/*
@@ -465,9 +465,9 @@ int main(int argc, char **argv)
 			}
 			if (failing_level_override < 0 ) 	// if faulty level NOT set on command line
 			{
-				failing_level = n/2;			// faulty level/iteration, -1=none
+				failing_level = nmat/2;			// faulty level/iteration, -1=none
 			}
-			if (failing_level < 0 || failing_level >= n )
+			if (failing_level < 0 || failing_level >= nmat )
 			{
 				if (mpi_rank==0) DISPLAY_WRN("\b","Failing level grater than greatest level: never failing!");
 				failing_level=-1;
@@ -475,13 +475,13 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				scalapack_failing_level=(int)ceil((n-failing_level)/scalapack_nb);
+				scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
 			}
-			if (fault_protection == 0 && spare_procs > 0 )
+			if (faulty_procs == 0 && spare_procs > 0 )
 			{
 				if (mpi_rank==0) DISPLAY_WRN("\b","Some spare processes have been allocated, but no fault tolerance is enabled");
 			}
-			if (fault_protection > 0 && spare_procs == 0 )
+			if (faulty_procs > 0 && spare_procs == 0 )
 			{
 				if (mpi_rank==0) DISPLAY_ERR("\b","If fault tolerance is enabled, some spare processes have to be allocated");
 				MPI_Finalize();
@@ -578,7 +578,7 @@ int main(int argc, char **argv)
 		};
 
 		test_input routine_input = {
-			n,
+			nmat,
 			NULL,
 			NULL,
 			NULL,
@@ -648,9 +648,9 @@ int main(int argc, char **argv)
 		printf("     SPK-like blocking factor:      %d\n",scalapack_nb);
 
 		printf("     Fault tolerance:               ");
-		if (fault_protection > 0)
+		if (faulty_procs > 0)
 		{
-			printf("enabled = %d\n",fault_protection);
+			printf("enabled = %d\n",faulty_procs);
 			printf("       Calc. processes:             %d\n",calc_procs);
 			printf("       Spare processes:             %d\n",spare_procs);
 			printf("     IMe failing rank:              %d\n",failing_rank);
@@ -659,26 +659,26 @@ int main(int argc, char **argv)
 				printf("%d\n",failing_level);
 			printf("     SPK-like failing level:        ");
 				if (failing_level<0) {printf("never = -1\n");}
-				else {printf("%d\n",n-failing_level);}
+				else {printf("%d\n",nmat-failing_level);}
 			printf("     SPK-like failing iteration:    ");
 				if (failing_level<0) {printf("never = ");}
 				printf("%d\n",scalapack_failing_level);
-			printf("     Checkpoint skip interval:      %d\n",checkpoint_skip_interval);
+			printf("     Checkpoint skip interval:      %d\n",scalapack_checkpoint_interval);
 
 			printf("     Checkpoint freq.:              ");
-			if (checkpoint_skip_interval<0)
+			if (scalapack_checkpoint_interval<0)
 			{
 				printf("never\n");
 			}
 			else
 			{
-				if (checkpoint_skip_interval==0)
+				if (scalapack_checkpoint_interval==0)
 				{
 					printf("always\n");
 				}
 				else
 				{
-					printf("every %d iterations\n",checkpoint_skip_interval+1);
+					printf("every %d iterations\n",scalapack_checkpoint_interval+1);
 				}
 			}
 		}
@@ -733,7 +733,7 @@ int main(int argc, char **argv)
 		j=0; // error accumulation
 		for (i=0; i<versions_selected; i++)
 		{
-			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, fault_protection, fault_number, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval)).exit_code;
+			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, fault_tolerance, faulty_procs, mpi_rank, failing_rank, failing_level, scalapack_checkpoint_interval)).exit_code;
 		}
 		MPI_Bcast(&j,1,MPI_INT,0,MPI_COMM_WORLD);
 		if (j != 0)
@@ -750,9 +750,9 @@ int main(int argc, char **argv)
 		 */
 		if (mpi_rank==0)
 		{
-			A_ref = AllocateMatrix1D(n, n);
-			x_ref = AllocateVector(n);
-			b_ref = AllocateVector(n);
+			A_ref = AllocateMatrix1D(nmat, nmat);
+			x_ref = AllocateVector(nmat);
+			b_ref = AllocateVector(nmat);
 		}
 		else
 		{
@@ -785,7 +785,7 @@ int main(int argc, char **argv)
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".X");
 					fp=fopen(matrix_input_file_name,"rb");
-					fread(x_ref,sizeof(double),n,fp);
+					fread(x_ref,sizeof(double),nmat,fp);
 					fclose(fp);
 					sdsfree(matrix_input_file_name);
 					if (verbose > 0) printf("     ..X\n");
@@ -793,7 +793,7 @@ int main(int argc, char **argv)
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".B");
 					fp=fopen(matrix_input_file_name,"rb");
-					fread(b_ref,sizeof(double),n,fp);
+					fread(b_ref,sizeof(double),nmat,fp);
 					fclose(fp);
 					sdsfree(matrix_input_file_name);
 					if (verbose > 0) printf("     ..B\n");
@@ -801,7 +801,7 @@ int main(int argc, char **argv)
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".A");
 					fp=fopen(matrix_input_file_name,"rb");
-					fread(A_ref,sizeof(double),n*n,fp);
+					fread(A_ref,sizeof(double),nmat*nmat,fp);
 					fclose(fp);
 					fp=NULL;
 					sdsfree(matrix_input_file_name);
@@ -821,7 +821,7 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						cnd_readback = round( pCheckSystemMatrices1D(n, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+						cnd_readback = round( pCheckSystemMatrices1D(nmat, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 					}
 				}
 			}
@@ -857,7 +857,7 @@ int main(int argc, char **argv)
 						MPI_Finalize();
 						return ERR_INPUT_ARG;
 					}
-					cnd_readback = round( pGenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+					cnd_readback = round( pGenSystemMatrices1D(nmat, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 				}
 				else if (strcmp(matrix_gen_type, "seq" ) == 0)
 				{
@@ -868,7 +868,7 @@ int main(int argc, char **argv)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
 						}
-						cnd_readback = round( GenSystemMatrices1D(n, A_ref, x_ref, b_ref, seed, cnd, get_cnd) );
+						cnd_readback = round( GenSystemMatrices1D(nmat, A_ref, x_ref, b_ref, seed, cnd, get_cnd) );
 					}
 				}
 				else
@@ -941,7 +941,7 @@ int main(int argc, char **argv)
 			printf("\n");
 			printf("Options are:\n");
 			printf("  -v    <integer number>     : verbosity level [0-3] (0=quiet)\n" );
-			printf("  -n    <integer number>     : input matrix rank\n" );
+			printf("  -nm   <integer number>     : input matrix rank\n" );
 			printf("  -nrhs <integer number>     : r.h.s. columns\n" );
 			printf("  -seed <integer number>     : seed of the random generation\n" );
 			printf("  -cnd  <integer number>     : condition number of the input matrix\n" );
@@ -953,9 +953,9 @@ int main(int argc, char **argv)
 			printf("  -o    <file path>          : output to CSV file\n" );
 			printf("  -i    <file path>          : input matrices base name file path (.A, .X, .B auto appended)\n" );
 			printf("  -ft   <integer number>     : fault-tolerance level [0-..] (0=none)\n" );
-			printf("  -fn   <integer number>     : number of simulated faults [0-..] (0=none)\n" );
 			printf("  -fr   <integer number>     : simulated faulty mpi rank\n" );
 			printf("  -fl   <integer number>     : simulated faulty IMe inhibition level\n" );
+			printf("  -npf  <integer number>     : number of simulated faults [0-..] (0=none)\n" );
 			printf("  -nps  <integer number>     : number of spare processes [0-..] (0=none)\n" );
 			printf("  -cp   <integer number>     : checkpointing interval\n" );
 			printf("  -spk-nb <integer number>   : ScaLAPACK blocking factor\n" );
@@ -1001,7 +1001,7 @@ int main(int argc, char **argv)
 				matrix_output_file_name = sdsdup(matrix_output_base_name);
 				matrix_output_file_name = sdscat(matrix_output_file_name, ".X");
 				fp=fopen(matrix_output_file_name,"wb");
-				fwrite(x_ref,sizeof(double),n,fp);
+				fwrite(x_ref,sizeof(double),nmat,fp);
 				fclose(fp);
 				sdsfree(matrix_output_file_name);
 				if (verbose > 0) printf("     ..X\n");
@@ -1009,7 +1009,7 @@ int main(int argc, char **argv)
 				matrix_output_file_name = sdsdup(matrix_output_base_name);
 				matrix_output_file_name = sdscat(matrix_output_file_name, ".B");
 				fp=fopen(matrix_output_file_name,"wb");
-				fwrite(b_ref,sizeof(double),n,fp);
+				fwrite(b_ref,sizeof(double),nmat,fp);
 				fclose(fp);
 				sdsfree(matrix_output_file_name);
 				if (verbose > 0) printf("     ..B\n");
@@ -1017,7 +1017,7 @@ int main(int argc, char **argv)
 				matrix_output_file_name = sdsdup(matrix_output_base_name);
 				matrix_output_file_name = sdscat(matrix_output_file_name, ".A");
 				fp=fopen(matrix_output_file_name,"wb");
-				fwrite(A_ref,sizeof(double),n*n,fp);
+				fwrite(A_ref,sizeof(double),nmat*nmat,fp);
 				fclose(fp);
 				fp=NULL;
 				sdsfree(matrix_output_file_name);
@@ -1106,11 +1106,11 @@ int main(int argc, char **argv)
 				fpinfo("number of spare processes",spare_procs);
 				fpinfo("failing rank",failing_rank);
 				fpinfo("failing level",failing_level);
-				fpinfo("checkpoint skip interval",checkpoint_skip_interval);
+				fpinfo("checkpoint skip interval",scalapack_checkpoint_interval);
 				fpinfo("seed",seed);
 				fpinfo("condition number set",cnd);
 				fpinfo("condition number got",cnd_readback);
-				fpinfo("matrix size",n);
+				fpinfo("matrix size",nmat);
 				fpinfo("scalapack blocking factor",scalapack_nb);
 				fpinfo("ime blocking factor",ime_nb);
 				fpinfo("repetitions",repetitions);
@@ -1150,7 +1150,24 @@ int main(int argc, char **argv)
 				// every run calls some selected routines
 				for (i=0; i<versions_selected; i++)
 				{
-					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, fault_protection, fault_number, mpi_rank, failing_rank, failing_level, checkpoint_skip_interval);
+					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, fault_tolerance, faulty_procs, mpi_rank, failing_rank, failing_level, scalapack_checkpoint_interval);
+
+					if (output_to_file)
+					{
+						if (mpi_rank==0)
+						{
+							fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], rep+1,				\
+																	versionrun[i][rep].exit_code,				\
+																	versionrun[i][rep].total_time,				\
+																	versionrun[i][rep].norm_rel_err				\
+							);
+							fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)", rep+1,	\
+																	versionrun[i][rep].exit_code,				\
+																	versionrun[i][rep].core_time,				\
+																	versionrun[i][rep].norm_rel_err				\
+							);
+						}
+					}
 				}
 
 				if (mpi_rank==0)
