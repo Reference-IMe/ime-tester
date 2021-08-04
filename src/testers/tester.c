@@ -1066,10 +1066,10 @@ int main(int argc, char **argv)
 			#define fpinfo(string_label,integer_info) if (fp!=NULL && mpi_rank==0) {fprintf(fp,"info,%s,%d\n",string_label,integer_info); \
 			}
 			#define fpdata(track_num) if (fp!=NULL && mpi_rank==0) {																		\
-				fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",versionname_all[track_num], rep+1,	versionrun[track_num][rep].exit_code,				\
+				fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",versionname_all[track_num], rep+1,	versionrun[track_num][rep].exit_code,				\
 																					versionrun[track_num][rep].total_time,					\
 																					versionrun[track_num][rep].norm_rel_err);				\
-				fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",versionname_all[track_num],"(core)", rep+1,	versionrun[track_num][rep].exit_code,	\
+				fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",versionname_all[track_num],"(core)", rep+1,	versionrun[track_num][rep].exit_code,	\
 																								versionrun[track_num][rep].core_time,		\
 																								versionrun[track_num][rep].norm_rel_err);	\
 			}
@@ -1156,12 +1156,12 @@ int main(int argc, char **argv)
 					{
 						if (mpi_rank==0)
 						{
-							fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], rep+1,				\
+							fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], rep+1,				\
 																	versionrun[i][rep].exit_code,				\
 																	versionrun[i][rep].total_time,				\
 																	versionrun[i][rep].norm_rel_err				\
 							);
-							fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)", rep+1,	\
+							fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], "(core)", rep+1,	\
 																	versionrun[i][rep].exit_code,				\
 																	versionrun[i][rep].core_time,				\
 																	versionrun[i][rep].norm_rel_err				\
@@ -1180,7 +1180,7 @@ int main(int argc, char **argv)
 						versiontot[i].norm_rel_err	+= versionrun[i][rep].norm_rel_err;
 						if (verbose>0)
 						{
-							printf("%-30s    Call    run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],		\
+							printf("%-30s    Call    run time: %10.0f (%.0f)\ts\t nre: %.17f\n",	versionname_selected[i],		\
 																								versionrun[i][rep].total_time,	\
 																								versionrun[i][rep].core_time,	\
 																								versionrun[i][rep].norm_rel_err	\
@@ -1210,19 +1210,19 @@ int main(int argc, char **argv)
 				// average
 				for (i=0; i<versions_selected; i++)
 				{
-					printf("%-30s    Average run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],				\
+					printf("%-30s    Average run time: %10.0f (%.0f)\ts\t nre: %.17f\n",	versionname_selected[i],				\
 																						versiontot[i].total_time/repetitions,	\
 																						versiontot[i].core_time/repetitions,	\
 																						versiontot[i].norm_rel_err/repetitions	\
 					);
 					if (output_to_file)
 					{
-						fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], 0,				\
+						fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], 0,				\
 																versionrun[i][0].exit_code,				\
 																versiontot[i].total_time/repetitions,	\
 																versiontot[i].norm_rel_err/repetitions	\
 						);
-						fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)", 0,	\
+						fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], "(core)", 0,	\
 																versionrun[i][0].exit_code,				\
 																versiontot[i].core_time/repetitions,	\
 																versiontot[i].norm_rel_err/repetitions	\
@@ -1235,19 +1235,19 @@ int main(int argc, char **argv)
 				for (i=0; i<versions_selected; i++)
 				{
 					dmedian( versionrun[i], repetitions);
-					printf("%-30s    Median  run time: %10.0f (%.0f)\ts\t nre: %f\n",	versionname_selected[i],					\
+					printf("%-30s    Median  run time: %10.0f (%.0f)\ts\t nre: %.17f\n",	versionname_selected[i],					\
 																						versionrun[i][repetitions/2].total_time,	\
 																						versionrun[i][repetitions/2].core_time,		\
 																						versionrun[i][repetitions/2].norm_rel_err	\
 					);
 					if (output_to_file)
 					{
-						fprintf(fp,"data,%s,%d,%d,%.0f,%f\n",	versionname_selected[i], -1,				\
+						fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], -1,				\
 																versionrun[i][0].exit_code,					\
 																versionrun[i][repetitions/2].total_time,	\
 																versionrun[i][repetitions/2].norm_rel_err	\
 						);
-						fprintf(fp,"data,%s%s,%d,%d,%.0f,%f\n",	versionname_selected[i], "(core)",-1,		\
+						fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], "(core)",-1,		\
 																versionrun[i][0].exit_code,					\
 																versionrun[i][repetitions/2].core_time,		\
 																versionrun[i][repetitions/2].norm_rel_err	\
