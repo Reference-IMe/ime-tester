@@ -38,15 +38,15 @@ test_result test_FTLA_pDGETRF(const char check, const char* label, int verbosity
 				{
 					DISPLAY_WRN(label,"blocking factor < 64")
 				}
-				if (IS_SQUARE(input.calc_procs))
+				if (IS_SQUARE(env.calc_procs))
 				{
-					sqrt_calc_procs=sqrt(input.calc_procs);
+					sqrt_calc_procs=sqrt(env.calc_procs);
 
 					if (IS_MULT(input.n, sqrt_calc_procs))
 					{
 						if (input.n / sqrt_calc_procs > 0)
 						{
-							if (input.spare_procs > 0)
+							if (env.spare_procs > 0)
 							{
 								DISPLAY_WRN(label,"can run also with FT enabled or spare processes allocated, but calc. processes will differ from total processes")
 							}
@@ -93,7 +93,7 @@ test_result test_FTLA_pDGETRF(const char check, const char* label, int verbosity
 			bb = NULL;
 		}
 
-		output = FTLA_ftdtr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs,
+		output = FTLA_ftdtr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 								faults,
 								env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 								env.blacs_ctxt_grid, env.blacs_ctxt_root);

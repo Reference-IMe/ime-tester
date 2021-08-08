@@ -9,7 +9,7 @@
 #include "../pbDGESV_CO.bf1.h"
 
 
-test_result test_IMe_pbDGESV(const char check, const char* label, const char* variant, int verbosity, test_input input, int rank)
+test_result test_IMe_pbDGESV(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_tolerance)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -31,7 +31,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 
 	if (check)
 	{
-		if (rank==0)
+		if (env.mpi_rank==0)
 		{
 			if (input.ime_bf < 1)
 			{
@@ -39,17 +39,17 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 			}
 			else
 			{
-				if (IS_SQUARE(input.calc_procs))
+				if (IS_SQUARE(env.calc_procs))
 				{
-					sqrt_calc_procs=sqrt(input.calc_procs);
+					sqrt_calc_procs=sqrt(env.calc_procs);
 
 					if (IS_MULT(input.n, sqrt_calc_procs))
 					{
 						if (input.n / sqrt_calc_procs > 0)
 						{
-							if (input.spare_procs > 0)
+							if (env.spare_procs > 0 || fault_tolerance > 0)
 							{
-								DISPLAY_WRN(label,"can run also with FT enabled or spare processes allocated, but calc. processes will differ from total processes")
+								DISPLAY_WRN(label,"can run also with fault tolerance enabled or spare processes allocated, but calc. processes will differ from total processes")
 							}
 							if (IS_MULT(input.n / sqrt_calc_procs, input.ime_bf))
 							{
@@ -71,7 +71,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 	}
 	else
 	{
-		if (rank >= input.calc_procs)
+		if (env.mpi_rank >= env.calc_procs)
 		{
 			i_calc=0;
 			MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, MPI_UNDEFINED, &comm_calc); // checksumming procs don't belong to calc communicator
@@ -79,7 +79,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 		else
 		{
 			i_calc=1;
-			MPI_Comm_split(MPI_COMM_WORLD, i_calc, rank, &comm_calc); // calc procs belong to calc communicator
+			MPI_Comm_split(MPI_COMM_WORLD, i_calc, env.mpi_rank, &comm_calc); // calc procs belong to calc communicator
 		}
 
 		if (i_calc)
@@ -87,7 +87,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 			xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
 			bb=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
 
-			if (rank==0)
+			if (env.mpi_rank==0)
 			{
 				xx_ref=AllocateMatrix1D(input.n, input.nrhs);
 				A2=AllocateMatrix2D(input.n, input.n, CONTIGUOUS);
@@ -117,15 +117,13 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 				xx_ref=NULL;
 			}
 
-				 if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-//			else if ( strcmp( variant, "PB-CO-bfx") == 0) output = pbDGESV_CO_bfx (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
-//			else if ( strcmp( variant, "dev"      ) == 0) output = pbDGESV_CO_dev (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
 			}
 
-			if (rank==0)
+			if (env.mpi_rank==0)
 			{
 				// check exit condition
 				if (output.exit_code!=0)
@@ -144,7 +142,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 				}
 			}
 			//cleanup
-			if (rank==0)
+			if (env.mpi_rank==0)
 			{
 				DeallocateMatrix2D(A2, input.n, CONTIGUOUS);
 			}
@@ -166,7 +164,7 @@ test_result test_IMe_pbDGESV(const char check, const char* label, const char* va
 			rank_result.core_time=0;
 		}
 
-		if (input.spare_procs>0)
+		if (env.spare_procs>0)
 		{
 			if (comm_calc != MPI_COMM_NULL)
 			{

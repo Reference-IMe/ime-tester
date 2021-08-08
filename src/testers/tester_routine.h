@@ -36,20 +36,20 @@
 
 #include "test_FTLA_pDGETRF.h"
 #include "test_FTLA_pDGEQRF.h"
-#include "test_IMe_pvDGESV.h"
+
 #include "test_IMe_pbDGESV.h"
 #include "test_IMe_pbDGESV_ftx.h"
 
-#include "test_IMe_blacsDGESV.h"
-
 /*
+#include "test_IMe_pvDGESV.h"
+#include "test_IMe_blacsDGESV.h"
 #include "test_IMe_pviDGESV_cs.h"
 #include "test_IMe_pviDGESV_ft1.h"
 #include "test_IMe_pviDGEF.h"
 #include "test_IMe_pviDGEF_ft1.h"
 */
 
-test_result tester_routine(const char check, const char* routine_name, int verbosity, parallel_env routine_env, test_input routine_input, int fault_protection, int fault_number, int rank, int failing_rank, int failing_level, int checkpoint_skip_interval)
+test_result tester_routine(const char check, const char* routine_name, int verbosity, parallel_env routine_env, test_input routine_input, fault_env routine_fault)
 {
 	test_result info;
 
@@ -90,36 +90,36 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 
 	else */
 
-	     if	( strcmp( routine_name, IME_PB_SV_CO_BF1 )					== 0 )	info = test_IMe_pbDGESV    (check, routine_name, "PB-CO-bf1",       verbosity, routine_input, rank);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, -1,            0);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/x", verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level, 1);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ft0/x", verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level, 0);
-	else if	( strcmp( routine_name, IME_DEV )							== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "dev",             verbosity, routine_env, routine_input, fault_protection, fault_number, failing_rank, failing_level, 1);
+	     if	( strcmp( routine_name, IME_PB_SV_CO_BF1 )					== 0 )	info = test_IMe_pbDGESV    (check, routine_name, "PB-CO-bf1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
+	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/0", verbosity, routine_env, routine_input, routine_fault.fault_tolerance, 0                         , routine_fault.failing_rank, -1,                          0);
+	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/x", verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
+	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ft0/x", verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 0);
+	else if	( strcmp( routine_name, IME_DEV )							== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "dev",             verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
 
-	else if	( strcmp( routine_name, IME_BLACS_SV_CO_1 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-1", verbosity, routine_env, routine_input);
-	else if	( strcmp( routine_name, IME_BLACS_SV_CO_2 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-2", verbosity, routine_env, routine_input);
+//	else if	( strcmp( routine_name, IME_BLACS_SV_CO_1 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-1", verbosity, routine_env, routine_input);
+//	else if	( strcmp( routine_name, IME_BLACS_SV_CO_2 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-2", verbosity, routine_env, routine_input);
 
 	else if	( strcmp( routine_name, SPK_SV ) 						== 0 )	info = test_ScaLAPACK_pDGESV       (check, routine_name, verbosity, routine_env, routine_input);
-	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, fault_protection, fault_number, -1,            checkpoint_skip_interval);
-	else if	( strcmp( routine_name, SPK_SV_FAULT_1_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, fault_protection, fault_number, failing_level, checkpoint_skip_interval);
-	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CS ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cs(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
-	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_X_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ftx_cp(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, 1,                             0, -1,                          routine_fault.scalapack_checkpoint_interval);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_1_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, 1,                             1, routine_fault.failing_level, routine_fault.scalapack_checkpoint_interval);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CS ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cs(check, routine_name, verbosity, routine_env, routine_input, 1,                             0, -1,                          routine_fault.scalapack_checkpoint_interval);
+	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_X_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ftx_cp(check, routine_name, verbosity, routine_env, routine_input, routine_fault.fault_tolerance, 0, -1,                          routine_fault.scalapack_checkpoint_interval);
 
 	else if	( strcmp( routine_name, SPK_LU ) 					== 0 )	info = test_ScaLAPACK_pDGETRF    (check, routine_name, verbosity, routine_env, routine_input);
-	else if	( strcmp( routine_name, SPK_LU_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGETRF_ft1(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
-	else if	( strcmp( routine_name, SPK_LU_FAULT_1_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGETRF_ft1(check, routine_name, verbosity, routine_env, routine_input, failing_level, checkpoint_skip_interval);
+	else if	( strcmp( routine_name, SPK_LU_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGETRF_ft1(check, routine_name, verbosity, routine_env, routine_input, 1, 0, -1,                          routine_fault.scalapack_checkpoint_interval);
+	else if	( strcmp( routine_name, SPK_LU_FAULT_1_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGETRF_ft1(check, routine_name, verbosity, routine_env, routine_input, 1, 1, routine_fault.failing_level, routine_fault.scalapack_checkpoint_interval);
 
 	else if	( strcmp( routine_name, SPK_QR ) 					== 0 )	info = test_ScaLAPACK_pDGEQRF    (check, routine_name, verbosity, routine_env, routine_input);
-	else if	( strcmp( routine_name, SPK_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGEQRF_ft1(check, routine_name, verbosity, routine_env, routine_input, -1, checkpoint_skip_interval);
-	else if	( strcmp( routine_name, SPK_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGEQRF_ft1(check, routine_name, verbosity, routine_env, routine_input, failing_level, checkpoint_skip_interval);
+	else if	( strcmp( routine_name, SPK_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGEQRF_ft1(check, routine_name, verbosity, routine_env, routine_input, 1, 0, -1,                          routine_fault.scalapack_checkpoint_interval);
+	else if	( strcmp( routine_name, SPK_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_ScaLAPACK_pDGEQRF_ft1(check, routine_name, verbosity, routine_env, routine_input, 1, 1, routine_fault.failing_level, routine_fault.scalapack_checkpoint_interval);
 
 	else if	( strcmp( routine_name, FTLA_LU_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(check, routine_name, verbosity, routine_env, routine_input, 0);
 	else if	( strcmp( routine_name, FTLA_LU_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(check, routine_name, verbosity, routine_env, routine_input, 1);
-	else if	( strcmp( routine_name, FTLA_LU_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGETRF(check, routine_name, verbosity, routine_env, routine_input, fault_protection);
+	else if	( strcmp( routine_name, FTLA_LU_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGETRF(check, routine_name, verbosity, routine_env, routine_input, routine_fault.faulty_procs);
 
 	else if	( strcmp( routine_name, FTLA_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, 0);
 	else if	( strcmp( routine_name, FTLA_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, 1);
-	else if	( strcmp( routine_name, FTLA_QR_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, fault_protection);
+	else if	( strcmp( routine_name, FTLA_QR_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, routine_fault.faulty_procs);
 
 	else info = TEST_NOT_IMPLEMENTED;
 

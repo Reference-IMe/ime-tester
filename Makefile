@@ -133,7 +133,7 @@ SEQ_EXE = # compare_solve
 PAR_EXE = tester
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
-PAR_STD_DEP = $(SRC_DIR)/blacs*.h $(SRC_DIR)/pvDGEIT_WX.h $(TST_DIR)/test_*.h $(SRC_DIR)/helpers/*.h
+PAR_STD_DEP = $(TST_DIR)/test_*.h $(SRC_DIR)/helpers/*.h
 SEQ_STD_DEP = $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
 
 all: $(LAPACK_LIB_DIR)/librefblas.a \
@@ -155,7 +155,7 @@ $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" lapacklib
 
 # do not use "-j" flag: compilation inconsistency!
-# ScaLAPACK's makefile has been modified to accept variable for pointing to the local LAPACK lib in this repository
+# ScaLAPACK's makefile has been modified to accept a variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 	
@@ -189,9 +189,6 @@ $(SDS_LIB_DIR)/sds.o: $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/tester*.h \
 				$(PAR_STD_DEP) \
-				$(SRC_DIR)/pviDGE*.h \
-				$(SRC_DIR)/pvDGE*.h \
-				$(SRC_DIR)/pbDGE*.h \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \

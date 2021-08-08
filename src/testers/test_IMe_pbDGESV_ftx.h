@@ -9,7 +9,7 @@
 #include "../pbDGESV_CO.bf1.ftx.h"
 #include "../pbDGESV_CO.dev.h"
 
-test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_protection, int fault_number, int failing_rank, int failing_level, int recovery)
+test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_tolerance, int faulty_procs, int failing_rank, int failing_level, int recovery)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -24,7 +24,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	double*  xx_ref;
 
 	int sqrt_calc_procs;
-	sqrt_calc_procs=sqrt(input.calc_procs);
+	sqrt_calc_procs=sqrt(env.calc_procs);
 
 	int* failing_rank_list;
 
@@ -32,26 +32,34 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	{
 		if (env.mpi_rank==0)
 		{
-			if (fault_protection*sqrt_calc_procs < input.spare_procs)
+			if (fault_tolerance*sqrt_calc_procs > env.spare_procs)
 			{
 				DISPLAY_ERR(label,"not enough spare processes for the requested fault tolerance level");
 			}
-			if (input.ime_bf < 1)
+			else if (fault_tolerance < 1)
+			{
+				DISPLAY_ERR(label,"fault tolerance disabled ('-ft 0')");
+			}
+			else if (faulty_procs > fault_tolerance)
+			{
+				DISPLAY_ERR(label,"requested fault occurrences greater than fault tolerance");
+			}
+			else if (input.ime_bf < 1)
 			{
 				DISPLAY_ERR(label,"the blocking factor has to be greater than 0");
 			}
 			else
 			{
-				if (IS_SQUARE(input.calc_procs))
+				if (IS_SQUARE(env.calc_procs))
 				{
 					if (IS_MULT(input.n, sqrt_calc_procs))
 					{
 						if (input.n / sqrt_calc_procs > 0)
 						{
-							if (sqrt_calc_procs - (failing_rank % sqrt_calc_procs) < fault_protection)
+							if (sqrt_calc_procs - (failing_rank % sqrt_calc_procs) < fault_tolerance)
 							{
 								DISPLAY_WRN(label,"has first faulty rank too high: lowering..");
-								failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_protection;
+								failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_tolerance;
 							}
 							if (failing_level == 0)
 							{
@@ -63,10 +71,10 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 								DISPLAY_WRN(label,"has failing level at first one, not allowed, correcting to second one..");
 								failing_level = input.n - 2;
 							}
-							if (input.spare_procs > 0)
+							if (env.spare_procs > 0)
 							{
 								printf("     Faulty ranks:");
-								for (i=failing_rank; i<failing_rank+fault_protection; i++)
+								for (i=failing_rank; i<failing_rank+fault_tolerance; i++)
 								{
 									printf(" %d",i);
 								}
@@ -94,13 +102,13 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	{
 
 		// failure list
-		if (sqrt_calc_procs - (failing_rank % sqrt_calc_procs) < fault_protection)
+		if (sqrt_calc_procs - (failing_rank % sqrt_calc_procs) < fault_tolerance)
 		{
-			failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_protection;
+			failing_rank=(floor(failing_rank/sqrt_calc_procs)+1)*sqrt_calc_procs-fault_tolerance;
 		}
-		failing_rank_list = malloc(fault_protection*sizeof(int));
+		failing_rank_list = malloc(fault_tolerance*sizeof(int));
 
-		for (i=failing_rank; i<failing_rank+fault_protection; i++)
+		for (i=failing_rank; i<failing_rank+fault_tolerance; i++)
 		{
 			failing_rank_list[i-failing_rank]=i;
 		}
@@ -114,7 +122,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			failing_level = input.n - 2;
 		}
 
-		if (env.mpi_rank < input.calc_procs)
+		if (env.mpi_rank < env.calc_procs)
 		{
 			xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
 			bb=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
@@ -157,10 +165,10 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			bb=NULL;
 		}
 
-			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
-		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
-		else if ( strcmp( variant, "PB-CO-bf1-ftx/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
-		else if ( strcmp( variant, "PB-CO-bf1-ft0/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_protection, failing_rank_list, failing_level, recovery);
+			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
+		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
+		else if ( strcmp( variant, "PB-CO-bf1-ftx/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
+		else if ( strcmp( variant, "PB-CO-bf1-ft0/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
 		else
 		{
 			DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
@@ -186,7 +194,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 		}
 
 		//cleanup
-		if (env.mpi_rank < input.calc_procs)
+		if (env.mpi_rank < env.calc_procs)
 		{
 			if (env.mpi_rank==0)
 			{

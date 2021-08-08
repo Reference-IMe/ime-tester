@@ -15,6 +15,8 @@
 
 typedef struct parallel_env
 {
+	int calc_procs;
+	int spare_procs;
 	int mpi_rank;
 	MPI_Comm mpi_comm;
 	int blacs_nprow;
@@ -27,6 +29,16 @@ typedef struct parallel_env
 	int* blacs_ctxt_spare;
 } parallel_env;
 
+
+typedef struct fault_env
+{
+	int fault_tolerance;
+	int faulty_procs;
+	int failing_rank;
+	int failing_level;
+	int scalapack_checkpoint_interval;
+} fault_env;
+
 typedef struct test_input
 {
 	int n;
@@ -34,14 +46,9 @@ typedef struct test_input
 	double* x_ref;
 	double* b_ref;
 	int nrhs;
-	int calc_procs;
-	int spare_procs;
 	int ime_bf;
 	int scalapack_bf;
 	char calc_nre;
-	//int failing_rank;
-	//int failing_level;
-	//int checkpoint_skip_interval;
 } test_input;
 
 typedef struct test_output

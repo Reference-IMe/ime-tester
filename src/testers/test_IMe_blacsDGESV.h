@@ -31,7 +31,7 @@ test_result test_IMe_blacsDGESV(const char check, const char* label, const char*
 	{
 		if (env.mpi_rank==0)
 		{
-			if (input.spare_procs > 0)
+			if (env.spare_procs > 0)
 			{
 				DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
 			}
@@ -76,10 +76,10 @@ test_result test_IMe_blacsDGESV(const char check, const char* label, const char*
 			xx_ref = NULL;
 		}
 
-		if ( strcmp( variant, "BLACS-CO-1" ) == 0) output = blacsDGESV_CO_1(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs,
+		if ( strcmp( variant, "BLACS-CO-1" ) == 0) output = blacsDGESV_CO_1(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 																			env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 																			env.blacs_ctxt_grid, env.blacs_ctxt_root);
-		else if ( strcmp( variant, "BLACS-CO-2" ) == 0) output = blacsDGESV_CO_2(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs,
+		else if ( strcmp( variant, "BLACS-CO-2" ) == 0) output = blacsDGESV_CO_2(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 																			env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 																			env.blacs_ctxt_grid, env.blacs_ctxt_root);
 		else

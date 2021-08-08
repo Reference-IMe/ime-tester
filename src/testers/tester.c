@@ -250,15 +250,15 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = IME_PV_SV_CO_A_SMALL;
 		versionname_all[versions_all++] = IME_PV_SV_CO_A_SMALLER;
 		versionname_all[versions_all++] = IME_PV_SV_CO_A_SMALLEST;
+
+		versionname_all[versions_all++] = IME_BLACS_SV_CO_1;
+		versionname_all[versions_all++] = IME_BLACS_SV_CO_2;
 		*/
 
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
-
-		versionname_all[versions_all++] = IME_BLACS_SV_CO_1;
-		versionname_all[versions_all++] = IME_BLACS_SV_CO_2;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
@@ -477,22 +477,41 @@ int main(int argc, char **argv)
 			{
 				scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
 			}
-			if (faulty_procs == 0 && spare_procs > 0 )
+			if (fault_tolerance > 0)
 			{
-				if (mpi_rank==0) DISPLAY_WRN("\b","Some spare processes have been allocated, but no fault tolerance is enabled");
+				if (faulty_procs <= 0)
+				{
+					if (mpi_rank==0) DISPLAY_WRN("\b","Fault tolerance is set, but no process will be faulty");
+				}
+				else
+				{
+					if (spare_procs <= 0 )
+					{
+						if (mpi_rank==0) DISPLAY_ERR("\b","If fault tolerance is enabled and some processes will be faulty, then some spare processes have to be allocated");
+						MPI_Finalize();
+						return ERR_INPUT_ARG;
+					}
+				}
 			}
-			if (faulty_procs > 0 && spare_procs == 0 )
+			else
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","If fault tolerance is enabled, some spare processes have to be allocated");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
+				if (faulty_procs > 0)
+				{
+					if (mpi_rank==0) DISPLAY_WRN("\b","Some processes will be faulty, but no fault tolerance is set: unpredictable results");
+				}
+				if (spare_procs > 0 )
+				{
+					if (mpi_rank==0) DISPLAY_WRN("\b","Some spare processes have been allocated, but no fault tolerance is set");
+				}
 			}
+
 			if (spare_procs > calc_procs )
 			{
 				if (mpi_rank==0) DISPLAY_ERR("\b","Spare processes must not be more than calc. processes");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
+
 			if (!IS_SQUARE(calc_procs))
 			{
 				if (mpi_rank==0) DISPLAY_ERR("\b","The number of calc. processes has to be square");
@@ -565,6 +584,8 @@ int main(int argc, char **argv)
 	 * ****************************
 	 */
 		parallel_env routine_env = {
+			calc_procs,
+			spare_procs,
 			mpi_rank,
 			MPI_COMM_WORLD,
 			blacs_nprow,
@@ -583,11 +604,17 @@ int main(int argc, char **argv)
 			NULL,
 			NULL,
 			nrhs,
-			calc_procs,
-			spare_procs,
 			ime_nb,
 			scalapack_nb,
 			get_nre
+		};
+
+		fault_env routine_fault	= {
+			fault_tolerance,
+			faulty_procs,
+			failing_rank,
+			failing_level,
+			scalapack_checkpoint_interval
 		};
 
 	/*
@@ -733,7 +760,7 @@ int main(int argc, char **argv)
 		j=0; // error accumulation
 		for (i=0; i<versions_selected; i++)
 		{
-			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, fault_tolerance, faulty_procs, mpi_rank, failing_rank, failing_level, scalapack_checkpoint_interval)).exit_code;
+			j = j + (tester_routine(1, versionname_selected[i], verbose, routine_env, routine_input, routine_fault)).exit_code;
 		}
 		MPI_Bcast(&j,1,MPI_INT,0,MPI_COMM_WORLD);
 		if (j != 0)
@@ -833,7 +860,7 @@ int main(int argc, char **argv)
 				if (strcmp(matrix_gen_type, "par" ) == 0)
 				{
 					// init communication channels (generation uses blacs => mpi interference..)
-					test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+					test_dummy(versionname_all[0], verbose, routine_env, routine_input);
 
 					if (mpi_rank==0)
 					{
@@ -1098,12 +1125,15 @@ int main(int argc, char **argv)
 				fpinfo("hour",readtime->tm_hour);
 				fpinfo("minute",readtime->tm_min);
 				fpinfo("second",readtime->tm_sec);
-				fpinfo("number of MPI ranks",calc_procs);
+				fpinfo("number of MPI ranks",mpi_procs);
 				fpinfo("number of OMP threads",omp_threads);
 				fpinfo("number of BLACS rows",blacs_nprow);
 				fpinfo("number of BLACS columns",blacs_npcol);
 				fpinfo("number of processes",np);
+				fpinfo("number of calc processes",calc_procs);
 				fpinfo("number of spare processes",spare_procs);
+				fpinfo("number of faulty processes",faulty_procs);
+				fpinfo("fault tolerance",fault_tolerance);
 				fpinfo("failing rank",failing_rank);
 				fpinfo("failing level",failing_level);
 				fpinfo("checkpoint skip interval",scalapack_checkpoint_interval);
@@ -1136,7 +1166,7 @@ int main(int argc, char **argv)
 			}
 
 			// init communication channels if not done during matrix generation
-			if (strcmp(matrix_gen_type, "par" ) != 0) test_dummy(versionname_all[0], verbose, routine_input, mpi_rank, MPI_COMM_WORLD);
+			if (strcmp(matrix_gen_type, "par" ) != 0) test_dummy(versionname_all[0], verbose, routine_env, routine_input);
 
 			/*
 			 * main loop
@@ -1150,21 +1180,21 @@ int main(int argc, char **argv)
 				// every run calls some selected routines
 				for (i=0; i<versions_selected; i++)
 				{
-					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, fault_tolerance, faulty_procs, mpi_rank, failing_rank, failing_level, scalapack_checkpoint_interval);
+					versionrun[i][rep]=tester_routine(0, versionname_selected[i], verbose, routine_env, routine_input, routine_fault);
 
 					if (output_to_file)
 					{
 						if (mpi_rank==0)
 						{
 							fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], rep+1,				\
-																	versionrun[i][rep].exit_code,				\
-																	versionrun[i][rep].total_time,				\
-																	versionrun[i][rep].norm_rel_err				\
+																		versionrun[i][rep].exit_code,				\
+																		versionrun[i][rep].total_time,				\
+																		versionrun[i][rep].norm_rel_err				\
 							);
 							fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], "(core)", rep+1,	\
-																	versionrun[i][rep].exit_code,				\
-																	versionrun[i][rep].core_time,				\
-																	versionrun[i][rep].norm_rel_err				\
+																		versionrun[i][rep].exit_code,				\
+																		versionrun[i][rep].core_time,				\
+																		versionrun[i][rep].norm_rel_err				\
 							);
 						}
 					}
@@ -1181,9 +1211,9 @@ int main(int argc, char **argv)
 						if (verbose>0)
 						{
 							printf("%-30s    Call    run time: %10.0f (%.0f)\ts\t nre: %.17f\n",	versionname_selected[i],		\
-																								versionrun[i][rep].total_time,	\
-																								versionrun[i][rep].core_time,	\
-																								versionrun[i][rep].norm_rel_err	\
+																									versionrun[i][rep].total_time,	\
+																									versionrun[i][rep].core_time,	\
+																									versionrun[i][rep].norm_rel_err	\
 							);
 						}
 					}
@@ -1211,21 +1241,21 @@ int main(int argc, char **argv)
 				for (i=0; i<versions_selected; i++)
 				{
 					printf("%-30s    Average run time: %10.0f (%.0f)\ts\t nre: %.17f\n",	versionname_selected[i],				\
-																						versiontot[i].total_time/repetitions,	\
-																						versiontot[i].core_time/repetitions,	\
-																						versiontot[i].norm_rel_err/repetitions	\
+																							versiontot[i].total_time/repetitions,	\
+																							versiontot[i].core_time/repetitions,	\
+																							versiontot[i].norm_rel_err/repetitions	\
 					);
 					if (output_to_file)
 					{
 						fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], 0,				\
-																versionrun[i][0].exit_code,				\
-																versiontot[i].total_time/repetitions,	\
-																versiontot[i].norm_rel_err/repetitions	\
+																	versionrun[i][0].exit_code,				\
+																	versiontot[i].total_time/repetitions,	\
+																	versiontot[i].norm_rel_err/repetitions	\
 						);
 						fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], "(core)", 0,	\
-																versionrun[i][0].exit_code,				\
-																versiontot[i].core_time/repetitions,	\
-																versiontot[i].norm_rel_err/repetitions	\
+																	versionrun[i][0].exit_code,				\
+																	versiontot[i].core_time/repetitions,	\
+																	versiontot[i].norm_rel_err/repetitions	\
 						);
 					}
 				}
@@ -1236,21 +1266,21 @@ int main(int argc, char **argv)
 				{
 					dmedian( versionrun[i], repetitions);
 					printf("%-30s    Median  run time: %10.0f (%.0f)\ts\t nre: %.17f\n",	versionname_selected[i],					\
-																						versionrun[i][repetitions/2].total_time,	\
-																						versionrun[i][repetitions/2].core_time,		\
-																						versionrun[i][repetitions/2].norm_rel_err	\
+																							versionrun[i][repetitions/2].total_time,	\
+																							versionrun[i][repetitions/2].core_time,		\
+																							versionrun[i][repetitions/2].norm_rel_err	\
 					);
 					if (output_to_file)
 					{
 						fprintf(fp,"data,%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], -1,				\
-																versionrun[i][0].exit_code,					\
-																versionrun[i][repetitions/2].total_time,	\
-																versionrun[i][repetitions/2].norm_rel_err	\
+																	versionrun[i][0].exit_code,					\
+																	versionrun[i][repetitions/2].total_time,	\
+																	versionrun[i][repetitions/2].norm_rel_err	\
 						);
 						fprintf(fp,"data,%s%s,%d,%d,%.0f,%.17f\n",	versionname_selected[i], "(core)",-1,		\
-																versionrun[i][0].exit_code,					\
-																versionrun[i][repetitions/2].core_time,		\
-																versionrun[i][repetitions/2].norm_rel_err	\
+																	versionrun[i][0].exit_code,					\
+																	versionrun[i][repetitions/2].core_time,		\
+																	versionrun[i][repetitions/2].norm_rel_err	\
 						);
 					}
 				}

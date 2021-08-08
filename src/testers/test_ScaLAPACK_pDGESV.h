@@ -29,9 +29,9 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbo
 	{
 		if (env.mpi_rank==0)
 		{
-			if (input.spare_procs > 0)
+			if (env.spare_procs > 0)
 			{
-				DISPLAY_WRN(label,"can run also with FT enabled, but calc. processes differ from total processes")
+				DISPLAY_WRN(label,"can run also with fault tolerance enabled, but calc. processes differ from total processes")
 			}
 			if (input.scalapack_bf < 64)
 			{
@@ -74,7 +74,7 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbo
 			xx_ref = NULL;
 		}
 
-		output = ScaLAPACK_pDGESV(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs,
+		output = ScaLAPACK_pDGESV(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 									env.blacs_ctxt_grid, env.blacs_ctxt_root);
 

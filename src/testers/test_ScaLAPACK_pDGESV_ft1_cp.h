@@ -12,7 +12,7 @@
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ft1_cp.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, int verbosity, parallel_env env, test_input input, int fault_protection, int fault_number, int failing_level, int checkpoint_freq)
+test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, int verbosity, parallel_env env, test_input input, int fault_tolerance, int faulty_procs, int failing_level, int checkpoint_freq)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -26,19 +26,23 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 
 	int rank_calc_procs;
 
-	rank_calc_procs=sqrt(input.calc_procs);
+	rank_calc_procs=sqrt(env.calc_procs);
 
 	if (check)
 	{
 		if (env.mpi_rank==0)
 		{
-			if (fault_number > fault_protection)
+			if (faulty_procs > fault_tolerance)
 			{
-				DISPLAY_WRN(label,"requested fault occurrences greater than protection, ignoring");
+				DISPLAY_ERR(label,"requested fault occurrences greater than fault tolerance (single fault routine)");
 			}
-			if (fault_protection > 1)
+			else if (fault_tolerance < 1)
 			{
-				DISPLAY_ERR(label,"requested fault protection too high (single fault routine)");
+				DISPLAY_ERR(label,"fault tolerance disabled ('-ft 0')");
+			}
+			else if (fault_tolerance > 1)
+			{
+				DISPLAY_ERR(label,"requested fault tolerance too high (single fault routine)");
 			}
 			else
 			{
@@ -46,9 +50,13 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 				{
 					DISPLAY_WRN(label,"blocking factor < 64");
 				}
-				if (input.spare_procs > 0)
+				if (env.spare_procs > 1)
 				{
-					if (IS_SQUARE(input.calc_procs))
+					DISPLAY_ERR(label,"too many spare processes allocated (single fault routine)");
+				}
+				else if (env.spare_procs > 0)
+				{
+					if (IS_SQUARE(env.calc_procs))
 					{
 						if (IS_MULT(input.n, rank_calc_procs))
 						{
@@ -74,7 +82,7 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 				}
 				else
 				{
-					DISPLAY_ERR(label,"FT disabled ('-ft 0')");
+					DISPLAY_ERR(label,"fault tolerance enabled, but no requested spare processes");
 				}
 			}
 		}
@@ -112,7 +120,7 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp(const char check, const char* label, in
 			xx_ref = NULL;
 		}
 
-		output = ScaLAPACK_pDGESV_ft1_cp(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, input.calc_procs, input.spare_procs,
+		output = ScaLAPACK_pDGESV_ft1_cp(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs, env.spare_procs,
 										failing_level, checkpoint_freq,
 										env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 										env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare[0]);
