@@ -35,7 +35,9 @@
 #include "test_ScaLAPACK_pDGEQRF_ft1_cp.h"
 
 #include "test_FTLA_pDGETRF.h"
+#include "test_FTLA_pDGESV_TRF.h"
 #include "test_FTLA_pDGEQRF.h"
+#include "test_FTLA_pDGESV_QRF.h"
 
 #include "test_IMe_pbDGESV.h"
 #include "test_IMe_pbDGESV_ftx.h"
@@ -117,9 +119,17 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, FTLA_LU_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGETRF(check, routine_name, verbosity, routine_env, routine_input, 1);
 	else if	( strcmp( routine_name, FTLA_LU_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGETRF(check, routine_name, verbosity, routine_env, routine_input, routine_fault.faulty_procs);
 
+	else if	( strcmp( routine_name, FTLA_LU_SV_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGESV_TRF(check, routine_name, verbosity, routine_env, routine_input, 0);
+	else if	( strcmp( routine_name, FTLA_LU_SV_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGESV_TRF(check, routine_name, verbosity, routine_env, routine_input, 1);
+	else if	( strcmp( routine_name, FTLA_LU_SV_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGESV_TRF(check, routine_name, verbosity, routine_env, routine_input, routine_fault.faulty_procs);
+
 	else if	( strcmp( routine_name, FTLA_QR_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, 0);
 	else if	( strcmp( routine_name, FTLA_QR_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, 1);
 	else if	( strcmp( routine_name, FTLA_QR_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGEQRF(check, routine_name, verbosity, routine_env, routine_input, routine_fault.faulty_procs);
+
+	else if	( strcmp( routine_name, FTLA_QR_SV_FAULT_0_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGESV_QRF(check, routine_name, verbosity, routine_env, routine_input, 0);
+	else if	( strcmp( routine_name, FTLA_QR_SV_FAULT_1_TOLERANT_1 ) == 0 )	info = test_FTLA_pDGESV_QRF(check, routine_name, verbosity, routine_env, routine_input, 1);
+	else if	( strcmp( routine_name, FTLA_QR_SV_FAULT_X_TOLERANT_X ) == 0 )	info = test_FTLA_pDGESV_QRF(check, routine_name, verbosity, routine_env, routine_input, routine_fault.faulty_procs);
 
 	else info = TEST_NOT_IMPLEMENTED;
 

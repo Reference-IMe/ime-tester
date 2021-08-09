@@ -278,9 +278,17 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = FTLA_LU_FAULT_1_TOLERANT_1;
 		versionname_all[versions_all++] = FTLA_LU_FAULT_X_TOLERANT_X;
 
+		versionname_all[versions_all++] = FTLA_LU_SV_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_LU_SV_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_LU_SV_FAULT_X_TOLERANT_X;
+
 		versionname_all[versions_all++] = FTLA_QR_FAULT_0_TOLERANT_1;
 		versionname_all[versions_all++] = FTLA_QR_FAULT_1_TOLERANT_1;
 		versionname_all[versions_all++] = FTLA_QR_FAULT_X_TOLERANT_X;
+
+		versionname_all[versions_all++] = FTLA_QR_SV_FAULT_0_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_QR_SV_FAULT_1_TOLERANT_1;
+		versionname_all[versions_all++] = FTLA_QR_SV_FAULT_X_TOLERANT_X;
 
 		versions_selected = 0;
 
