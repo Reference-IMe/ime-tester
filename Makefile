@@ -188,6 +188,7 @@ $(SDS_LIB_DIR)/sds.o: $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
 
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/tester*.h \
+				$(SRC_DIR)/*.h \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
