@@ -113,7 +113,7 @@ test_result test_FTLA_pDGETRF(const char check, const char* label, int verbosity
 				printf("\nThe %s factorization is:\n",label);
 				PrintMatrix1D(A, input.n, input.n);
 				printf("\n with exit code     %d\n",output.exit_code);
-				printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
+				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
 			}
 		}
 

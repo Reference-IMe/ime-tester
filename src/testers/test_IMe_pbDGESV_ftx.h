@@ -189,7 +189,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 				printf("\nThe %s solution is:\n",label);
 				PrintMatrix2D(xx, input.n, input.nrhs);
 				printf("\n with exit code     %d\n",output.exit_code);
-				printf("      norm.rel.err. %f\n",rank_result.norm_rel_err);
+				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
 			}
 		}
 

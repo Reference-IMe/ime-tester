@@ -261,6 +261,7 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
 
 		versionname_all[versions_all++] = SPK_SV;
+		versionname_all[versions_all++] = SPK_SV_NOPIV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
 		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1_CP;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CS;

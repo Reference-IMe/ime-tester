@@ -44,6 +44,8 @@ extern void pdgetrf_cs_ (int* m, int* n, double* A, int* ia, int* ja, int* descA
 
 extern void pdgetrf_cpx_ (int* m, int* n, double* A, int* ia, int* ja, int* descA, double* Acp, int* iacp, int* jacp, int* descAcp, int* ipiv, int* ipivcp, int* nipiv, int* cpfreq, int* jfault, int* ictxt, int* cprocs, int* info);
 
+extern void pdgesvnopiv_  (int* n, int* nrhs, double* A, int* ia, int* ja, int* descA, int* ipiv, double* B, int* ib, int* jb, int* descB, int* info);
+
 // FTLA
 extern void pdmatgen_ (int*, char*, char*, int*, int*, int*, int*, double*, int*, int*, int*, int*, int*, int*, int*, int*, int*, int*, int*, int*);
 extern void pdgeqrrv_ (int* m, int* n, double* A, int* ia, int* ja, int* descA, double* tau, double* work);

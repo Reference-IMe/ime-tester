@@ -196,6 +196,9 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cpx.o \
 				$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cs.o \
+				$(TST_DIR)/ScaLAPACK/pdgesv_nopivot.o \
+				$(TST_DIR)/ScaLAPACK/pdgetf2_nopivot.o \
+				$(TST_DIR)/ScaLAPACK/pdgetrf_nopivot.o \
 				$(TST_DIR)/FTLA/*.h \
 				| $(FTLA_LIB_DIR)/libftla.a \
 				$(BIN_DIR)
@@ -209,6 +212,9 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 		$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
 		$(TST_DIR)/ScaLAPACK/pdgetrf_cpx.o \
 		$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
+		$(TST_DIR)/ScaLAPACK/pdgesv_nopivot.o \
+		$(TST_DIR)/ScaLAPACK/pdgetf2_nopivot.o \
+		$(TST_DIR)/ScaLAPACK/pdgetrf_nopivot.o \
 		$(FTLA_LIB_DIR)/libftla.a \
 		$(FTLA_LIB_DIR)/helpersftla.a \
 		$(SCALAPACK_LIB_DIR)/libscalapack.a \

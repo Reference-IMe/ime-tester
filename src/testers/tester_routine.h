@@ -24,6 +24,7 @@
 #include "tester_structures.h"
 
 #include "test_ScaLAPACK_pDGESV.h"
+#include "test_ScaLAPACK_pDGESV_nopivot.h"
 #include "test_ScaLAPACK_pDGESV_ft1_cp.h"
 #include "test_ScaLAPACK_pDGESV_ft1_cs.h"
 #include "test_ScaLAPACK_pDGESV_ftx_cp.h"
@@ -102,6 +103,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 //	else if	( strcmp( routine_name, IME_BLACS_SV_CO_2 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-2", verbosity, routine_env, routine_input);
 
 	else if	( strcmp( routine_name, SPK_SV ) 						== 0 )	info = test_ScaLAPACK_pDGESV       (check, routine_name, verbosity, routine_env, routine_input);
+	else if	( strcmp( routine_name, SPK_SV_NOPIV ) 					== 0 )	info = test_ScaLAPACK_pDGESV_nopivot(check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, 1,                             0, -1,                          routine_fault.scalapack_checkpoint_interval);
 	else if	( strcmp( routine_name, SPK_SV_FAULT_1_TOLERANT_1_CP ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cp(check, routine_name, verbosity, routine_env, routine_input, 1,                             1, routine_fault.failing_level, routine_fault.scalapack_checkpoint_interval);
 	else if	( strcmp( routine_name, SPK_SV_FAULT_0_TOLERANT_1_CS ) 	== 0 )	info = test_ScaLAPACK_pDGESV_ft1_cs(check, routine_name, verbosity, routine_env, routine_input, 1,                             0, -1,                          routine_fault.scalapack_checkpoint_interval);
