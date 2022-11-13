@@ -35,7 +35,7 @@
 int versionnumber_in(int n_all, char** all, char* selected)
 {
 	int i=n_all-1;
-	while (i>=0)
+	while (i>=1) // skips the first ("dummy" not callable)
 	{
 		if( strcmp( all[i], selected ) == 0 )
 		{
@@ -43,7 +43,7 @@ int versionnumber_in(int n_all, char** all, char* selected)
 		}
 		i--;
 	}
-	return i;
+	return i-1; // returns -1 if no match
 }
 
 char* faketrim(char* str)
@@ -182,13 +182,13 @@ int main(int argc, char **argv)
 		output_to_file			 = 0;		// no output to file
 		input_from_file			 = 0;		// no input from file
 		command					 = "null";
-		nmat					 = 8;
+		nmat					 = -1;		// size (rank) of the input matrix;
 		nrhs					 = 1;
 		verbose					 = 1;		// minimum output verbosity (0 = none)
 		repetitions				 = 1;		// how many calls for each routine
-		spare_procs				 = 0;		// no fault tolerance enabled
-		faulty_procs			 = 0;
-		fault_tolerance			 = 0;
+		spare_procs				 = 0;		// no recovery possible in case of fault
+		faulty_procs			 = 0;		// no faults will occur
+		fault_tolerance			 = -1;		// level of fault tolerance requested (0 = none, -1 = unset)
 		failing_rank			 = 2;		// process 2 will fail
 		failing_level			 = -1;		// failing level
 		failing_level_override	 = -1;		// failing level automatically set
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 		// TODO: add a description for every routine
 
 		versions_all = 0;
-		versionname_all[versions_all++] = "dummy";
+		versionname_all[versions_all++] = "dummy"; // not actually callable
 
 		versionname_all[versions_all++] = IME_DEV;
 		// default version removed
@@ -257,14 +257,14 @@ int main(int argc, char **argv)
 
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
-		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
+		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_NOPIV;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
 		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1_CP;
-		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CS;
+		//versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CS;
 		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_X_CP;
 
 		versionname_all[versions_all++] = SPK_LU;
@@ -299,22 +299,6 @@ int main(int argc, char **argv)
 		// TODO: checking for valid arguments
 		for( i = 1; i < argc; i++ )
 		{
-			if( strcmp( argv[i], "-nm" ) == 0 ) {
-				nmat = atoi(argv[i+1]);
-				i++;
-			}
-			if( strcmp( argv[i], "-nrhs" ) == 0 ) {
-				nrhs = atoi(argv[i+1]);
-				i++;
-			}
-			if( strcmp( argv[i], "-v" ) == 0 ) {
-				verbose = atoi(argv[i+1]);
-				i++;
-			}
-			if( strcmp( argv[i], "-r" ) == 0 ) {
-				repetitions = atoi(argv[i+1]);
-				i++;
-			}
 			if( strcmp( argv[i], "-o" ) == 0 ) {
 				output_to_file = 1;
 				test_output_file_name = sdsnew(argv[i+1]);
@@ -325,16 +309,39 @@ int main(int argc, char **argv)
 				matrix_input_base_name = sdsnew(argv[i+1]);
 				i++;
 			}
-			// number of spare procs
-			if( strcmp( argv[i], "-nps" ) == 0 ) {
-				spare_procs = atoi(argv[i+1]);
+			if( strcmp( argv[i], "-v" ) == 0 ) {
+				verbose = atoi(argv[i+1]);
 				i++;
 			}
-			// number of procs faulted
-			if( strcmp( argv[i], "-npf" ) == 0 ) {
-				faulty_procs = atoi(argv[i+1]);
+			if( strcmp( argv[i], "-r" ) == 0 ) {
+				repetitions = atoi(argv[i+1]);
 				i++;
 			}
+			if( strcmp( argv[i], "-seed" ) == 0 ) {
+				seed = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-cnd" ) == 0 ) {
+				cnd = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
+				scalapack_nb = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-ime-nb" ) == 0 ) {
+				ime_nb = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-nm" ) == 0 ) {
+				nmat = atoi(argv[i+1]);
+				i++;
+			}
+			if( strcmp( argv[i], "-nrhs" ) == 0 ) {
+				nrhs = atoi(argv[i+1]);
+				i++;
+			}
+
 			// fault tolerance
 			if( strcmp( argv[i], "-ft" ) == 0 ) {
 				fault_tolerance = atoi(argv[i+1]);
@@ -349,22 +356,22 @@ int main(int argc, char **argv)
 				failing_level_override = 1;
 				i++;
 			}
+			// number of spare procs
+			if( strcmp( argv[i], "-nps" ) == 0 ) {
+				spare_procs = atoi(argv[i+1]);
+				i++;
+			}
+			// number of procs faulted
+			if( strcmp( argv[i], "-npf" ) == 0 ) {
+				faulty_procs = atoi(argv[i+1]);
+				i++;
+			}
+
 			if( strcmp( argv[i], "-cp" ) == 0 ) {
 				scalapack_checkpoint_interval = atoi(argv[i+1]);
 				i++;
 			}
-			if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
-				scalapack_nb = atoi(argv[i+1]);
-				i++;
-			}
-			if( strcmp( argv[i], "-ime-nb" ) == 0 ) {
-				ime_nb = atoi(argv[i+1]);
-				i++;
-			}
-			if( strcmp( argv[i], "-cnd" ) == 0 ) {
-				cnd = atoi(argv[i+1]);
-				i++;
-			}
+
 			if( strcmp( argv[i], "-no-cnd-readback" ) == 0 ) {
 				get_cnd = 0;
 				//i++; // no parameter value, no inc
@@ -372,10 +379,6 @@ int main(int argc, char **argv)
 			if( strcmp( argv[i], "-no-cnd-set" ) == 0 ) {
 				set_cnd = 0;
 				//i++; // no parameter value, no inc
-			}
-			if( strcmp( argv[i], "-seed" ) == 0 ) {
-				seed = atoi(argv[i+1]);
-				i++;
 			}
 			if( strcmp( argv[i], "-no-nre-readback" ) == 0 ) {
 				get_nre = 0;
@@ -460,65 +463,128 @@ int main(int argc, char **argv)
 
 		np=mpi_procs*omp_threads;
 
+		if (mpi_rank==0 && verbose>0)
+		{
+			printf("\n IMe test suite\n================\n");
+		}
+
 		/*
 		 *******************
 		 * preliminary check
 		 *******************
 		 */
-		if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip check
+		if ( strcmp(command, "null" ) != 0 && strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0 ) // if informative commands, skip check
 		{
 			// checking on some input parameters
-			if (mpi_rank==0 && verbose>0)
+			if (verbose < 0)
 			{
-				printf("\n IMe test suite\n================\n");
+				//if (mpi_rank==0) DISPLAY_WRN("\b","Verbosity level cannot be less than zero: setting to zero");
+				verbose=0;
 			}
-			if (failing_level_override < 0 ) 	// if faulty level NOT set on command line
+			if (repetitions <= 0)
 			{
-				failing_level = nmat/2;			// faulty level/iteration, -1=none
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","Repetitions cannot be less than one: setting to one");
+				repetitions=1;
 			}
-			if (failing_level < 0 || failing_level >= nmat )
+			if (cnd < 1)
 			{
-				if (mpi_rank==0) DISPLAY_WRN("\b","Failing level grater than greatest level: never failing!");
-				failing_level=-1;
-				scalapack_failing_level=-1;
+				if (mpi_rank==0) DISPLAY_ERR("\b","Condition number invalid: must be at least one");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (scalapack_nb <= 0)
+			{
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","ScaLAPACK blocking factor cannot be less than one: setting to one");
+				scalapack_nb=1;
+			}
+			if (ime_nb <= 0)
+			{
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","IMe blocking factor cannot be less than one: setting to one");
+				ime_nb=1;
+			}
+			if (nmat <= 0)
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","Input matrix size not set or invalid: must be grater than zero");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (nrhs <= 0)
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","Number of r.h.s invalid: must be greater than zero");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (faulty_procs < 0)
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","Number of faulty processes invalid: must be at least zero");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (spare_procs < 0)
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","Number of spare processes invalid: must be at least zero");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			if (fault_tolerance < 0)
+			{
+				if (mpi_rank==0) DISPLAY_ERR("\b","Fault tolerance level not set or invalid: must be at least zero");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
 			}
 			else
 			{
-				scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
-			}
-			if (fault_tolerance > 0)
-			{
-				if (faulty_procs <= 0)
+				if (fault_tolerance == 0)
 				{
-					if (mpi_rank==0) DISPLAY_WRN("\b","Fault tolerance is set, but no process will be faulty");
+					failing_level=-1;
+					scalapack_failing_level=-1;
+					failing_rank=-1;
 				}
-				else
+				else // (fault_tolerance > 0)
 				{
-					if (spare_procs <= 0 )
+					if (failing_level_override < 0 ) // faulty level NOT set on command line
 					{
-						if (mpi_rank==0) DISPLAY_ERR("\b","If fault tolerance is enabled and some processes will be faulty, then some spare processes have to be allocated");
+						if (mpi_rank==0) DISPLAY_ERR("\b","Failing level not set: if fault tolerance is enabled a failing level must be given");
 						MPI_Finalize();
 						return ERR_INPUT_ARG;
 					}
+					else // faulty level IS set on command line
+					{
+						if (failing_level < 0 || failing_level >= nmat ) // out of bounds faulty level
+						{
+							if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","Failing level less than zero or greater than greatest level: never failing!");
+							failing_level=-1;
+							scalapack_failing_level=-1;
+							failing_rank=-1;
+						}
+						else // valid faulty level
+						{
+							// calc corresponding level for ScaLAPACK
+							scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
+						}
+					}
+					if (faulty_procs == 0)
+					{
+						if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","Fault tolerance is set, but no process will be faulty: never failing!");
+						failing_level=-1;
+						scalapack_failing_level=-1;
+						failing_rank=-1;
+					}
+					else // (faulty_procs > 0)
+					{
+						if (failing_level == -1)
+						{
+							if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","At least one faulty process is set but not a faulty level: never failing!");
+						}
+						else
+						{
+							if (spare_procs == 0 )
+							{
+								if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","No spare processes: faults cannot be recovered!");
+							}
+						}
+					}
 				}
-			}
-			else
-			{
-				if (faulty_procs > 0)
-				{
-					if (mpi_rank==0) DISPLAY_WRN("\b","Some processes will be faulty, but no fault tolerance is set: unpredictable results");
-				}
-				if (spare_procs > 0 )
-				{
-					if (mpi_rank==0) DISPLAY_WRN("\b","Some spare processes have been allocated, but no fault tolerance is set");
-				}
-			}
-
-			if (spare_procs > calc_procs )
-			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Spare processes must not be more than calc. processes");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
 			}
 
 			if (!IS_SQUARE(calc_procs))
@@ -631,119 +697,123 @@ int main(int argc, char **argv)
 	 * starting summary to video
 	 * ******************************
 	 */
-	if (mpi_rank==0 && verbose>0)
+	if ( strcmp(command, "null" ) != 0 && strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip check
 	{
-		printf("     Total processes:               %d\n",np);
-		printf("     OMP threads:                   %d\n",omp_threads);
-		printf("     MPI ranks:                     %d\n",mpi_procs);
-		printf("     BLACS grid:                    %dx%d\n",blacs_nprow,blacs_npcol);
-	}
-	/*
-	 * check grid ranking
-	 */
-	if (verbose>2)
-	{
-		if (mpi_rank==0)
+		if (mpi_rank==0 && verbose>0)
 		{
-			printf("     MPI ranks of calc. processes:\n");
-			printf("       Planned:\n");
-			for (i=0; i<blacs_nprow; i++)
+			printf("     Total processes:               %d\n",np);
+			printf("     OMP threads:                   %d\n",omp_threads);
+			printf("     MPI ranks:                     %d\n",mpi_procs);
+			printf("     BLACS grid:                    %dx%d\n",blacs_nprow,blacs_npcol);
+		}
+		/*
+		 * check grid ranking
+		 */
+		if (verbose>2)
+		{
+			if (mpi_rank==0)
 			{
-				printf("         ");
-				for (j=0; j<blacs_npcol; j++)
+				printf("     MPI ranks of calc. processes:\n");
+				printf("       Planned:\n");
+				for (i=0; i<blacs_nprow; i++)
 				{
-					printf("%d\t",i*blacs_npcol+j);
+					printf("         ");
+					for (j=0; j<blacs_npcol; j++)
+					{
+						printf("%d\t",i*blacs_npcol+j);
+					}
+					printf("\n");
 				}
-				printf("\n");
+				printf("       Allocated:\n");
+				fflush(stdout);
 			}
-			printf("       Allocated:\n");
-			fflush(stdout);
-		}
 
-		for (i=0; i<mpi_procs; i++)
-		{
-			MPI_Barrier(MPI_COMM_WORLD);
-			if (mpi_rank==i)
+			for (i=0; i<mpi_procs; i++)
 			{
-				printf("         %d @ (%d,%d)\n",i,blacs_row,blacs_col);
-			}
-			MPI_Barrier(MPI_COMM_WORLD);
-			fflush(stdout);
-		}
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	if (mpi_rank==0 && verbose>0)
-	{
-		printf("     Calculate n.r.e.:              ");
-			if (get_nre)	{printf("yes\n");}
-			else			{printf("no\n");}
-		printf("     IMe iterations:                %d\n",rows);
-		printf("     IMe blocking factor:           %d\n",ime_nb);
-		printf("     SPK-like iterations:           %d\n",scalapack_iter);
-		printf("     SPK-like blocking factor:      %d\n",scalapack_nb);
-
-		printf("     Fault tolerance:               ");
-		if (faulty_procs > 0)
-		{
-			printf("enabled = %d\n",faulty_procs);
-			printf("       Calc. processes:             %d\n",calc_procs);
-			printf("       Spare processes:             %d\n",spare_procs);
-			printf("     IMe failing rank:              %d\n",failing_rank);
-			printf("     IMe failing level:             ");
-				if (failing_level<0) {printf("never = ");}
-				printf("%d\n",failing_level);
-			printf("     SPK-like failing level:        ");
-				if (failing_level<0) {printf("never = -1\n");}
-				else {printf("%d\n",nmat-failing_level);}
-			printf("     SPK-like failing iteration:    ");
-				if (failing_level<0) {printf("never = ");}
-				printf("%d\n",scalapack_failing_level);
-			printf("     Checkpoint skip interval:      %d\n",scalapack_checkpoint_interval);
-
-			printf("     Checkpoint freq.:              ");
-			if (scalapack_checkpoint_interval<0)
-			{
-				printf("never\n");
-			}
-			else
-			{
-				if (scalapack_checkpoint_interval==0)
+				MPI_Barrier(MPI_COMM_WORLD);
+				if (mpi_rank==i)
 				{
-					printf("always\n");
+					printf("         %d @ (%d,%d)\n",i,blacs_row,blacs_col);
+				}
+				MPI_Barrier(MPI_COMM_WORLD);
+				fflush(stdout);
+			}
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		if (mpi_rank==0 && verbose>0)
+		{
+			printf("     Calculate n.r.e.:              ");
+				if (get_nre)	{printf("yes\n");}
+				else			{printf("no\n");}
+			printf("     IMe iterations:                %d\n",rows);
+			printf("     IMe blocking factor:           %d\n",ime_nb);
+			printf("     SPK-like iterations:           %d\n",scalapack_iter);
+			printf("     SPK-like blocking factor:      %d\n",scalapack_nb);
+
+			printf("     Fault tolerance:               ");
+			if (fault_tolerance > 0)
+			{
+				printf("enabled = %d\n",fault_tolerance);
+				printf("       Calc. processes:             %d\n",calc_procs);
+				printf("       Faulty processes:            %d\n",faulty_procs);
+				printf("       Spare processes:             %d\n",spare_procs);
+				printf("     IMe failing rank:              %d\n",failing_rank);
+				printf("     IMe failing level:             ");
+					if (failing_level<0) {printf("never = ");}
+					printf("%d\n",failing_level);
+				printf("     SPK-like failing level:        ");
+					if (failing_level<0) {printf("never = -1\n");}
+					else {printf("%d\n",nmat-failing_level);}
+				printf("     SPK-like failing iteration:    ");
+					if (failing_level<0) {printf("never = ");}
+					printf("%d\n",scalapack_failing_level);
+				printf("     Checkpoint skip interval:      %d\n",scalapack_checkpoint_interval);
+
+				printf("     Checkpoint freq.:              ");
+				if (scalapack_checkpoint_interval<0)
+				{
+					printf("never\n");
 				}
 				else
 				{
-					printf("every %d iterations\n",scalapack_checkpoint_interval+1);
+					if (scalapack_checkpoint_interval==0)
+					{
+						printf("always\n");
+					}
+					else
+					{
+						printf("every %d iterations\n",scalapack_checkpoint_interval+1);
+					}
 				}
 			}
-		}
-		else
-		{
-			printf("disabled\n");
-			printf("       Calc. processes:             %d\n",calc_procs);
-		}
+			else
+			{
+				printf("disabled\n");
+				printf("       Calc. processes:             %d\n",calc_procs);
+			}
 
-		printf("     Testing routines:\n");
-		for( j = 0; j < versions_selected; j++ )
-		{
-			printf("      %2d %s\n", j+1 ,versionname_selected[j]);
-		}
+			printf("     Testing routines:\n");
+			for( j = 0; j < versions_selected; j++ )
+			{
+				printf("      %2d %s\n", j+1 ,versionname_selected[j]);
+			}
 
-		printf("     Run repetitions:               %d\n",repetitions);
+			printf("     Run repetitions:               %d\n",repetitions);
 
-		if (output_to_file)
-		{
-			printf("     Output file:                   %s\n",test_output_file_name);
+			if (output_to_file)
+			{
+				printf("     Output file:                   %s\n",test_output_file_name);
+			}
+			else
+			{
+				printf("WRN: No output to file\n");
+			}
 		}
-		else
-		{
-			printf("WRN: No output to file\n");
-		}
-	}
+//	}
 
-	if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip checks and preparation
-	{
+//	if ( strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip checks and preparation
+//	{
 		/*
 		 * ******
 		 * checks
@@ -871,7 +941,7 @@ int main(int argc, char **argv)
 					// init communication channels (generation uses blacs => mpi interference..)
 					test_dummy(versionname_all[0], verbose, routine_env, routine_input);
 
-					if (mpi_rank==0)
+					if (mpi_rank==0 && verbose>0)
 					{
 						printf("     Generating random input matrices in parallel with ScaLAPACK\n");
 						if (!get_cnd)
@@ -897,7 +967,7 @@ int main(int argc, char **argv)
 				}
 				else if (strcmp(matrix_gen_type, "seq" ) == 0)
 				{
-					if (mpi_rank==0)
+					if (mpi_rank==0 && verbose>0)
 					{
 						printf("     Generating random input matrices sequentially with LAPACK\n");
 						if (!get_cnd)
@@ -932,6 +1002,23 @@ int main(int argc, char **argv)
 			routine_input.A_ref = A_ref;
 			routine_input.x_ref = x_ref;
 			routine_input.b_ref = b_ref;
+
+			/*
+			 * ******************************
+			 * continuing summary to video
+			 * ******************************
+			 */
+			if (mpi_rank==0 && verbose>0)
+			{
+				printf("     Matrix random generation seed: %d\n",seed);
+				printf("     Matrix size:                   %dx%d\n",rows,cols);
+				printf("     Matrix condition number set:   %d\n",cnd);
+				printf("     Matrix condition number got:   %d\n",cnd_readback);
+				if (cnd_readback!=cnd)
+				{
+					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,cnd_readback);
+				}
+			}
 	}
 	else
 	{
@@ -940,22 +1027,6 @@ int main(int argc, char **argv)
 		b_ref = NULL;
 	}
 
-	/*
-	 * ******************************
-	 * continuing summary to video
-	 * ******************************
-	 */
-	if (mpi_rank==0 && verbose>0)
-	{
-		printf("     Matrix random generation seed: %d\n",seed);
-		printf("     Matrix size:                   %dx%d\n",rows,cols);
-		printf("     Matrix condition number set:   %d\n",cnd);
-		printf("     Matrix condition number got:   %d\n",cnd_readback);
-		if (cnd_readback!=cnd)
-		{
-			printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,cnd_readback);
-		}
-	}
 
 	/*
 	 * ********
@@ -1005,10 +1076,10 @@ int main(int argc, char **argv)
 	{
 		if (mpi_rank==0)
 		{
-			printf("Testable routines:\n");
-			for( j = 0; j < versions_all; j++ )
+			printf("\nTestable routines:\n");
+			for( j = 1; j < versions_all; j++ )
 			{
-				printf("     %2d %s\n", j+1 ,versionname_all[j]);
+				printf("     %2d %s\n", j ,versionname_all[j]);
 			}
 			printf("\n");
 		}
@@ -1232,7 +1303,7 @@ int main(int argc, char **argv)
 			/*
 			 * print final summary to video and to file
 			 */
-			if (mpi_rank==0)
+			if (mpi_rank==0 && verbose>0)
 			{
 				printf("\n Summary:\n");
 

@@ -29,62 +29,7 @@ test_result test_ScaLAPACK_pDGETRF_ft1(const char check, const char* label, int 
 
 	if (check)
 	{
-		if (env.mpi_rank==0)
-		{
-			if (faulty_procs > fault_tolerance)
-			{
-				DISPLAY_ERR(label,"requested fault occurrences greater than fault tolerance (single fault routine)");
-			}
-			else if (fault_tolerance < 1)
-			{
-				DISPLAY_ERR(label,"fault tolerance disabled ('-ft 0')");
-			}
-			else if (fault_tolerance > 1)
-			{
-				DISPLAY_ERR(label,"requested fault tolerance too high (single fault routine)");
-			}
-			else
-			{
-				if (input.scalapack_bf < 64)
-				{
-					DISPLAY_WRN(label,"blocking factor < 64");
-				}
-				if (env.spare_procs > 1)
-				{
-					DISPLAY_ERR(label,"too many spare processes allocated (single fault routine)");
-				}
-				else if (env.spare_procs > 0)
-				{
-					if (IS_SQUARE(env.calc_procs))
-					{
-						if (IS_MULT(input.n, rank_calc_procs))
-						{
-							if (IS_MULT(input.n / rank_calc_procs, input.scalapack_bf))
-							{
-								DISPLAY_MSG(label,"OK");
-								output.exit_code = 0;
-							}
-							else
-							{
-								DISPLAY_ERR(label,"the number of columns (rows) per calc. process has to be a multiple of the blocking factor");
-							}
-						}
-						else
-						{
-							DISPLAY_ERR(label,"the matrix size has to be a multiple of the calc. processes per rank");
-						}
-					}
-					else
-					{
-						DISPLAY_ERR(label,"the number of the calc. processes must be square");
-					}
-				}
-				else
-				{
-					DISPLAY_ERR(label,"fault tolerance enabled, but no requested spare processes");
-				}
-			}
-		}
+		#include "test_ScaLAPACK_pre-check_ft.inc"
 	}
 	else
 	{
@@ -118,21 +63,8 @@ test_result test_ScaLAPACK_pDGETRF_ft1(const char check, const char* label, int 
 
 		if (env.mpi_rank==0)
 		{
-			// check exit condition
-			if (output.exit_code!=0)
-			{
-				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
-			}
-			// calc error
-			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(bb, input.x_ref, input.n, input.nrhs);
-
-			if (verbosity>1)
-			{
-				printf("\nThe %s factorization is:\n",label);
-				PrintMatrix1D(A, input.n, input.n);
-				printf("\n with exit code     %d\n",output.exit_code);
-				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
-			}
+			#include "test_ScaLAPACK_post-check-factorization.inc"
+			#include "test_ScaLAPACK_show-factorization.inc"
 		}
 
 		NULLFREE(A);

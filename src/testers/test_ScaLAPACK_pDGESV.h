@@ -27,19 +27,7 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbo
 
 	if (check)
 	{
-		if (env.mpi_rank==0)
-		{
-			if (env.spare_procs > 0)
-			{
-				DISPLAY_WRN(label,"can run also with fault tolerance enabled, but calc. processes differ from total processes")
-			}
-			if (input.scalapack_bf < 64)
-			{
-				DISPLAY_WRN(label,"blocking factor < 64")
-			}
-			DISPLAY_MSG(label,"OK");
-			output.exit_code = 0;
-		}
+		#include "test_ScaLAPACK_pre-check.inc"
 	}
 	else
 	{
@@ -80,22 +68,10 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbo
 
 		if (env.mpi_rank==0)
 		{
-			// check exit condition
-			if (output.exit_code!=0)
-			{
-				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
-			}
-			// calc error
-			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(bb, xx_ref, input.n, input.nrhs);
-
-			if (verbosity>1)
-			{
-				printf("\nThe %s solution is:\n",label);
-				PrintMatrix1D(bb, input.n, input.nrhs);
-				printf("\n with exit code     %d\n",output.exit_code);
-				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
-			}
+			#include "test_ScaLAPACK_post-check-solution.inc"
+			#include "test_ScaLAPACK_show-solution.inc"
 		}
+
 		NULLFREE(A);
 		NULLFREE(bb);
 		NULLFREE(xx_ref);

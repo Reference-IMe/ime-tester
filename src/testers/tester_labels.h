@@ -12,6 +12,7 @@
 #define ERR_ROUTINE_UNKNOWN					3
 #define ERR_ROUTINE_MISCONFIG				4
 
+#define DUMMY								"dummy"
 
 #define IME_PV_SV_WO						"IMe-PV-SV-WO"
 #define IME_PV_SV_WO_OAE					"IMe-PV-SV-WO-oae"

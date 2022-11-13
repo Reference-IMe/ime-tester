@@ -32,9 +32,17 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 	{
 		if (env.mpi_rank==0)
 		{
+			if (faulty_procs == 0)
+			{
+				if (verbosity>0) DISPLAY_WRN(label,"No fault will be actually injected: (never failing)");
+			}
 			if (fault_tolerance*sqrt_calc_procs > env.spare_procs)
 			{
 				DISPLAY_ERR(label,"not enough spare processes for the requested fault tolerance level");
+			}
+			else if (fault_tolerance*sqrt_calc_procs < env.spare_procs)
+			{
+				DISPLAY_ERR(label,"in this experimental version spare processes have to match the requested fault tolerance level");
 			}
 			else if (fault_tolerance < 1)
 			{
@@ -42,7 +50,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			}
 			else if (faulty_procs > fault_tolerance)
 			{
-				DISPLAY_ERR(label,"requested fault occurrences greater than fault tolerance");
+				DISPLAY_ERR(label,"requested fault occurrences greater than fault tolerance level");
 			}
 			else if (input.ime_bf < 1)
 			{
@@ -168,7 +176,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* label, const char
 			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
 		else if ( strcmp( variant, "PB-CO-bf1-ftx/0") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
 		else if ( strcmp( variant, "PB-CO-bf1-ftx/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
-		else if ( strcmp( variant, "PB-CO-bf1-ft0/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
+		//else if ( strcmp( variant, "PB-CO-bf1-ft0/x") == 0) output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
 		else
 		{
 			DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");

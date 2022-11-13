@@ -25,19 +25,7 @@ test_result test_ScaLAPACK_pDGEQRF(const char check, const char* label, int verb
 
 	if (check)
 	{
-		if (env.mpi_rank==0)
-		{
-			if (env.spare_procs > 0)
-			{
-				DISPLAY_WRN(label,"can run also with fault tolerance enabled, but calc. processes differ from total processes")
-			}
-			if (input.scalapack_bf < 64)
-			{
-				DISPLAY_WRN(label,"blocking factor < 64")
-			}
-			DISPLAY_MSG(label,"OK");
-			output.exit_code = 0;
-		}
+		#include "test_ScaLAPACK_pre-check.inc"
 	}
 	else
 	{
@@ -70,24 +58,8 @@ test_result test_ScaLAPACK_pDGEQRF(const char check, const char* label, int verb
 
 		if (env.mpi_rank==0)
 		{
-			// check exit condition
-			if (output.exit_code!=0)
-			{
-				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
-			}
-			// calc error
-			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(bb, input.x_ref, input.n, 1);
-		}
-
-		if (env.mpi_rank==0)
-		{
-			if (verbosity>1)
-			{
-				printf("\nThe %s factorization is:\n",label);
-				PrintMatrix1D(A, input.n, input.n);
-				printf("\n with exit code     %d\n",output.exit_code);
-				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
-			}
+			#include "test_ScaLAPACK_post-check-factorization.inc"
+			#include "test_ScaLAPACK_show-factorization.inc"
 		}
 
 		NULLFREE(A);
