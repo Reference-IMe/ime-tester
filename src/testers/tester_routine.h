@@ -39,10 +39,10 @@
 #include "test_FTLA_pDGESV_TRF.h"
 #include "test_FTLA_pDGEQRF.h"
 #include "test_FTLA_pDGESV_QRF.h"
+#include "test_IMe_pbDGESV_CO.h"
+#include "test_IMe_pbDGESV_CO_ftx.h"
 
-#include "test_IMe_pbDGESV.h"
-#include "test_IMe_pbDGESV_ftx.h"
-
+#include "test_IMe_pbDGESV_WO.h"
 /*
 #include "test_IMe_pvDGESV.h"
 #include "test_IMe_blacsDGESV.h"
@@ -98,6 +98,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ftx/x", verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
 //	else if	( strcmp( routine_name, IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0)== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ft0/x", verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 0);
 	else if	( strcmp( routine_name, IME_DEV )							== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "dev",             verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
+	else if	( strcmp( routine_name, IME_PB_SV_WO_BF1 )					== 0 )	info = test_IMe_pbDGESV_WO (check, routine_name, "PB-WO-bf1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 
 //	else if	( strcmp( routine_name, IME_BLACS_SV_CO_1 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-1", verbosity, routine_env, routine_input);
 //	else if	( strcmp( routine_name, IME_BLACS_SV_CO_2 )					== 0 )	info = test_IMe_blacsDGESV (check, routine_name, "BLACS-CO-2", verbosity, routine_env, routine_input);

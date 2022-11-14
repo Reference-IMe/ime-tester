@@ -255,6 +255,7 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = IME_BLACS_SV_CO_2;
 		*/
 
+		versionname_all[versions_all++] = IME_PB_SV_WO_BF1;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
 		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
