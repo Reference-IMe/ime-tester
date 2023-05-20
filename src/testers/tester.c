@@ -189,8 +189,8 @@ int main(int argc, char **argv)
 		spare_procs				 = 0;		// no recovery possible in case of fault
 		faulty_procs			 = 0;		// no faults will occur
 		fault_tolerance			 = -1;		// level of fault tolerance requested (0 = none, -1 = unset)
-		failing_rank			 = 2;		// process 2 will fail
-		failing_level			 = -1;		// failing level
+		failing_rank			 = 2;		// in case of fault, process 2 will fail
+		failing_level			 = -1;		// failing level (-1 = none, never failing)
 		failing_level_override	 = -1;		// failing level automatically set
 		scalapack_checkpoint_interval = -1;		// -1=never, otherwise do at every (scalapack_checkpoint_interval+1) iteration
 		cnd						 = 1;		// condition number for randomly generated matrices
@@ -257,16 +257,18 @@ int main(int argc, char **argv)
 
 		versionname_all[versions_all++] = IME_PB_SV_WO_BF1;
 		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
-		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
+		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
 		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
-		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
+		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
+		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FT;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_NOPIV;
-		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
-		versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1_CP;
+		//versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CP;
+		//versionname_all[versions_all++] = SPK_SV_FAULT_1_TOLERANT_1_CP;
 		//versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_1_CS;
-		versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_X_CP;
+		//versionname_all[versions_all++] = SPK_SV_FAULT_0_TOLERANT_X_CP;
+		versionname_all[versions_all++] = SPK_SV_FT_CP;
 
 		versionname_all[versions_all++] = SPK_LU;
 		versionname_all[versions_all++] = SPK_LU_FAULT_0_TOLERANT_1;
@@ -326,6 +328,10 @@ int main(int argc, char **argv)
 				cnd = atoi(argv[i+1]);
 				i++;
 			}
+			if( strcmp( argv[i], "-spk-cp" ) == 0 ) {
+				scalapack_checkpoint_interval = atoi(argv[i+1]);
+				i++;
+			}
 			if( strcmp( argv[i], "-spk-nb" ) == 0 ) {
 				scalapack_nb = atoi(argv[i+1]);
 				i++;
@@ -365,11 +371,6 @@ int main(int argc, char **argv)
 			// number of procs faulted
 			if( strcmp( argv[i], "-npf" ) == 0 ) {
 				faulty_procs = atoi(argv[i+1]);
-				i++;
-			}
-
-			if( strcmp( argv[i], "-cp" ) == 0 ) {
-				scalapack_checkpoint_interval = atoi(argv[i+1]);
 				i++;
 			}
 
@@ -469,6 +470,7 @@ int main(int argc, char **argv)
 			printf("\n IMe test suite\n================\n");
 		}
 
+
 		/*
 		 *******************
 		 * preliminary check
@@ -484,68 +486,57 @@ int main(int argc, char **argv)
 			}
 			if (repetitions <= 0)
 			{
-				if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","Repetitions cannot be less than one: setting to one");
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Repetitions cannot be less than one: setting to one");
 				repetitions=1;
 			}
 			if (cnd < 1)
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Condition number invalid: must be at least one");
+				if (mpi_rank==0) DISPLAY_ERR_GLB("Condition number invalid: must be at least one");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
 			if (scalapack_nb <= 0)
 			{
-				if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","ScaLAPACK blocking factor cannot be less than one: setting to one");
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("ScaLAPACK blocking factor cannot be less than one: setting to one");
 				scalapack_nb=1;
 			}
 			if (ime_nb <= 0)
 			{
-				if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","IMe blocking factor cannot be less than one: setting to one");
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("IMe blocking factor cannot be less than one: setting to one");
 				ime_nb=1;
 			}
 			if (nmat <= 0)
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Input matrix size not set or invalid: must be grater than zero");
+				if (mpi_rank==0) DISPLAY_ERR_GLB("Input matrix size not set or invalid: must be grater than zero");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
 			if (nrhs <= 0)
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Number of r.h.s invalid: must be greater than zero");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
-			}
-			if (faulty_procs < 0)
-			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Number of faulty processes invalid: must be at least zero");
+				if (mpi_rank==0) DISPLAY_ERR_GLB("Number of r.h.s invalid: must be greater than zero");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
 			if (spare_procs < 0)
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Number of spare processes invalid: must be at least zero");
+				if (mpi_rank==0) DISPLAY_ERR_GLB("Number of spare processes invalid: must be at least zero");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
-			if (fault_tolerance < 0)
+
+			if (faulty_procs < 0) // faulty processes invalid
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","Fault tolerance level not set or invalid: must be at least zero");
+				if (mpi_rank==0) DISPLAY_ERR_GLB("Number of faulty processes invalid: must be at least zero");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
-			else
+			else  // faulty processes valid
 			{
-				if (fault_tolerance == 0)
+				if (faulty_procs > 0) // faults will occur
 				{
-					failing_level=-1;
-					scalapack_failing_level=-1;
-					failing_rank=-1;
-				}
-				else // (fault_tolerance > 0)
-				{
-					if (failing_level_override < 0 ) // faulty level NOT set on command line
+					if (failing_level_override < 0 ) // faulty level IS NOT set on command line
 					{
-						if (mpi_rank==0) DISPLAY_ERR("\b","Failing level not set: if fault tolerance is enabled a failing level must be given");
+						if (mpi_rank==0) DISPLAY_ERR_GLB("Failing level not set: if a process will be faulty a failing level must be given");
 						MPI_Finalize();
 						return ERR_INPUT_ARG;
 					}
@@ -553,10 +544,9 @@ int main(int argc, char **argv)
 					{
 						if (failing_level < 0 || failing_level >= nmat ) // out of bounds faulty level
 						{
-							if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","Failing level less than zero or greater than greatest level: never failing!");
-							failing_level=-1;
-							scalapack_failing_level=-1;
-							failing_rank=-1;
+							if (mpi_rank==0) DISPLAY_ERR_GLB("Failing level invalid: must be at least zero and not greater than greatest level");
+							MPI_Finalize();
+							return ERR_INPUT_ARG;
 						}
 						else // valid faulty level
 						{
@@ -564,24 +554,41 @@ int main(int argc, char **argv)
 							scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
 						}
 					}
-					if (faulty_procs == 0)
+				}
+			}
+
+			if (fault_tolerance < 0) // fault tolerance level is invalid
+			{
+				if (mpi_rank==0) DISPLAY_ERR_GLB("Fault tolerance level not set or invalid: must be at least zero");
+				MPI_Finalize();
+				return ERR_INPUT_ARG;
+			}
+			else // fault tolerance level is valid
+			{
+				if (fault_tolerance == 0) // fault tolerance disabled
+				{
+					if (faulty_procs > 0)
 					{
-						if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","Fault tolerance is set, but no process will be faulty: never failing!");
-						failing_level=-1;
-						scalapack_failing_level=-1;
-						failing_rank=-1;
+						if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Fault tolerance level is not set, but at least one process will be faulty: never recovering");
 					}
-					else // (faulty_procs > 0)
+				}
+				else // fault tolerance enabled
+				{
+					if (faulty_procs < 1) // faults will not occur
+					{
+						if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Fault tolerance level is set, but no process will be faulty: never failing");
+					}
+					else // faults will occur
 					{
 						if (failing_level == -1)
 						{
-							if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","At least one faulty process is set but not a faulty level: never failing!");
+							if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("At least one faulty process is set but not a faulty level: never failing");
 						}
 						else
 						{
 							if (spare_procs == 0 )
 							{
-								if (mpi_rank==0 && verbose>0) DISPLAY_WRN("\b","No spare processes: faults cannot be recovered!");
+								if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("No spare processes: never recovering");
 							}
 						}
 					}
@@ -590,11 +597,12 @@ int main(int argc, char **argv)
 
 			if (!IS_SQUARE(calc_procs))
 			{
-				if (mpi_rank==0) DISPLAY_ERR("\b","The number of calc. processes has to be square");
+				if (mpi_rank==0) DISPLAY_ERR_GLB("The number of calc. processes has to be square");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
 		}
+
 
 		/*
 		 * BLACS
@@ -693,6 +701,7 @@ int main(int argc, char **argv)
 			scalapack_checkpoint_interval
 		};
 
+
 	/*
 	 * ******************************
 	 * starting summary to video
@@ -749,8 +758,8 @@ int main(int argc, char **argv)
 				else			{printf("no\n");}
 			printf("     IMe iterations:                %d\n",rows);
 			printf("     IMe blocking factor:           %d\n",ime_nb);
-			printf("     SPK-like iterations:           %d\n",scalapack_iter);
-			printf("     SPK-like blocking factor:      %d\n",scalapack_nb);
+			printf("     SPK iterations:                %d\n",scalapack_iter);
+			printf("     SPK blocking factor:           %d\n",scalapack_nb);
 
 			printf("     Fault tolerance:               ");
 			if (fault_tolerance > 0)
@@ -763,13 +772,13 @@ int main(int argc, char **argv)
 				printf("     IMe failing level:             ");
 					if (failing_level<0) {printf("never = ");}
 					printf("%d\n",failing_level);
-				printf("     SPK-like failing level:        ");
+				printf("     SPK (IMe-like) failing level:  ");
 					if (failing_level<0) {printf("never = -1\n");}
 					else {printf("%d\n",nmat-failing_level);}
-				printf("     SPK-like failing iteration:    ");
+				printf("     SPK (IMe-like) failing iter.:  ");
 					if (failing_level<0) {printf("never = ");}
 					printf("%d\n",scalapack_failing_level);
-				printf("     Checkpoint skip interval:      %d\n",scalapack_checkpoint_interval);
+				printf("     Checkpoint skip interval:      %d SPK iterations\n",scalapack_checkpoint_interval);
 
 				printf("     Checkpoint freq.:              ");
 				if (scalapack_checkpoint_interval<0)
@@ -784,7 +793,7 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						printf("every %d iterations\n",scalapack_checkpoint_interval+1);
+						printf("every %d SPK iterations | %d IMe iterations\n",scalapack_checkpoint_interval+1,(scalapack_checkpoint_interval+1)*scalapack_nb);
 					}
 				}
 			}
@@ -808,7 +817,7 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				printf("WRN: No output to file\n");
+				printf("WRN> No output to file\n");
 			}
 		}
 //	}
@@ -944,7 +953,7 @@ int main(int argc, char **argv)
 
 					if (mpi_rank==0 && verbose>0)
 					{
-						printf("     Generating random input matrices in parallel with ScaLAPACK\n");
+						printf("     Matrix random generation alg.: in parallel with ScaLAPACK\n");
 						if (!get_cnd)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
@@ -970,7 +979,7 @@ int main(int argc, char **argv)
 				{
 					if (mpi_rank==0 && verbose>0)
 					{
-						printf("     Generating random input matrices sequentially with LAPACK\n");
+						printf("     Matrix random generation alg.: sequentially with LAPACK\n");
 						if (!get_cnd)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");

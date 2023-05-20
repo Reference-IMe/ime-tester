@@ -16,7 +16,12 @@
 
 
 test_output ScaLAPACK_pDGESV_ftx_cp(int n, double* A_global, int m, double* B_global, int nb,
-									int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq,
+									int mpi_rank, int cprocs, int sprocs,
+									int checkpoint_freq,
+									int num_of_failing_ranks,
+									int* failing_rank_list,
+									int failing_level,
+									int recovery,
 									int nprow, int npcol, int myrow, int mycol,
 									int context, int context_global, int context_all, int* context_cp)
 {
@@ -211,7 +216,7 @@ test_output ScaLAPACK_pDGESV_ftx_cp(int n, double* A_global, int m, double* B_gl
 	// Linear system equations solver
 	// split in LU factorization + solve (pdgetrf + pdgetrs) to introduce checkpointing
 	// checkpointed factorization called by everyone
-	pdgetrf_cpx_( &n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, &descA_cp[0][0], ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &failing_level, &context_all, &cprocs, &info );
+	pdgetrf_cpx_( &n, &n, At, &i1, &i1, descAt, A_cp, &i1, &i1, &descA_cp[0][0], ipiv, ipiv_cp, &nipiv, &checkpoint_freq, &num_of_failing_ranks, failing_rank_list, &failing_level, &recovery, &context_all, &cprocs, &info );
 	// solve called by non-spare nodes only
 	if (mpi_rank < cprocs)
 	{

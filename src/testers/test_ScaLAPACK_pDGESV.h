@@ -10,10 +10,11 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../helpers/simple_dynamic_strings/sds.h"
 #include "tester_structures.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
-test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbosity, parallel_env env, test_input input)
+test_result test_ScaLAPACK_pDGESV(const char check, const char* tag, int verbosity, parallel_env env, test_input input)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -24,6 +25,9 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbo
 	double* A;
 	double* bb;
 	double* xx_ref;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	if (check)
 	{
@@ -76,5 +80,6 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* label, int verbo
 		NULLFREE(bb);
 		NULLFREE(xx_ref);
 	}
+	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

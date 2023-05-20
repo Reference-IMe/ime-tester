@@ -56,6 +56,7 @@
 #define IME_DEV								"IMe-dev"
 #define IME_PB_SV_CO_BFX					"IMe-PB-SV-CO-bfx"
 #define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
+#define IME_PB_SV_CO_BF1_FT					"IMe-PB-SV-CO-bf1-ft"
 #define IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X	"IMe-PB-SV-CO-bf1-ftx/0"
 #define IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X	"IMe-PB-SV-CO-bf1-ftx/x"
 #define IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0	"IMe-PB-SV-CO-bf1-ft0/x"
@@ -72,6 +73,8 @@
 #define SPK_SV_FAULT_0_TOLERANT_1_CS		"SPK-SV-ft1/0-cs"
 
 #define SPK_SV_FAULT_0_TOLERANT_X_CP		"SPK-SV-ftx/0-cp"
+
+#define SPK_SV_FT_CP						"SPK-SV-ft"
 
 #define SPK_LU								"SPK-LU"
 #define SPK_LU_FAULT_0_TOLERANT_1			"SPK-LU-ft1/0"
