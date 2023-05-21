@@ -1074,7 +1074,7 @@ int main(int argc, char **argv)
 			printf("  -fl   <integer number>     : simulated faulty IMe inhibition level\n" );
 			printf("  -npf  <integer number>     : number of simulated faults [0-..] (0=none)\n" );
 			printf("  -nps  <integer number>     : number of spare processes [0-..] (0=none)\n" );
-			printf("  -cp   <integer number>     : checkpointing interval\n" );
+			printf("  -spk-cp <integer number>   : checkpointing interval\n" );
 			printf("  -spk-nb <integer number>   : ScaLAPACK blocking factor\n" );
 			printf("  -ime-nb <integer number>   : IMe blocking factor\n\n" );
 		}
