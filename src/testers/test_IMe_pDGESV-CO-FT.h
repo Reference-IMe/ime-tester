@@ -211,7 +211,7 @@ test_result test_IMe_pDGESV_CO_FT (	const char check, const char* tag, const cha
 				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 			}
 			// calc error
-			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(&xx[0][0], xx_ref, input.n, input.nrhs);
+			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D_double(&xx[0][0], xx_ref, input.n, input.nrhs);
 
 			if (verbosity>1)
 			{

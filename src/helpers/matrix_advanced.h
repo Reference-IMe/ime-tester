@@ -14,7 +14,7 @@
 #ifndef SRC_HELPERS_MATRIX_ADVANCED_H_
 #define SRC_HELPERS_MATRIX_ADVANCED_H_
 
-void OrthogonalizeMatrix1D(double* mat, int rows, int cols)
+void OrthogonalizeMatrix1D_double(double* mat, int rows, int cols)
 {
 	int info;
     int lwork;
@@ -32,7 +32,7 @@ void OrthogonalizeMatrix1D(double* mat, int rows, int cols)
     NULLFREE(tau);
 }
 
-void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
+void RandomSquareMatrixCND1D_double(double* mat, int n, int seed, double cnd)
 {
 	double* mat1;
 			mat1=AllocateMatrix1D_double(n, n);
@@ -55,9 +55,9 @@ void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 	}
 
 	RandomMatrix1D_double(mat1, n, n, seed);
-	OrthogonalizeMatrix1D(mat1, n, n);
+	OrthogonalizeMatrix1D_double(mat1, n, n);
 	RandomMatrix1D_double(mat2, n, n, seed+1);
-	OrthogonalizeMatrix1D(mat2, n, n);
+	OrthogonalizeMatrix1D_double(mat2, n, n);
 
 	// mat <- mat1.S.mat2 = mat1.(S.mat2)
 	//
@@ -79,7 +79,7 @@ void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 	DeallocateMatrix1D_double(mat2);
 }
 
-double ConditionNumber1D(double* mat, int rows, int cols)
+double ConditionNumber1D_double(double* mat, int rows, int cols)
 {
 	// condition number calculated by definition:
 	// the ratio 'cnd' of the largest to smallest singular value in the singular value decomposition of a matrix 'mat'.
@@ -128,7 +128,7 @@ double ConditionNumber1D(double* mat, int rows, int cols)
 	return cnd;
 }
 
-double GenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback)
+double GenSystemMatrices1D_double(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback)
 {
 	int i1 = 1;
 	double d0 = 0.0;
@@ -136,17 +136,17 @@ double GenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, dou
 	char transA = 'N', transx = 'N';
 	double read_cnd = -1;
 
-	RandomSquareMatrix1D_cnd(A, n, seed, cnd);
+	RandomSquareMatrixCND1D_double(A, n, seed, cnd);
 	FillVector(x, n, 1);
 	dgemm_(&transA, &transx, &n, &i1, &n, &d1, A, &n, x, &n, &d0, b, &n);
 	if (cnd_readback)
 	{
-		read_cnd = ConditionNumber1D(A, n, n);
+		read_cnd = ConditionNumber1D_double(A, n, n);
 	}
 	return read_cnd;
 }
 
-double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+double pGenSystemMatrices1D_double_pdgemr2d(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
 {
 	/*
 	 * This version suffers from the pdgemr2d bug: out of memory
@@ -157,7 +157,7 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 	 * final workaround suggested in
 	 * https://stackoverflow.com/questions/30167724/how-to-use-pdgemr2d-to-copy-distributed-matrix-in-total-to-all-processes
 	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
-	 * see "pGenSystemMatrices1D" below
+	 * see "pGenSystemMatrices1D_double" below
 	 *
 	 */
 
@@ -276,7 +276,7 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 		// create mat1 -> A1
 		RandomMatrix1D_double(A1, nr, nc, local_seed);
 
-		//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
+		//OrthogonalizeMatrix1D_double(A1, nr, nc); // to be parallelized
 		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 		pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 
@@ -286,7 +286,7 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 		// create mat2 -> A1
 		RandomMatrix1D_double(A1, nr, nc, local_seed+npcol*nprow);
 
-		//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
+		//OrthogonalizeMatrix1D_double(A2, nr, nc);// to be parallelized
 		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 		pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 
@@ -336,7 +336,7 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 	return read_cnd;
 }
 
-void MYblacs_scatter(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
+void MYblacs_scatter_double(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
 {
 	/*
 	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
@@ -375,7 +375,7 @@ void MYblacs_scatter(int N, int M, double* A_glob, int nrows, int ncols, double*
 	}
 }
 
-void MYblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
+void MYblacs_gather_double(int N, int M, double* A_glob, int nrows, int ncols, double* A_loc, int Nb, int Mb, int mpi_rank, int procrows, int proccols, int myrow, int mycol,  int ctxt)
 {
 	/*
 	 * https://andyspiros.wordpress.com/2011/07/08/an-example-of-blacs-with-c/
@@ -414,7 +414,7 @@ void MYblacs_gather(int N, int M, double* A_glob, int nrows, int ncols, double* 
 	}
 }
 
-double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, double cnd, char calc_cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+double pGenSystemMatrices1D_double(int n, double* A, double* x, double* b, int seed, double cnd, char calc_cnd, char cnd_readback, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
 {
 	// general
 	int i;
@@ -531,7 +531,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 			// create mat1 -> A1
 			RandomMatrix1D_double(A1, nr, nc, local_seed);
 
-			//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
+			//OrthogonalizeMatrix1D_double(A1, nr, nc); // to be parallelized
 			pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 			pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 
@@ -541,7 +541,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 			// create mat2 -> A1
 			RandomMatrix1D_double(A1, nr, nc, local_seed+npcol*nprow);
 
-			//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
+			//OrthogonalizeMatrix1D_double(A2, nr, nc);// to be parallelized
 			pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 			pdorgqr_( &n, &n, &n, A1, &i1, &i1, descA1, tau, work, &lwork, &info );
 
@@ -560,21 +560,21 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		}
 		// get back A (A1 -> A)
 		//pdgemr2d_ (&n, &n, A1, &i1, &i1, descA1, A, &i1, &i1, descA_global, &context);
-		MYblacs_gather(n, n, A, nr, nc, A1, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+		MYblacs_gather_double(n, n, A, nr, nc, A1, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// distributed init to 1 for vec X
 		pdlaset_("A", &n, &i1, &d1, &d1, X, &i1, &i1, descX);
 
 		// get back X
 		//pdgemr2d_ (&n, &i1, X, &i1, &i1, descX, x, &i1, &i1, descX_global, &context);
-		MYblacs_gather(n, i1, x, nr, i1, X, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+		MYblacs_gather_double(n, i1, x, nr, i1, X, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// A.X -> B  (S.X -> B)
 		pdgemm_(&trans, &notrans, &n, &i1, &n, &d1, A1, &i1, &i1, descA1, X, &i1, &i1, descX, &d0, B, &i1, &i1, descB);
 
 		// get back B
 		//pdgemr2d_ (&n, &i1, B, &i1, &i1, descB, b, &i1, &i1, descB_global, &context);
-		MYblacs_gather(n, i1, b, nr, i1, B, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
+		MYblacs_gather_double(n, i1, b, nr, i1, B, nb, nb, mpi_rank, nprow, npcol, myrow, mycol, context);
 
 		// use chunks in A1 to calc the condition number
 		NULLFREE(work);
@@ -602,7 +602,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 	return read_cnd;
 }
 
-double pCheckSystemMatrices1D(int n, double* A, double* x, double* b, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
+double pCheckSystemMatrices1D_double(int n, double* A, double* x, double* b, int nb, int mpi_rank, int cprocs, int nprow, int npcol, int myrow, int mycol, int context, int context_global)
 {
 	// general
 	int i;
@@ -681,7 +681,7 @@ double pCheckSystemMatrices1D(int n, double* A, double* x, double* b, int nb, in
 	return read_cnd;
 }
 
-double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
+double NormwiseRelativeError1D_double(double* mat, double* refmat, int rows, int cols)
 {
 	// errors clearly explained: https://www.cs.cornell.edu/~bindel/class/cs6210-f16/lec/2016-09-02.pdf
 	// in LAPACK: https://www.netlib.org/lapack/lug/node78.html

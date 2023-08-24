@@ -888,7 +888,7 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						cnd_readback = round( pCheckSystemMatrices1D(nmat, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+						cnd_readback = round( pCheckSystemMatrices1D_double(nmat, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 					}
 				}
 			}
@@ -924,7 +924,7 @@ int main(int argc, char **argv)
 						MPI_Finalize();
 						return ERR_INPUT_ARG;
 					}
-					cnd_readback = round( pGenSystemMatrices1D(nmat, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+					cnd_readback = round( pGenSystemMatrices1D_double(nmat, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 				}
 				else if (strcmp(matrix_gen_type, "seq" ) == 0)
 				{
@@ -935,7 +935,7 @@ int main(int argc, char **argv)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
 						}
-						cnd_readback = round( GenSystemMatrices1D(nmat, A_ref, x_ref, b_ref, seed, cnd, get_cnd) );
+						cnd_readback = round( GenSystemMatrices1D_double(nmat, A_ref, x_ref, b_ref, seed, cnd, get_cnd) );
 					}
 				}
 				else

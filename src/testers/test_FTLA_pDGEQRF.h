@@ -106,7 +106,7 @@ test_result test_FTLA_pDGEQRF(const char check, const char* label, int verbosity
 				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 			}
 			// calc error
-			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D(bb, input.x_ref, input.n, 1);
+			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D_double(bb, input.x_ref, input.n, 1);
 
 			if (verbosity>1)
 			{
