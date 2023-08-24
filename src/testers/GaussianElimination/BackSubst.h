@@ -16,7 +16,7 @@ void BackSubstitution(int n, double** A, int m, double** bb, double** xx)
 		int i,j,k;
 		double* sum;
 
-		sum=AllocateVector(m);
+		sum=AllocateVector_double(m);
 
 		for(j=0;j<m;j++)
 		{
@@ -35,7 +35,7 @@ void BackSubstitution(int n, double** A, int m, double** bb, double** xx)
 				xx[i][j]=(bb[i][j]-sum[j])/A[i][i];
 			}
 		}
-		DeallocateVector(sum);
+		DeallocateVector_double(sum);
 }
 
 #endif

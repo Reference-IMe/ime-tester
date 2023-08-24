@@ -12,7 +12,7 @@ void GaussianElimination(int n, double** A, int m, double** bb)
     int i,j,k;
     double* c;
 
-    c=AllocateVector(n);
+    c=AllocateVector_double(n);
 
 	for(k=0; k<n; k++)
 	{
@@ -32,5 +32,5 @@ void GaussianElimination(int n, double** A, int m, double** bb)
 			}
 		}
 	}
-	DeallocateVector(c);
+	DeallocateVector_double(c);
 }

@@ -818,8 +818,8 @@ int main(int argc, char **argv)
 		if (mpi_rank==0)
 		{
 			A_ref = AllocateMatrix1D_double(nmat, nmat);
-			x_ref = AllocateVector(nmat);
-			b_ref = AllocateVector(nmat);
+			x_ref = AllocateVector_double(nmat);
+			b_ref = AllocateVector_double(nmat);
 		}
 		else
 		{
@@ -1345,8 +1345,8 @@ int main(int argc, char **argv)
 			if (fp != NULL) fclose(fp);
 		}
 		DeallocateMatrix1D_double(A_ref);
-		DeallocateVector(b_ref);
-		DeallocateVector(x_ref);
+		DeallocateVector_double(b_ref);
+		DeallocateVector_double(x_ref);
 	}
 	sdsfree(test_output_file_name);
 	*/

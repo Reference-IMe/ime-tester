@@ -11,7 +11,7 @@ void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, in
     int* mymap;
     int mycols;
 
-    c=AllocateVector(n);
+    c=AllocateVector_double(n);
     map=malloc(n*sizeof(int));
     mycols=n/nprocs;
     mymap=malloc(mycols*sizeof(int));
@@ -104,7 +104,7 @@ void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, in
 
 	free(map);
 	free(mymap);
-	DeallocateVector(c);
+	DeallocateVector_double(c);
 }
 
 
@@ -114,7 +114,7 @@ void pGaussianElimination_fullmatrix(double** A, double* b, int n, int rank, int
     double* c;
     int* map;
 
-    c=AllocateVector(n);
+    c=AllocateVector_double(n);
     map=malloc(n*sizeof(int));
 
 	MPI_Datatype single_column;
@@ -213,7 +213,7 @@ void pGaussianElimination_fullmatrix(double** A, double* b, int n, int rank, int
 	}
 
 	free(map);
-	DeallocateVector(c);
+	DeallocateVector_double(c);
 }
 
 void BackSubstitution(double** A, double* b, double* x, int n)

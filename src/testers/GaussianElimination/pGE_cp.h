@@ -31,7 +31,7 @@ void pGaussianElimination_cp(int n, double** A, int m, double** b, int rank, int
     int mystart=0;
 
     double* c;
-    c=AllocateVector(n);
+    c=AllocateVector_double(n);
     
     double** blocal;
     blocal=AllocateMatrix2D_double(n,m,CONTIGUOUS);
@@ -235,8 +235,8 @@ void pGaussianElimination_cp(int n, double** A, int m, double** b, int rank, int
 	free(map);
 	free(local);
 	free(global);
-	DeallocateVector(c);
+	DeallocateVector_double(c);
 	DeallocateMatrix2D_double(blocal,n,CONTIGUOUS);
-	DeallocateVector(Abase);
+	DeallocateVector_double(Abase);
     DeallocateMatrix2D_double(Alocal,myrows,CONTIGUOUS);
 }

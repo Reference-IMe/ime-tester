@@ -9,7 +9,7 @@ void pGaussianElimination(double** A, double* b, int n, int rank, int nprocs)
     double* c;
     int* map;
 
-    c=AllocateVector(n);
+    c=AllocateVector_double(n);
     map=malloc(n*sizeof(int));
 
     MPI_Bcast (&A[0][0],n*n,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -62,7 +62,7 @@ void pGaussianElimination(double** A, double* b, int n, int rank, int nprocs)
 
 	}
 	free(map);
-	DeallocateVector(c);
+	DeallocateVector_double(c);
 }
 
 void BackSubstitution(double** A, double* b, double* x, int n)

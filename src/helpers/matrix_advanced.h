@@ -40,7 +40,7 @@ void RandomSquareMatrixCND1D_double(double* mat, int n, int seed, double cnd)
 			mat2=AllocateMatrix1D_double(n, n);
 
 	double* s;
-			s=AllocateVector(n);
+			s=AllocateVector_double(n);
 
 	double smax = log10(cnd)/2;
 	double smin = -smax;
@@ -74,7 +74,7 @@ void RandomSquareMatrixCND1D_double(double* mat, int n, int seed, double cnd)
 	double one = 1.0, zero = 0.0;
 	dgemm_(&transA, &transB, &n, &n, &n, &one, mat1, &n, mat2, &n, &zero, mat, &n);
 
-	DeallocateVector(s);
+	DeallocateVector_double(s);
 	DeallocateMatrix1D_double(mat1);
 	DeallocateMatrix1D_double(mat2);
 }
@@ -96,7 +96,7 @@ double ConditionNumber1D_double(double* mat, int rows, int cols)
 	double* vt=NULL;
 //			vt=AllocateMatrix1D_double(cols, cols);
 	double* s;
-			s=AllocateVector(cols);
+			s=AllocateVector_double(cols);
 	double* mat_copy;									// SVD algorithm destroys input matrix mat
 			mat_copy=AllocateMatrix1D_double(rows, cols);		// http://www.netlib.org/lapack/explore-html/d1/d7e/group__double_g_esing_ga84fdf22a62b12ff364621e4713ce02f2.html
 
@@ -110,7 +110,7 @@ double ConditionNumber1D_double(double* mat, int rows, int cols)
 	lwork = -1;
 	dgesvd_( &nojob, &nojob, &rows, &cols, mat_copy, &rows, s, u, &rows, vt, &cols, &wkopt, &lwork, &info );
 	lwork = (int)wkopt;
-	work = AllocateVector(lwork);
+	work = AllocateVector_double(lwork);
 	dgesvd_( &nojob, &nojob, &rows, &cols, mat_copy, &rows, s, u, &rows, vt, &cols, work, &lwork, &info );
     if( info > 0 )
     {
@@ -120,8 +120,8 @@ double ConditionNumber1D_double(double* mat, int rows, int cols)
     cnd = s[0]/s[cols-1];
 
     DeallocateMatrix1D_double(mat_copy);
-	DeallocateVector(s);
-	DeallocateVector(work);
+	DeallocateVector_double(s);
+	DeallocateVector_double(work);
 	DeallocateMatrix1D_double(u);
 	DeallocateMatrix1D_double(vt);
 
@@ -137,7 +137,7 @@ double GenSystemMatrices1D_double(int n, double* A, double* x, double* b, int se
 	double read_cnd = -1;
 
 	RandomSquareMatrixCND1D_double(A, n, seed, cnd);
-	FillVector(x, n, 1);
+	FillVector_double(x, n, 1);
 	dgemm_(&transA, &transx, &n, &i1, &n, &d1, A, &n, x, &n, &d0, b, &n);
 	if (cnd_readback)
 	{
@@ -196,7 +196,7 @@ double pGenSystemMatrices1D_double_pdgemr2d(int n, double* A, double* x, double*
 	double gap = (Smax-Smin)/(n-1);
 
 	double* s;
-			s=AllocateVector(n);
+			s=AllocateVector_double(n);
 
 	double read_cnd = -1;
 
@@ -318,7 +318,7 @@ double pGenSystemMatrices1D_double_pdgemr2d(int n, double* A, double* x, double*
 			lwork = -1;
 			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, &lazywork, &lwork, &info);
 			lwork = (int)lazywork;
-			work = AllocateVector(lwork);
+			work = AllocateVector_double(lwork);
 			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, work, &lwork, &info);
 
 			read_cnd = s[0]/s[n-1];
@@ -451,7 +451,7 @@ double pGenSystemMatrices1D_double(int n, double* A, double* x, double* b, int s
 	double gap = (Smax-Smin)/(n-1);
 
 	double* s;
-			s=AllocateVector(n);
+			s=AllocateVector_double(n);
 
 	double read_cnd = -1;
 
@@ -584,7 +584,7 @@ double pGenSystemMatrices1D_double(int n, double* A, double* x, double* b, int s
 			lwork = -1;
 			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, &lazywork, &lwork, &info);
 			lwork = (int)lazywork;
-			work = AllocateVector(lwork);
+			work = AllocateVector_double(lwork);
 			pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, work, &lwork, &info);
 
 			read_cnd = s[0]/s[n-1];
@@ -625,7 +625,7 @@ double pCheckSystemMatrices1D_double(int n, double* A, double* x, double* b, int
 	int info;
 
 	double* s;
-			s=AllocateVector(n);
+			s=AllocateVector_double(n);
 
 	double read_cnd = -1;
 
@@ -667,7 +667,7 @@ double pCheckSystemMatrices1D_double(int n, double* A, double* x, double* b, int
 		lwork = -1;
 		pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, &lazywork, &lwork, &info);
 		lwork = (int)lazywork;
-		work = AllocateVector(lwork);
+		work = AllocateVector_double(lwork);
 		pdgesvd_ ( &nojob, &nojob, &n, &n, A1, &i1, &i1, descA1, s, NULL, &i1, &i1, NULL, NULL, &i1, &i1, NULL, work, &lwork, &info);
 
 		read_cnd = s[0]/s[n-1];
@@ -690,7 +690,7 @@ double NormwiseRelativeError1D_double(double* mat, double* refmat, int rows, int
 	double* diffmat;
 			diffmat = AllocateMatrix1D_double(rows, cols);
 	double* work;
-			work = AllocateVector(rows);
+			work = AllocateVector_double(rows);
 	char norm = 'F';
 	for (i=0;i<rows;i++)
 	{
@@ -714,7 +714,7 @@ double NormwiseRelativeError1D_double(double* mat, double* refmat, int rows, int
 	}
 
 	DeallocateMatrix1D_double(diffmat);
-	DeallocateVector(work);
+	DeallocateVector_double(work);
 
 	return nre;
 }
