@@ -34,7 +34,7 @@ void pGaussianElimination_cp(int n, double** A, int m, double** b, int rank, int
     c=AllocateVector(n);
     
     double** blocal;
-    blocal=AllocateMatrix2D(n,m,CONTIGUOUS);
+    blocal=AllocateMatrix2D_double(n,m,CONTIGUOUS);
 
 	// row for pivoting
     double* Abase;
@@ -42,7 +42,7 @@ void pGaussianElimination_cp(int n, double** A, int m, double** b, int rank, int
 
     // local storage for a part of the input matrix (continuous rows, not interleaved)
     double** Alocal;
-    Alocal=AllocateMatrix2D(myrows, n, CONTIGUOUS);
+    Alocal=AllocateMatrix2D_double(myrows, n, CONTIGUOUS);
 
     int Srows;
     	Srows=myrows*sprocs;
@@ -236,7 +236,7 @@ void pGaussianElimination_cp(int n, double** A, int m, double** b, int rank, int
 	free(local);
 	free(global);
 	DeallocateVector(c);
-	DeallocateMatrix2D(blocal,n,CONTIGUOUS);
+	DeallocateMatrix2D_double(blocal,n,CONTIGUOUS);
 	DeallocateVector(Abase);
-    DeallocateMatrix2D(Alocal,myrows,CONTIGUOUS);
+    DeallocateMatrix2D_double(Alocal,myrows,CONTIGUOUS);
 }

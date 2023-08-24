@@ -8,7 +8,7 @@
 			if (verbosity>1)
 			{
 				printf("\nThe %s solution is:\n",label);
-				PrintMatrix1D(bb, input.n, input.nrhs);
+				PrintMatrix1D_double(bb, input.n, input.nrhs);
 				printf("\n with exit code     %d\n",output.exit_code);
 				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
 			}

@@ -35,9 +35,9 @@ void OrthogonalizeMatrix1D(double* mat, int rows, int cols)
 void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 {
 	double* mat1;
-			mat1=AllocateMatrix1D(n, n);
+			mat1=AllocateMatrix1D_double(n, n);
 	double* mat2;
-			mat2=AllocateMatrix1D(n, n);
+			mat2=AllocateMatrix1D_double(n, n);
 
 	double* s;
 			s=AllocateVector(n);
@@ -54,9 +54,9 @@ void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 		s[r]=pow(10,smin + r*gap);
 	}
 
-	RandomMatrix1D(mat1, n, n, seed);
+	RandomMatrix1D_double(mat1, n, n, seed);
 	OrthogonalizeMatrix1D(mat1, n, n);
-	RandomMatrix1D(mat2, n, n, seed+1);
+	RandomMatrix1D_double(mat2, n, n, seed+1);
 	OrthogonalizeMatrix1D(mat2, n, n);
 
 	// mat <- mat1.S.mat2 = mat1.(S.mat2)
@@ -75,8 +75,8 @@ void RandomSquareMatrix1D_cnd(double* mat, int n, int seed, double cnd)
 	dgemm_(&transA, &transB, &n, &n, &n, &one, mat1, &n, mat2, &n, &zero, mat, &n);
 
 	DeallocateVector(s);
-	DeallocateMatrix1D(mat1);
-	DeallocateMatrix1D(mat2);
+	DeallocateMatrix1D_double(mat1);
+	DeallocateMatrix1D_double(mat2);
 }
 
 double ConditionNumber1D(double* mat, int rows, int cols)
@@ -92,13 +92,13 @@ double ConditionNumber1D(double* mat, int rows, int cols)
     double wkopt;
     double* work;
     double* u=NULL;
-//			u=AllocateMatrix1D(rows, rows);
+//			u=AllocateMatrix1D_double(rows, rows);
 	double* vt=NULL;
-//			vt=AllocateMatrix1D(cols, cols);
+//			vt=AllocateMatrix1D_double(cols, cols);
 	double* s;
 			s=AllocateVector(cols);
 	double* mat_copy;									// SVD algorithm destroys input matrix mat
-			mat_copy=AllocateMatrix1D(rows, cols);		// http://www.netlib.org/lapack/explore-html/d1/d7e/group__double_g_esing_ga84fdf22a62b12ff364621e4713ce02f2.html
+			mat_copy=AllocateMatrix1D_double(rows, cols);		// http://www.netlib.org/lapack/explore-html/d1/d7e/group__double_g_esing_ga84fdf22a62b12ff364621e4713ce02f2.html
 
 	char nojob='N'; // no need of calculating u and vt
 
@@ -119,11 +119,11 @@ double ConditionNumber1D(double* mat, int rows, int cols)
     }
     cnd = s[0]/s[cols-1];
 
-    DeallocateMatrix1D(mat_copy);
+    DeallocateMatrix1D_double(mat_copy);
 	DeallocateVector(s);
 	DeallocateVector(work);
-	DeallocateMatrix1D(u);
-	DeallocateMatrix1D(vt);
+	DeallocateMatrix1D_double(u);
+	DeallocateMatrix1D_double(vt);
 
 	return cnd;
 }
@@ -274,7 +274,7 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 		tau = malloc( nc*sizeof(double) );
 
 		// create mat1 -> A1
-		RandomMatrix1D(A1, nr, nc, local_seed);
+		RandomMatrix1D_double(A1, nr, nc, local_seed);
 
 		//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
 		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
@@ -284,7 +284,7 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 		pdgemm_("N", "N", &n, &n, &n, &d1, A1, &i1, &i1, descA1, S, &i1, &i1, descS, &d0, A2, &i1, &i1, descA2);
 
 		// create mat2 -> A1
-		RandomMatrix1D(A1, nr, nc, local_seed+npcol*nprow);
+		RandomMatrix1D_double(A1, nr, nc, local_seed+npcol*nprow);
 
 		//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
 		pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
@@ -324,11 +324,11 @@ double pGenSystemMatrices1D_pdgemr2d(int n, double* A, double* x, double* b, int
 			read_cnd = s[0]/s[n-1];
 		}
 
-		DeallocateMatrix1D(A1);
-		DeallocateMatrix1D(A2);
-		DeallocateMatrix1D(S);
-		DeallocateMatrix1D(X);
-		DeallocateMatrix1D(B);
+		DeallocateMatrix1D_double(A1);
+		DeallocateMatrix1D_double(A2);
+		DeallocateMatrix1D_double(S);
+		DeallocateMatrix1D_double(X);
+		DeallocateMatrix1D_double(B);
 		NULLFREE(s);
 		NULLFREE(work);
 		NULLFREE(tau);
@@ -529,7 +529,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 			tau = malloc( nc*sizeof(double) );
 
 			// create mat1 -> A1
-			RandomMatrix1D(A1, nr, nc, local_seed);
+			RandomMatrix1D_double(A1, nr, nc, local_seed);
 
 			//OrthogonalizeMatrix1D(A1, nr, nc); // to be parallelized
 			pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
@@ -539,7 +539,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 			pdgemm_("N", "N", &n, &n, &n, &d1, A1, &i1, &i1, descA1, S, &i1, &i1, descS, &d0, A2, &i1, &i1, descA2);
 
 			// create mat2 -> A1
-			RandomMatrix1D(A1, nr, nc, local_seed+npcol*nprow);
+			RandomMatrix1D_double(A1, nr, nc, local_seed+npcol*nprow);
 
 			//OrthogonalizeMatrix1D(A2, nr, nc);// to be parallelized
 			pdgeqrf_( &n, &n,     A1, &i1, &i1, descA1, tau, work, &lwork, &info );
@@ -554,7 +554,7 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 		else
 		{
 			// create mat1 -> A1
-			RandomMatrix1D(A1, nr, nc, local_seed);
+			RandomMatrix1D_double(A1, nr, nc, local_seed);
 			tau = NULL;
 			work = NULL;
 		}
@@ -590,11 +590,11 @@ double pGenSystemMatrices1D(int n, double* A, double* x, double* b, int seed, do
 			read_cnd = s[0]/s[n-1];
 		}
 
-		DeallocateMatrix1D(A1);
-		DeallocateMatrix1D(A2);
-		DeallocateMatrix1D(S);
-		DeallocateMatrix1D(X);
-		DeallocateMatrix1D(B);
+		DeallocateMatrix1D_double(A1);
+		DeallocateMatrix1D_double(A2);
+		DeallocateMatrix1D_double(S);
+		DeallocateMatrix1D_double(X);
+		DeallocateMatrix1D_double(B);
 		NULLFREE(s);
 		NULLFREE(work);
 		NULLFREE(tau);
@@ -672,8 +672,8 @@ double pCheckSystemMatrices1D(int n, double* A, double* x, double* b, int nb, in
 
 		read_cnd = s[0]/s[n-1];
 
-		DeallocateMatrix1D(A1);
-		DeallocateMatrix1D(A2);
+		DeallocateMatrix1D_double(A1);
+		DeallocateMatrix1D_double(A2);
 
 		NULLFREE(s);
 		NULLFREE(work);
@@ -688,7 +688,7 @@ double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 	int i,j;
 	double nre = 0;	// used also to signal if input matrix contains NaN (0=no, -1=yes)
 	double* diffmat;
-			diffmat = AllocateMatrix1D(rows, cols);
+			diffmat = AllocateMatrix1D_double(rows, cols);
 	double* work;
 			work = AllocateVector(rows);
 	char norm = 'F';
@@ -713,7 +713,7 @@ double NormwiseRelativeError1D(double* mat, double* refmat, int rows, int cols)
 		nre = dlange_(&norm, &rows, &cols, diffmat, &rows, work) / dlange_(&norm, &rows, &cols, refmat, &rows, work);
 	}
 
-	DeallocateMatrix1D(diffmat);
+	DeallocateMatrix1D_double(diffmat);
 	DeallocateVector(work);
 
 	return nre;

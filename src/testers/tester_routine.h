@@ -46,9 +46,10 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 {
 	test_result info;
 
-		 if	( strcmp( routine_name, IME_SV_CO	)				== 0 )	info = test_IMe_pDGESV_CO		(check, routine_name, "PB-CO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
-	else if	( strcmp( routine_name, IME_SV_CO_FT)				== 0 )	info = test_IMe_pDGESV_CO_FT	(check, routine_name, "PB-CO-BF1-FT",    verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
-	else if	( strcmp( routine_name, IME_SV_WO   )				== 0 )	info = test_IMe_pDGESV_WO		(check, routine_name, "PB-WO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
+		 if	( strcmp( routine_name, IME_pDGESV_CO	)			== 0 )	info = test_IMe_pDGESV_CO		(check, routine_name, "PB-CO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
+	else if	( strcmp( routine_name, IME_pDGESV_CO_FT)			== 0 )	info = test_IMe_pDGESV_CO_FT	(check, routine_name, "PB-CO-BF1-FT",    verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
+	else if	( strcmp( routine_name, IME_pDGESV_WO   )			== 0 )	info = test_IMe_pDGESV_WO		(check, routine_name, "PB-WO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
+	//else if	( strcmp( routine_name, IME_pFGESV_CO   )			== 0 )	info = test_IMe_pFGESV_CO		(check, routine_name, "PB-CO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 
 	else if	( strcmp( routine_name, SPK_SV ) 					== 0 )	info = test_ScaLAPACK_pDGESV		(check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_SV_NOPIV ) 				== 0 )	info = test_ScaLAPACK_pDGESV_nopivot(check, routine_name, verbosity, routine_env, routine_input);

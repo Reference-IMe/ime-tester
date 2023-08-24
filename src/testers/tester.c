@@ -212,9 +212,10 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy"; // not actually callable
 
-		versionname_all[versions_all++] = IME_SV_WO;
-		versionname_all[versions_all++] = IME_SV_CO;
-		versionname_all[versions_all++] = IME_SV_CO_FT;
+		versionname_all[versions_all++] = IME_pFGESV_CO;
+		versionname_all[versions_all++] = IME_pDGESV_CO;
+		versionname_all[versions_all++] = IME_pDGESV_CO_FT;
+		versionname_all[versions_all++] = IME_pDGESV_WO;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_NOPIV;
@@ -816,7 +817,7 @@ int main(int argc, char **argv)
 		 */
 		if (mpi_rank==0)
 		{
-			A_ref = AllocateMatrix1D(nmat, nmat);
+			A_ref = AllocateMatrix1D_double(nmat, nmat);
 			x_ref = AllocateVector(nmat);
 			b_ref = AllocateVector(nmat);
 		}
@@ -954,8 +955,8 @@ int main(int argc, char **argv)
 			/*
 			if (mpi_rank==0)
 			{
-				FillMatrix1D(A_ref, n, n);
-				OneMatrix1D(b_ref, n, 1);
+				FillMatrix1D_double(A_ref, n, n);
+				OneMatrix1D_double(b_ref, n, 1);
 			}
 			*/
 
@@ -1343,7 +1344,7 @@ int main(int argc, char **argv)
 		{
 			if (fp != NULL) fclose(fp);
 		}
-		DeallocateMatrix1D(A_ref);
+		DeallocateMatrix1D_double(A_ref);
 		DeallocateVector(b_ref);
 		DeallocateVector(x_ref);
 	}

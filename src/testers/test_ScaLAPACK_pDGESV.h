@@ -37,11 +37,11 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* tag, int verbosi
 	{
 		if (env.mpi_rank==0)
 		{
-			A=AllocateMatrix1D(input.n, input.n);
-			bb=AllocateMatrix1D(input.n, input.nrhs);
-			xx_ref=AllocateMatrix1D(input.n, input.nrhs);
+			A=AllocateMatrix1D_double(input.n, input.n);
+			bb=AllocateMatrix1D_double(input.n, input.nrhs);
+			xx_ref=AllocateMatrix1D_double(input.n, input.nrhs);
 
-			CopyMatrix1D(input.A_ref, A, input.n, input.n);
+			CopyMatrix1D_double(input.A_ref, A, input.n, input.n);
 			for (i=0;i<input.n;i++)
 			{
 				for (j=0;j<input.nrhs;j++)
@@ -54,9 +54,9 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* tag, int verbosi
 			if (verbosity>2)
 			{
 				printf("\n\n Matrix A:\n");
-				PrintMatrix1D(A, input.n, input.n);
+				PrintMatrix1D_double(A, input.n, input.n);
 				printf("\n Vector b:\n");
-				PrintMatrix1D(bb, input.n, input.nrhs);
+				PrintMatrix1D_double(bb, input.n, input.nrhs);
 			}
 		}
 		else

@@ -20,10 +20,10 @@ void test_dummy(const char* label, int verbosity, parallel_env env, test_input i
 		}
 	}
 
-	xx=AllocateMatrix2D(1, env.calc_procs+env.spare_procs, CONTIGUOUS);
+	xx=AllocateMatrix2D_double(1, env.calc_procs+env.spare_procs, CONTIGUOUS);
 	xx[0][0]=0;
 	MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, env.mpi_comm);
-	DeallocateMatrix2D(xx, 1, CONTIGUOUS);
+	DeallocateMatrix2D_double(xx, 1, CONTIGUOUS);
 	if (env.mpi_rank==0)
 	{
 		if (verbosity>1)
@@ -48,9 +48,9 @@ void test_dummy(const char* label, int verbosity, parallel_env env, test_input i
 
 	if (i_calc)
 	{
-		xx=AllocateMatrix2D(input.n, input.nrhs, CONTIGUOUS);
+		xx=AllocateMatrix2D_double(input.n, input.nrhs, CONTIGUOUS);
 		MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, comm_calc);
-		DeallocateMatrix2D(xx, input.n, CONTIGUOUS);
+		DeallocateMatrix2D_double(xx, input.n, CONTIGUOUS);
 		if (env.mpi_rank==0)
 		{
 			if (verbosity>1)

@@ -31,10 +31,10 @@ test_result test_ScaLAPACK_pDGEQRF(const char check, const char* label, int verb
 	{
 		if (env.mpi_rank==0)
 		{
-			A=AllocateMatrix1D(input.n, input.n);
-			bb=AllocateMatrix1D(input.n, 1);
+			A=AllocateMatrix1D_double(input.n, input.n);
+			bb=AllocateMatrix1D_double(input.n, 1);
 
-			CopyMatrix1D(input.A_ref, A, input.n, input.n);
+			CopyMatrix1D_double(input.A_ref, A, input.n, input.n);
 
 			for (i=0;i<input.n;i++)
 			{
@@ -43,7 +43,7 @@ test_result test_ScaLAPACK_pDGEQRF(const char check, const char* label, int verb
 			if (verbosity>2)
 			{
 				printf("\n\n Matrix A:\n");
-				PrintMatrix1D(A, input.n, input.n);
+				PrintMatrix1D_double(A, input.n, input.n);
 			}
 		}
 		else

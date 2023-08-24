@@ -9,19 +9,19 @@ double test_IMe_DGESV(const char* label, int verbosity, int rows, int cols, int 
 	double** A;
 	double** bb;
 	double** xx;
-	A=AllocateMatrix2D(rows, cols, CONTIGUOUS);
-	bb=AllocateMatrix2D(rows, nrhs, CONTIGUOUS);
-	xx=AllocateMatrix2D(rows, nrhs, CONTIGUOUS);
+	A=AllocateMatrix2D_double(rows, cols, CONTIGUOUS);
+	bb=AllocateMatrix2D_double(rows, nrhs, CONTIGUOUS);
+	xx=AllocateMatrix2D_double(rows, nrhs, CONTIGUOUS);
 
-	FillMatrix2D(A, rows, cols);
-	OneMatrix2D(bb, rows, nrhs);
+	FillMatrix2D_double(A, rows, cols);
+	OneMatrix2D_double(bb, rows, nrhs);
 
 	if (verbosity>2)
 	{
 		printf("\n\n Matrix A:\n");
-		PrintMatrix2D(A, rows, cols);
+		PrintMatrix2D_double(A, rows, cols);
 		printf("\n Vector b:\n");
-		PrintMatrix2D(bb, rows, nrhs);
+		PrintMatrix2D_double(bb, rows, nrhs);
 	}
 
 	start = time(NULL);
@@ -33,12 +33,12 @@ double test_IMe_DGESV(const char* label, int verbosity, int rows, int cols, int 
 	if (verbosity>1)
 	{
 		printf("\nThe %s solution is:\n",label);
-		PrintMatrix2D(xx, rows, nrhs);
+		PrintMatrix2D_double(xx, rows, nrhs);
 	}
 
-	DeallocateMatrix2D(A,rows,CONTIGUOUS);
-	DeallocateMatrix2D(bb,rows,CONTIGUOUS);
-	DeallocateMatrix2D(xx,rows,CONTIGUOUS);
+	DeallocateMatrix2D_double(A,rows,CONTIGUOUS);
+	DeallocateMatrix2D_double(bb,rows,CONTIGUOUS);
+	DeallocateMatrix2D_double(xx,rows,CONTIGUOUS);
 
 	return (double)(stop - start);
 }
