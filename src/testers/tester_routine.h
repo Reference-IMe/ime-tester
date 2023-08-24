@@ -38,9 +38,9 @@
 #include "test_FTLA_pDGESV_TRF.h"
 #include "test_FTLA_pDGEQRF.h"
 #include "test_FTLA_pDGESV_QRF.h"
-#include "test_IMe_pbDGESV_CO.h"
-#include "test_IMe_pbDGESV_CO_ftx.h"
-#include "test_IMe_pbDGESV_WO.h"
+#include "test_IMe_pbDGESV-CO.h"
+#include "test_IMe_pbDGESV-CO-FT.h"
+#include "test_IMe_pbDGESV-WO.h"
 
 test_result tester_routine(const char check, const char* routine_name, int verbosity, parallel_env routine_env, test_input routine_input, fault_env routine_fault)
 {

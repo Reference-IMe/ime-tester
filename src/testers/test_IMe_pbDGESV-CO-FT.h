@@ -7,7 +7,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
 
-#include "../pbDGESV_CO.ftx.h"
+#include "../pbDGESV-CO-FT.h"
 
 test_result test_IMe_pbDGESV_ftx(const char check, const char* tag, const char* variant, int verbosity,
 									parallel_env env,

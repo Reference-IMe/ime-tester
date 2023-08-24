@@ -1,6 +1,7 @@
 #include <time.h>
+
+#include "../DGESV-WO.h"
 #include "../helpers/matrix.h"
-#include "../DGESV_WO.h"
 
 double test_IMe_DGESV(const char* label, int verbosity, int rows, int cols, int nrhs)
 {
