@@ -9,7 +9,7 @@
 
 #include "../pDGESV-CO-FT.h"
 
-test_result test_IMe_pbDGESV_ftx(const char check, const char* tag, const char* variant, int verbosity,
+test_result test_IMe_pDGESV_CO_FT (	const char check, const char* tag, const char* variant, int verbosity,
 									parallel_env env,
 									test_input input,
 									int fault_tolerance,
@@ -185,17 +185,17 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* tag, const char* 
 			bb=NULL;
 		}
 
-		if ( strcmp( variant, "PB-CO-bf1-ft") == 0)
+		if ( strcmp( variant, "PB-CO-BF1-FT") == 0)
 		{
 			if (fault_tolerance < 1)
 			{
 				// if fault tolerance is disabled, force disable recovery
-				output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, 0);
+				output = pDGESV_CO_FT (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, 0);
 			}
 			else
 			{
 				// if fault tolerance is enabled, pass recovery option as set by user
-				output = pbDGESV_CO_bf1_ftx (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, recovery);
+				output = pDGESV_CO_FT (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, recovery);
 			}
 		}
 		else

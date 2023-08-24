@@ -10,10 +10,10 @@
 
 
 
-test_result test_IMe_pbDGESV(const char check, const char* tag, const char* variant, int verbosity,
-								parallel_env env,
-								test_input input,
-								int fault_tolerance)
+test_result test_IMe_pDGESV_CO (	const char check, const char* tag, const char* variant, int verbosity,
+									parallel_env env,
+									test_input input,
+									int fault_tolerance)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -124,7 +124,7 @@ test_result test_IMe_pbDGESV(const char check, const char* tag, const char* vari
 				xx_ref=NULL;
 			}
 
-			if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			if ( strcmp( variant, "PB-CO-BF1") == 0) output = pDGESV_CO (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
