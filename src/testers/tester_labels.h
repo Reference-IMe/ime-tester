@@ -54,6 +54,8 @@
 #define IME_PV_SV_CO_A_SMALLEST				"IMe-PV-SV-CO-a-smallest"
 
 #define IME_DEV								"IMe-dev"
+#define IME_PB_SV_CO						"IMe-PB-SV-CO"
+#define IME_PB_SV_CO_FT						"IMe-PB-SV-CO-ft"
 #define IME_PB_SV_CO_BFX					"IMe-PB-SV-CO-bfx"
 #define IME_PB_SV_CO_BF1					"IMe-PB-SV-CO-bf1"
 #define IME_PB_SV_CO_BF1_FT					"IMe-PB-SV-CO-bf1-ft"
@@ -64,6 +66,7 @@
 #define IME_BLACS_SV_CO_1					"IMe-blacs-SV-CO-1"
 #define IME_BLACS_SV_CO_2					"IMe-blacs-SV-CO-2"
 
+#define IME_PB_SV_WO						"IMe-PB-SV-WO"
 #define IME_PB_SV_WO_BF1					"IMe-PB-SV-WO-bf1"
 
 #define SPK_SV								"SPK-SV"

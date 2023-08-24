@@ -4,9 +4,9 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../pbDGESV_WO.h"
 #include "tester_structures.h"
 
-#include "../pbDGESV_WO.bf1.h"
 
 
 test_result test_IMe_pbDGESV_WO(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_tolerance)

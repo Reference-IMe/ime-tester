@@ -212,8 +212,8 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy"; // not actually callable
 
-		versionname_all[versions_all++] = IME_DEV;
-		// default version removed
+		// default and developer version removed
+		// versionname_all[versions_all++] = IME_DEV;
 
 		/*
 		 * obsolete versions, removed
@@ -255,12 +255,15 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = IME_BLACS_SV_CO_2;
 		*/
 
-		versionname_all[versions_all++] = IME_PB_SV_WO_BF1;
-		versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
+		versionname_all[versions_all++] = IME_PB_SV_WO;
+		versionname_all[versions_all++] = IME_PB_SV_CO;
+		//versionname_all[versions_all++] = IME_PB_SV_WO_BF1;
+		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1;
 		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_0_TOLERANT_X;
 		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_0;
 		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FAULT_X_TOLERANT_X;
-		versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FT;
+		//versionname_all[versions_all++] = IME_PB_SV_CO_BF1_FT;
+		versionname_all[versions_all++] = IME_PB_SV_CO_FT;
 
 		versionname_all[versions_all++] = SPK_SV;
 		versionname_all[versions_all++] = SPK_SV_NOPIV;

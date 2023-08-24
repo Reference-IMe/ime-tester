@@ -21,6 +21,7 @@ void test_dummy(const char* label, int verbosity, parallel_env env, test_input i
 	}
 
 	xx=AllocateMatrix2D(1, env.calc_procs+env.spare_procs, CONTIGUOUS);
+	xx[0][0]=0;
 	MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, env.mpi_comm);
 	DeallocateMatrix2D(xx, 1, CONTIGUOUS);
 	if (env.mpi_rank==0)

@@ -5,9 +5,9 @@
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
+#include "../pbDGESV_CO.h"
 #include "tester_structures.h"
 
-#include "../pbDGESV_CO.bf1.h"
 
 
 test_result test_IMe_pbDGESV(const char check, const char* tag, const char* variant, int verbosity,

@@ -7,8 +7,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
 
-#include "../pbDGESV_CO.bf1.ftx.h"
-#include "../pbDGESV_CO.dev.h"
+#include "../pbDGESV_CO.ftx.h"
 
 test_result test_IMe_pbDGESV_ftx(const char check, const char* tag, const char* variant, int verbosity,
 									parallel_env env,
@@ -186,8 +185,7 @@ test_result test_IMe_pbDGESV_ftx(const char check, const char* tag, const char* 
 			bb=NULL;
 		}
 
-			 if ( strcmp( variant, "dev"            ) == 0) output = pbDGESV_CO_dev (A2, bb, xx, input, env, fault_tolerance, failing_rank_list, failing_level, recovery);
-		else if ( strcmp( variant, "PB-CO-bf1-ft") == 0)
+		if ( strcmp( variant, "PB-CO-bf1-ft") == 0)
 		{
 			if (fault_tolerance < 1)
 			{
