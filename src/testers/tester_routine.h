@@ -38,17 +38,17 @@
 #include "test_FTLA_pDGESV_TRF.h"
 #include "test_FTLA_pDGEQRF.h"
 #include "test_FTLA_pDGESV_QRF.h"
-#include "test_IMe_pbDGESV-CO.h"
-#include "test_IMe_pbDGESV-CO-FT.h"
-#include "test_IMe_pbDGESV-WO.h"
+#include "test_IMe_pDGESV-CO.h"
+#include "test_IMe_pDGESV-CO-FT.h"
+#include "test_IMe_pDGESV-WO.h"
 
 test_result tester_routine(const char check, const char* routine_name, int verbosity, parallel_env routine_env, test_input routine_input, fault_env routine_fault)
 {
 	test_result info;
 
-		 if	( strcmp( routine_name, IME_PB_SV_CO	 )					== 0 )	info = test_IMe_pbDGESV    (check, routine_name, "PB-CO-bf1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
-	else if	( strcmp( routine_name, IME_PB_SV_CO_FT)					== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ft",    verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
-	else if	( strcmp( routine_name, IME_PB_SV_WO )						== 0 )	info = test_IMe_pbDGESV_WO (check, routine_name, "PB-WO-bf1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
+		 if	( strcmp( routine_name, IME_SV_CO	 )					== 0 )	info = test_IMe_pbDGESV    (check, routine_name, "PB-CO-bf1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
+	else if	( strcmp( routine_name, IME_SV_CO_FT)					== 0 )	info = test_IMe_pbDGESV_ftx(check, routine_name, "PB-CO-bf1-ft",    verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
+	else if	( strcmp( routine_name, IME_SV_WO )						== 0 )	info = test_IMe_pbDGESV_WO (check, routine_name, "PB-WO-bf1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 
 	else if	( strcmp( routine_name, SPK_SV ) 						== 0 )	info = test_ScaLAPACK_pDGESV       (check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_SV_NOPIV ) 					== 0 )	info = test_ScaLAPACK_pDGESV_nopivot(check, routine_name, verbosity, routine_env, routine_input);

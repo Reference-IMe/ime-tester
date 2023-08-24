@@ -4,16 +4,12 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
-#include "../helpers/simple_dynamic_strings/sds.h"
-#include "../pbDGESV-CO.h"
+#include "../pDGESV-WO.h"
 #include "tester_structures.h"
 
 
 
-test_result test_IMe_pbDGESV(const char check, const char* tag, const char* variant, int verbosity,
-								parallel_env env,
-								test_input input,
-								int fault_tolerance)
+test_result test_IMe_pbDGESV_WO(const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_tolerance)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -26,9 +22,6 @@ test_result test_IMe_pbDGESV(const char check, const char* tag, const char* vari
 	double** bb;
 	double** xx;
 	double*  xx_ref;
-
-	sds label=sdsempty();
-	TAG2LABEL(tag,label);
 
 	int sqrt_calc_procs;
 
@@ -56,11 +49,11 @@ test_result test_IMe_pbDGESV(const char check, const char* tag, const char* vari
 						{
 							if (env.spare_procs > 0 || fault_tolerance > 0)
 							{
-								if (verbosity>0) DISPLAY_WRN(label,"can run also with fault tolerance set or spare processes allocated, but calc. processes will differ from total processes and no faults will be injected");
+								DISPLAY_WRN(label,"can run also with fault tolerance enabled or spare processes allocated, but calc. processes will differ from total processes")
 							}
 							if (IS_MULT(input.n / sqrt_calc_procs, input.ime_bf))
 							{
-								if (verbosity>0) DISPLAY_MSG(label,"OK");
+								DISPLAY_MSG(label,"OK");
 								output.exit_code = 0;
 							}
 							else
@@ -124,7 +117,7 @@ test_result test_IMe_pbDGESV(const char check, const char* tag, const char* vari
 				xx_ref=NULL;
 			}
 
-			if ( strcmp( variant, "PB-CO-bf1") == 0) output = pbDGESV_CO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			if ( strcmp( variant, "PB-WO-bf1") == 0) output = pbDGESV_WO_bf1 (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
@@ -179,6 +172,5 @@ test_result test_IMe_pbDGESV(const char check, const char* tag, const char* vari
 			}
 		}
 	}
-	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

@@ -14,9 +14,9 @@
 
 #define DUMMY								"dummy"
 
-#define IME_PB_SV_CO						"IMe-PB-SV-CO"
-#define IME_PB_SV_CO_FT						"IMe-PB-SV-CO-ft"
-#define IME_PB_SV_WO						"IMe-PB-SV-WO"
+#define IME_SV_CO							"IMe-SV-CO"
+#define IME_SV_CO_FT						"IMe-SV-CO-ft"
+#define IME_SV_WO							"IMe-SV-WO"
 
 #define SPK_SV								"SPK-SV"
 #define SPK_SV_NOPIV						"SPK-SV-nopiv"
