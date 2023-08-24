@@ -35,7 +35,7 @@ FFLAGS_cineca_spectrum  = -I$(MPI_ROOT)/include -qextname
 FFLAGS_enea_intel = 
 FFLAGS_enea_open = 
 
-FFLAGS_ubuntu_open = 
+FFLAGS_ubuntu_open = -fallow-argument-mismatch
 
 FFLAGS = $(OPTIMIZATION) $(DEBUG) $(FFLAGS_$(machine)_$(mpi))
 
