@@ -16,10 +16,13 @@ extern void Cblacs_gridinfo( int context, int*  np_row, int* np_col, int* my_row
 extern void Cblacs_gridexit( int context);
 extern void Cblacs_exit( int error_code);
 extern void Cblacs_abort( int ictxt, int ErrNo);
-
 extern void Cblacs_pcoord(int, int, int*, int*);
 extern void Cblacs_barrier(int, const char*);
+
 extern void Cdgerv2d(int, int, int, double*, int, int, int);
 extern void Cdgesd2d(int, int, int, double*, int, int, int);
+
+extern void Csgerv2d(int, int, int, float*, int, int, int);
+extern void Csgesd2d(int, int, int, float*, int, int, int);
 
 #endif /* __CBLACS_H__ */

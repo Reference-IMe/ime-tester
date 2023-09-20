@@ -1,8 +1,8 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../helpers/matrix_basic.h"
 #include "tester_structures.h"
 
 

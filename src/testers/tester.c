@@ -14,12 +14,12 @@
 #include <math.h>
 
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/vector.h"
 #include "../helpers/lapack.h"
 #include "../helpers/scalapack.h"
 #include "../helpers/Cblacs.h"
+#include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
 
 #include "tester_labels.h"
@@ -108,6 +108,10 @@ int main(int argc, char **argv)
 	 * application variables
 	 * *********************
 	 */
+
+	const int real_double = 2;
+	const int real_single = 1;
+
     int i,j,rep;
 
 	int			versions_all;
@@ -122,6 +126,7 @@ int main(int argc, char **argv)
     int nrhs;				// num. of r.h.s
     int cnd;				// condition number
     int seed;				// seed for random matrix generation
+    int type;				// precision type
     int rows;
     int cols;
     int scalapack_iter;		// scalapack total iterations
@@ -140,7 +145,8 @@ int main(int argc, char **argv)
     int scalapack_checkpoint_interval;
     int scalapack_failing_level;
 
-    sds matrix_gen_type;
+    sds matrix_gen_method;
+    sds matrix_precision_type;
     sds matrix_output_base_name;
     sds matrix_output_file_name;
     sds matrix_input_base_name;
@@ -158,9 +164,17 @@ int main(int argc, char **argv)
     char* command;
 
 	int cnd_readback;
-	double* A_ref;
-	double* x_ref;
-	double* b_ref;
+
+	// double precision
+	double* A_ref_d = NULL;
+	double* x_ref_d = NULL;
+	double* b_ref_d = NULL;
+
+	// single precision
+	float* A_ref_s = NULL;
+	float* x_ref_s = NULL;
+	float* b_ref_s = NULL;
+
 
     /*
      * ************
@@ -171,7 +185,8 @@ int main(int argc, char **argv)
 		/*
 		 * FIXED defaults
 		 */
-    	matrix_gen_type         = sdsnew("par"); // matrix generation type ( sequential (seq) /  parallel (par) )
+    	matrix_gen_method       = sdsnew("par"); // matrix generation type ( sequential (seq) /  parallel (par) )
+    	matrix_precision_type   = sdsnew("");
 		matrix_output_base_name = NULL;
 		matrix_output_file_name = NULL;
 		matrix_input_base_name  = NULL;
@@ -198,6 +213,7 @@ int main(int argc, char **argv)
 		set_cnd					 = 1;		// pre-conditioning (1) of the matrix  or not (0)
 		get_cnd					 = 1;		// read back (1) cnd from generated matrix or not (0)
 		seed					 = 1;		// seed for random generation
+		type					 = 0;		// precision type (0=unspecified)
 		get_nre					 = 1;		// calc (1) normwise relative error or not (0)
 		scalapack_nb			 = SCALAPACKNB;	// scalapack blocking factor, default defined in header
 		scalapack_failing_level  = -1;
@@ -275,6 +291,10 @@ int main(int argc, char **argv)
 				seed = atoi(argv[i+1]);
 				i++;
 			}
+			if( strcmp( argv[i], "-type" ) == 0 ) {
+				matrix_precision_type = sdsnew(argv[i+1]);
+				i++;
+			}
 			if( strcmp( argv[i], "-cnd" ) == 0 ) {
 				cnd = atoi(argv[i+1]);
 				i++;
@@ -338,7 +358,7 @@ int main(int argc, char **argv)
 				//i++; // no parameter value, no inc
 			}
 			if( strcmp( argv[i], "-mat-gen" ) == 0 ) {
-				matrix_gen_type = sdscpy(matrix_gen_type,argv[i+1]);
+				matrix_gen_method = sdscpy(matrix_gen_method,argv[i+1]);
 				i++;
 			}
 			if( strcmp( argv[i], "--run" ) == 0 ) {
@@ -429,32 +449,17 @@ int main(int argc, char **argv)
 		 */
 		if ( strcmp(command, "null" ) != 0 && strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0 ) // if informative commands, skip check
 		{
-			// checking on some input parameters
+			// checking on some input parameters for "--run" and "--save"
 			if (verbose < 0)
 			{
 				//if (mpi_rank==0) DISPLAY_WRN("\b","Verbosity level cannot be less than zero: setting to zero");
 				verbose=0;
-			}
-			if (repetitions <= 0)
-			{
-				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Repetitions cannot be less than one: setting to one");
-				repetitions=1;
 			}
 			if (cnd < 1)
 			{
 				if (mpi_rank==0) DISPLAY_ERR_GLB("Condition number invalid: must be at least one");
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
-			}
-			if (scalapack_nb <= 0)
-			{
-				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("ScaLAPACK blocking factor cannot be less than one: setting to one");
-				scalapack_nb=1;
-			}
-			if (ime_nb <= 0)
-			{
-				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("IMe blocking factor cannot be less than one: setting to one");
-				ime_nb=1;
 			}
 			if (nmat <= 0)
 			{
@@ -468,89 +473,109 @@ int main(int argc, char **argv)
 				MPI_Finalize();
 				return ERR_INPUT_ARG;
 			}
-			if (spare_procs < 0)
+			if (scalapack_nb <= 0)
 			{
-				if (mpi_rank==0) DISPLAY_ERR_GLB("Number of spare processes invalid: must be at least zero");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
+				if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("ScaLAPACK blocking factor cannot be less than one: setting to one");
+				scalapack_nb=1;
 			}
 
-			if (faulty_procs < 0) // faulty processes invalid
+			// checking on some input parameters for "--run" only
+			if ( strcmp(command, "--run" ) == 0 )
 			{
-				if (mpi_rank==0) DISPLAY_ERR_GLB("Number of faulty processes invalid: must be at least zero");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
-			}
-			else  // faulty processes valid
-			{
-				if (faulty_procs > 0) // faults will occur
+				if (ime_nb <= 0)
 				{
-					if (failing_level_override < 0 ) // faulty level IS NOT set on command line
+					if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("IMe blocking factor cannot be less than one: setting to one");
+					ime_nb=1;
+				}
+				if (repetitions <= 0)
+				{
+					if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Repetitions cannot be less than one: setting to one");
+					repetitions=1;
+				}
+				if (spare_procs < 0)
+				{
+					if (mpi_rank==0) DISPLAY_ERR_GLB("Number of spare processes invalid: must be at least zero");
+					MPI_Finalize();
+					return ERR_INPUT_ARG;
+				}
+
+				if (faulty_procs < 0) // faulty processes invalid
+				{
+					if (mpi_rank==0) DISPLAY_ERR_GLB("Number of faulty processes invalid: must be at least zero");
+					MPI_Finalize();
+					return ERR_INPUT_ARG;
+				}
+				else  // faulty processes valid
+				{
+					if (faulty_procs > 0) // faults will occur
 					{
-						if (mpi_rank==0) DISPLAY_ERR_GLB("Failing level not set: if a process will be faulty a failing level must be given");
-						MPI_Finalize();
-						return ERR_INPUT_ARG;
-					}
-					else // faulty level IS set on command line
-					{
-						if (failing_level < 0 || failing_level >= nmat ) // out of bounds faulty level
+						if (failing_level_override < 0 ) // faulty level IS NOT set on command line
 						{
-							if (mpi_rank==0) DISPLAY_ERR_GLB("Failing level invalid: must be at least zero and not greater than greatest level");
+							if (mpi_rank==0) DISPLAY_ERR_GLB("Failing level not set: if a process will be faulty a failing level must be given");
 							MPI_Finalize();
 							return ERR_INPUT_ARG;
 						}
-						else // valid faulty level
+						else // faulty level IS set on command line
 						{
-							// calc corresponding level for ScaLAPACK
-							scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
-						}
-					}
-				}
-			}
-
-			if (fault_tolerance < 0) // fault tolerance level is invalid
-			{
-				if (mpi_rank==0) DISPLAY_ERR_GLB("Fault tolerance level not set or invalid: must be at least zero");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
-			}
-			else // fault tolerance level is valid
-			{
-				if (fault_tolerance == 0) // fault tolerance disabled
-				{
-					if (faulty_procs > 0)
-					{
-						if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Fault tolerance level is not set, but at least one process will be faulty: never recovering");
-					}
-				}
-				else // fault tolerance enabled
-				{
-					if (faulty_procs < 1) // faults will not occur
-					{
-						if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Fault tolerance level is set, but no process will be faulty: never failing");
-					}
-					else // faults will occur
-					{
-						if (failing_level == -1)
-						{
-							if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("At least one faulty process is set but not a faulty level: never failing");
-						}
-						else
-						{
-							if (spare_procs == 0 )
+							if (failing_level < 0 || failing_level >= nmat ) // out of bounds faulty level
 							{
-								if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("No spare processes: never recovering");
+								if (mpi_rank==0) DISPLAY_ERR_GLB("Failing level invalid: must be at least zero and not greater than greatest level");
+								MPI_Finalize();
+								return ERR_INPUT_ARG;
+							}
+							else // valid faulty level
+							{
+								// calc corresponding level for ScaLAPACK
+								scalapack_failing_level=(int)ceil((nmat-failing_level)/scalapack_nb);
 							}
 						}
 					}
 				}
-			}
 
-			if (!IS_SQUARE(calc_procs))
-			{
-				if (mpi_rank==0) DISPLAY_ERR_GLB("The number of calc. processes has to be square");
-				MPI_Finalize();
-				return ERR_INPUT_ARG;
+				if (fault_tolerance < 0) // fault tolerance level is invalid
+				{
+					if (mpi_rank==0) DISPLAY_ERR_GLB("Fault tolerance level not set or invalid: must be at least zero");
+					MPI_Finalize();
+					return ERR_INPUT_ARG;
+				}
+				else // fault tolerance level is valid
+				{
+					if (fault_tolerance == 0) // fault tolerance disabled
+					{
+						if (faulty_procs > 0)
+						{
+							if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Fault tolerance level is not set, but at least one process will be faulty: never recovering");
+						}
+					}
+					else // fault tolerance enabled
+					{
+						if (faulty_procs < 1) // faults will not occur
+						{
+							if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("Fault tolerance level is set, but no process will be faulty: never failing");
+						}
+						else // faults will occur
+						{
+							if (failing_level == -1)
+							{
+								if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("At least one faulty process is set but not a faulty level: never failing");
+							}
+							else
+							{
+								if (spare_procs == 0 )
+								{
+									if (mpi_rank==0 && verbose>0) DISPLAY_WRN_GLB("No spare processes: never recovering");
+								}
+							}
+						}
+					}
+				}
+
+				if (!IS_SQUARE(calc_procs))
+				{
+					if (mpi_rank==0) DISPLAY_ERR_GLB("The number of calc. processes has to be square");
+					MPI_Finalize();
+					return ERR_INPUT_ARG;
+				}
 			}
 		}
 
@@ -638,6 +663,9 @@ int main(int argc, char **argv)
 			NULL,
 			NULL,
 			NULL,
+			NULL,
+			NULL,
+			NULL,
 			nrhs,
 			ime_nb,
 			scalapack_nb,
@@ -660,6 +688,8 @@ int main(int argc, char **argv)
 	 */
 	if ( strcmp(command, "null" ) != 0 && strcmp(command, "--help" ) != 0 && strcmp(command, "--list" ) != 0) // if informative commands, skip check
 	{
+		// action commands, check
+
 		if (mpi_rank==0 && verbose>0)
 		{
 			printf("     Total processes:               %d\n",np);
@@ -815,21 +845,53 @@ int main(int argc, char **argv)
 		 * prepare input matrices
 		 * **********************
 		 */
-		if (mpi_rank==0)
+		if (strcmp(matrix_precision_type, "double" ) == 0 || strcmp(matrix_precision_type, "d" ) == 0 )
 		{
-			A_ref = AllocateMatrix1D_double(nmat, nmat);
-			x_ref = AllocateVector_double(nmat);
-			b_ref = AllocateVector_double(nmat);
+			type = real_double;
+		}
+		else if (strcmp(matrix_precision_type, "single" ) == 0 || strcmp(matrix_precision_type, "s" ) == 0 )
+		{
+			type = real_single;
 		}
 		else
 		{
-			A_ref = NULL;
-			x_ref = NULL;
-			b_ref = NULL;
+			if (mpi_rank==0)
+			{
+				printf("ERR: Unknown or unspecified precision type\n\n");
+
+				if (output_to_file || input_from_file)
+				{
+					if (fp != NULL) fclose(fp);
+				}
+			}
+			sdsfree(test_output_file_name);
+			MPI_Finalize();
+			return ERR_INPUT_ARG;
 		}
-			/*
-			 * matrices from file
-			 */
+
+		if (type==real_double)
+		{
+			if (mpi_rank==0)
+			{
+				A_ref_d = AllocateMatrix1D_double(nmat, nmat);
+				x_ref_d = AllocateVector_double(nmat);
+				b_ref_d = AllocateVector_double(nmat);
+			}
+		}
+		else if (type==real_single)
+		{
+			if (mpi_rank==0)
+			{
+				A_ref_s = AllocateMatrix1D_float(nmat, nmat);
+				x_ref_s = AllocateVector_float(nmat);
+				b_ref_s = AllocateVector_float(nmat);
+			}
+		}
+
+
+		/*
+		 * matrices from file
+		 */
 			if (input_from_file)
 			{
 				if ( strcmp(command, "--save" ) == 0 )
@@ -852,7 +914,8 @@ int main(int argc, char **argv)
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".X");
 					fp=fopen(matrix_input_file_name,"rb");
-					fread(x_ref,sizeof(double),nmat,fp);
+							if (type==real_double) {FREAD(x_ref_d, sizeof(x_ref_d[0]), nmat, fp)}
+					else	if (type==real_single) {FREAD(x_ref_s, sizeof(x_ref_s[0]), nmat, fp)}
 					fclose(fp);
 					sdsfree(matrix_input_file_name);
 					if (verbose > 0) printf("     ..X\n");
@@ -860,7 +923,8 @@ int main(int argc, char **argv)
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".B");
 					fp=fopen(matrix_input_file_name,"rb");
-					fread(b_ref,sizeof(double),nmat,fp);
+							if (type==real_double) {FREAD(b_ref_d, sizeof(b_ref_d[0]), nmat, fp)}
+					else	if (type==real_single) {FREAD(b_ref_s, sizeof(b_ref_s[0]), nmat, fp)}
 					fclose(fp);
 					sdsfree(matrix_input_file_name);
 					if (verbose > 0) printf("     ..B\n");
@@ -868,7 +932,8 @@ int main(int argc, char **argv)
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
 					matrix_input_file_name = sdscat(matrix_input_file_name, ".A");
 					fp=fopen(matrix_input_file_name,"rb");
-					fread(A_ref,sizeof(double),nmat*nmat,fp);
+							if (type==real_double) {FREAD(A_ref_d, sizeof(A_ref_d[0]), nmat*nmat, fp)}
+					else	if (type==real_single) {FREAD(A_ref_s, sizeof(A_ref_s[0]), nmat*nmat, fp)}
 					fclose(fp);
 					fp=NULL;
 					sdsfree(matrix_input_file_name);
@@ -888,7 +953,8 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						cnd_readback = round( pCheckSystemMatrices1D_double(nmat, A_ref, x_ref, b_ref, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+								if (type==real_double) cnd_readback = round( pCheckSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+						else	if (type==real_single) cnd_readback = round( pCheckSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 					}
 				}
 			}
@@ -897,7 +963,7 @@ int main(int argc, char **argv)
 			 */
 			else
 			{
-				if (strcmp(matrix_gen_type, "par" ) == 0)
+				if (strcmp(matrix_gen_method, "par" ) == 0)
 				{
 					// init communication channels (generation uses blacs => mpi interference..)
 					test_dummy(versionname_all[0], verbose, routine_env, routine_input);
@@ -924,9 +990,10 @@ int main(int argc, char **argv)
 						MPI_Finalize();
 						return ERR_INPUT_ARG;
 					}
-					cnd_readback = round( pGenSystemMatrices1D_double(nmat, A_ref, x_ref, b_ref, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+							if (type==real_double) cnd_readback = round( pGenSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
+					else	if (type==real_single) cnd_readback = round( pGenSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, seed, cnd, set_cnd, get_cnd, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 				}
-				else if (strcmp(matrix_gen_type, "seq" ) == 0)
+				else if (strcmp(matrix_gen_method, "seq" ) == 0)
 				{
 					if (mpi_rank==0 && verbose>0)
 					{
@@ -935,14 +1002,15 @@ int main(int argc, char **argv)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
 						}
-						cnd_readback = round( GenSystemMatrices1D_double(nmat, A_ref, x_ref, b_ref, seed, cnd, get_cnd) );
+								if (type==real_double) cnd_readback = round( GenSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, seed, cnd, get_cnd) );
+						else	if (type==real_single) cnd_readback = round( GenSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, seed, cnd, get_cnd) );
 					}
 				}
 				else
 				{
 					if (mpi_rank==0)
 					{
-						printf("ERR: Unknown type of matrix generation %s\n\n",matrix_gen_type);
+						printf("ERR: Unknown type of matrix generation %s\n\n",matrix_gen_method);
 					}
 					MAIN_CLEANUP(mpi_rank);
 					MPI_Finalize();
@@ -955,14 +1023,22 @@ int main(int argc, char **argv)
 			/*
 			if (mpi_rank==0)
 			{
-				FillMatrix1D_double(A_ref, n, n);
-				OneMatrix1D_double(b_ref, n, 1);
+				FillMatrix1D_double(A_ref_d, n, n);
+				OneMatrix1D_double(b_ref_d, n, 1);
 			}
 			*/
-
-			routine_input.A_ref = A_ref;
-			routine_input.x_ref = x_ref;
-			routine_input.b_ref = b_ref;
+			if (type==real_double)
+			{
+				routine_input.A_ref_d = A_ref_d;
+				routine_input.x_ref_d = x_ref_d;
+				routine_input.b_ref_d = b_ref_d;
+			}
+			if (type==real_single)
+			{
+				routine_input.A_ref_s = A_ref_s;
+				routine_input.x_ref_s = x_ref_s;
+				routine_input.b_ref_s = b_ref_s;
+			}
 
 			/*
 			 * ******************************
@@ -981,13 +1057,22 @@ int main(int argc, char **argv)
 				}
 			}
 	}
-	else
+/*	else // informative commands, checks skipped
 	{
-		A_ref = NULL;
-		x_ref = NULL;
-		b_ref = NULL;
+		if (type==real_double)
+		{
+			A_ref_d = NULL;
+			x_ref_d = NULL;
+			b_ref_d = NULL;
+		}
+		if (type==real_single)
+		{
+			A_ref_s = NULL;
+			x_ref_s = NULL;
+			b_ref_s = NULL;
+		}
 	}
-
+*/
 
 	/*
 	 * ********
@@ -1069,7 +1154,8 @@ int main(int argc, char **argv)
 				matrix_output_file_name = sdsdup(matrix_output_base_name);
 				matrix_output_file_name = sdscat(matrix_output_file_name, ".X");
 				fp=fopen(matrix_output_file_name,"wb");
-				fwrite(x_ref,sizeof(double),nmat,fp);
+						if (type==real_double) fwrite(x_ref_d,sizeof(x_ref_d[0]),nmat,fp);
+				else	if (type==real_single) fwrite(x_ref_s,sizeof(x_ref_s[0]),nmat,fp);
 				fclose(fp);
 				sdsfree(matrix_output_file_name);
 				if (verbose > 0) printf("     ..X\n");
@@ -1077,7 +1163,8 @@ int main(int argc, char **argv)
 				matrix_output_file_name = sdsdup(matrix_output_base_name);
 				matrix_output_file_name = sdscat(matrix_output_file_name, ".B");
 				fp=fopen(matrix_output_file_name,"wb");
-				fwrite(b_ref,sizeof(double),nmat,fp);
+						if (type==real_double) fwrite(b_ref_d,sizeof(b_ref_d[0]),nmat,fp);
+				else	if (type==real_single) fwrite(b_ref_s,sizeof(b_ref_s[0]),nmat,fp);
 				fclose(fp);
 				sdsfree(matrix_output_file_name);
 				if (verbose > 0) printf("     ..B\n");
@@ -1085,7 +1172,8 @@ int main(int argc, char **argv)
 				matrix_output_file_name = sdsdup(matrix_output_base_name);
 				matrix_output_file_name = sdscat(matrix_output_file_name, ".A");
 				fp=fopen(matrix_output_file_name,"wb");
-				fwrite(A_ref,sizeof(double),nmat*nmat,fp);
+						if (type==real_double) fwrite(A_ref_d,sizeof(A_ref_d[0]),nmat*nmat,fp);
+				else	if (type==real_single) fwrite(A_ref_s,sizeof(A_ref_s[0]),nmat*nmat,fp);
 				fclose(fp);
 				fp=NULL;
 				sdsfree(matrix_output_file_name);
@@ -1207,7 +1295,7 @@ int main(int argc, char **argv)
 			}
 
 			// init communication channels if not done during matrix generation
-			if (strcmp(matrix_gen_type, "par" ) != 0) test_dummy(versionname_all[0], verbose, routine_env, routine_input);
+			if (strcmp(matrix_gen_method, "par" ) != 0) test_dummy(versionname_all[0], verbose, routine_env, routine_input);
 
 			/*
 			 * main loop

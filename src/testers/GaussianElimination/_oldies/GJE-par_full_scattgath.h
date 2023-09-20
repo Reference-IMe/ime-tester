@@ -3,7 +3,7 @@
 #include "../../helpers/types.h"
 #include <mpi.h>
 
-#include "../../helpers/matrix.h"
+#include "../../../helpers/matrix_basic.h"
 
 void pGaussianElimination_localmatrix(double** Alocal, double** A, double* b, int n, int rank, int nprocs)
 {

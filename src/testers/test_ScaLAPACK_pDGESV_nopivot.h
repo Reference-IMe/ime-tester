@@ -8,8 +8,8 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../helpers/matrix_basic.h"
 #include "tester_structures.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV_nopivot.h"
 
@@ -37,13 +37,13 @@ test_result test_ScaLAPACK_pDGESV_nopivot(const char check, const char* label, i
 			bb=AllocateMatrix1D_double(input.n, input.nrhs);
 			xx_ref=AllocateMatrix1D_double(input.n, input.nrhs);
 
-			CopyMatrix1D_double(input.A_ref, A, input.n, input.n);
+			CopyMatrix1D_double(input.A_ref_d, A, input.n, input.n);
 			for (i=0;i<input.n;i++)
 			{
 				for (j=0;j<input.nrhs;j++)
 				{
-					bb[i*input.nrhs+j] = input.b_ref[i];
-					xx_ref[i*input.nrhs+j] = input.x_ref[i];
+					bb[i*input.nrhs+j] = input.b_ref_d[i];
+					xx_ref[i*input.nrhs+j] = input.x_ref_d[i];
 				}
 			}
 

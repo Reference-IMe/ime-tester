@@ -8,7 +8,7 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
+#include "../helpers/matrix_basic.h"
 #include "tester_structures.h"
 #include "FTLA/FTLA_pDGESV_QRF.h"
 
@@ -75,11 +75,11 @@ test_result test_FTLA_pDGESV_QRF(const char check, const char* label, int verbos
 			A=AllocateMatrix1D_double(input.n, input.n);
 			bb=AllocateMatrix1D_double(input.n, 1);
 
-			CopyMatrix1D_double(input.A_ref, A, input.n, input.n);
+			CopyMatrix1D_double(input.A_ref_d, A, input.n, input.n);
 
 			for (i=0;i<input.n;i++)
 			{
-				bb[i] = input.b_ref[i];
+				bb[i] = input.b_ref_d[i];
 			}
 			if (verbosity>2)
 			{
@@ -108,7 +108,7 @@ test_result test_FTLA_pDGESV_QRF(const char check, const char* label, int verbos
 				printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 			}
 			// calc error
-			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D_double(bb, input.x_ref, input.n, 1);
+			if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D_double(bb, input.x_ref_d, input.n, 1);
 
 			if (verbosity>1)
 			{

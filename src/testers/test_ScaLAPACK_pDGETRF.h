@@ -8,8 +8,8 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../helpers/matrix_basic.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 #include "tester_structures.h"
 
@@ -35,11 +35,11 @@ test_result test_ScaLAPACK_pDGETRF(const char check, const char* label, int verb
 			A=AllocateMatrix1D_double(input.n, input.n);
 			bb=AllocateMatrix1D_double(input.n, 1);
 
-			CopyMatrix1D_double(input.A_ref, A, input.n, input.n);
+			CopyMatrix1D_double(input.A_ref_d, A, input.n, input.n);
 
 			for (i=0;i<input.n;i++)
 			{
-				bb[i] = input.b_ref[i];
+				bb[i] = input.b_ref_d[i];
 			}
 			if (verbosity>2)
 			{

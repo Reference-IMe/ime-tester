@@ -2,8 +2,8 @@
 #include <time.h>
 #include <unistd.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../helpers/matrix_basic.h"
 #include "../pDGESV-WO.h"
 #include "tester_structures.h"
 
@@ -92,14 +92,14 @@ test_result test_IMe_pDGESV_WO ( const char check, const char* label, const char
 				xx_ref=AllocateMatrix1D_double(input.n, input.nrhs);
 				A2=AllocateMatrix2D_double(input.n, input.n, CONTIGUOUS);
 				A2_1D=&A2[0][0];
-				CopyMatrix1D_double(input.A_ref, A2_1D, input.n, input.n);
+				CopyMatrix1D_double(input.A_ref_d, A2_1D, input.n, input.n);
 
 				for (i=0;i<input.n;i++)
 				{
 					for (j=0;j<input.nrhs;j++)
 					{
-						bb[i][j] = input.b_ref[i];
-						xx_ref[i*input.nrhs+j] = input.x_ref[i];
+						bb[i][j] = input.b_ref_d[i];
+						xx_ref[i*input.nrhs+j] = input.x_ref_d[i];
 					}
 				}
 

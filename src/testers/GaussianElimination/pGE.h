@@ -1,10 +1,11 @@
 #include <mpi.h>
+
+#include "../../helpers/matrix_basic.h"
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <math.h>
 //#include <unistd.h>
 
-#include "../../helpers/matrix.h"
 #include "../GaussianElimination/BackSubst.h"
 
 /*

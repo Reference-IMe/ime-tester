@@ -42,9 +42,12 @@ typedef struct fault_env
 typedef struct test_input
 {
 	int n;
-	double* A_ref;
-	double* x_ref;
-	double* b_ref;
+	double* A_ref_d;
+	double* x_ref_d;
+	double* b_ref_d;
+	float* A_ref_s;
+	float* x_ref_s;
+	float* b_ref_s;
 	int nrhs;
 	int ime_bf;
 	int scalapack_bf;

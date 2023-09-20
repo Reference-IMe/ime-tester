@@ -2,8 +2,8 @@
 #include <time.h>
 #include <unistd.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix.h"
 #include "../helpers/matrix_advanced.h"
+#include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
 #include "../pFGESV-CO.h"
 #include "tester_structures.h"

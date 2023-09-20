@@ -8,9 +8,9 @@
 #include <mpi.h>
 #include <time.h>
 #include "../../helpers/macros.h"
-#include "../../helpers/matrix.h"
 #include "../../helpers/vector.h"
 #include "../../helpers/Cblacs.h"
+#include "../../helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
