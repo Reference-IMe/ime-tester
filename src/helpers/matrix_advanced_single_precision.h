@@ -127,7 +127,7 @@ float ConditionNumber1D_float(float* mat, int rows, int cols)
 	return cnd;
 }
 
-float GenSystemMatrices1D_float(int n, float* A, float* x, float* b, int seed, float cnd, char cnd_readback)
+float GenSystemMatrices1D_float(int n, float* A, float* x, float* b, int seed, float cnd, char calc_cnd, char cnd_readback)
 {
 	int i1 = 1;
 	float d0 = 0.0;
@@ -135,7 +135,14 @@ float GenSystemMatrices1D_float(int n, float* A, float* x, float* b, int seed, f
 	char transA = 'N', transx = 'N';
 	float read_cnd = -1;
 
-	RandomSquareMatrixCND1D_float(A, n, seed, cnd);
+	if (calc_cnd)
+	{
+		RandomSquareMatrixCND1D_float(A, n, seed, cnd);
+	}
+	else
+	{
+		RandomMatrix1D_float(A, n, n, seed);
+	}
 	FillVector_float(x, n, 1);
 	sgemm_(&transA, &transx, &n, &i1, &n, &d1, A, &n, x, &n, &d0, b, &n);
 	if (cnd_readback)

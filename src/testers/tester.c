@@ -1002,8 +1002,8 @@ int main(int argc, char **argv)
 						{
 							printf("WRN: Condition number will not read back from generated matrix\n");
 						}
-								if (type==real_double) cnd_readback = round( GenSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, seed, cnd, get_cnd) );
-						else	if (type==real_single) cnd_readback = round( GenSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, seed, cnd, get_cnd) );
+								if (type==real_double) cnd_readback = round( GenSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, seed, cnd, set_cnd, get_cnd) );
+						else	if (type==real_single) cnd_readback = round( GenSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, seed, cnd, set_cnd, get_cnd) );
 					}
 				}
 				else
@@ -1019,14 +1019,25 @@ int main(int argc, char **argv)
 			}
 			sdsfree(matrix_input_base_name);
 
-			// matrix for debugging purposes
-			/*
-			if (mpi_rank==0)
+
+			// debugging
+			// if (mpi_rank==0)
 			{
-				FillMatrix1D_double(A_ref_d, n, n);
-				OneMatrix1D_double(b_ref_d, n, 1);
+				// create matrices for debugging purposes
+				/*
+				FillMatrix1D_double(A_ref_d, nmat, nmat);
+				OneMatrix1D_double(b_ref_d, nmat, 1);
+				*/
+
+				// show matrices for debugging purposes
+				/*
+				PrintMatrix1D_double(A_ref_d,nmat,nmat);
+				PrintVector_double(x_ref_d,nmat);
+				PrintVector_double(b_ref_d,nmat);
+				*/
 			}
-			*/
+
+
 			if (type==real_double)
 			{
 				routine_input.A_ref_d = A_ref_d;

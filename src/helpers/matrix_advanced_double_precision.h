@@ -126,15 +126,22 @@ double ConditionNumber1D_double(double* mat, int rows, int cols)
 	return cnd;
 }
 
-double GenSystemMatrices1D_double(int n, double* A, double* x, double* b, int seed, double cnd, char cnd_readback)
+double GenSystemMatrices1D_double(int n, double* A, double* x, double* b, int seed, double cnd, char calc_cnd, char cnd_readback)
 {
 	int i1 = 1;
 	double d0 = 0.0;
 	double d1 = 1.0;
-	char transA = 'N', transx = 'N';
+	char transA = 'T', transx = 'N';
 	double read_cnd = -1;
 
-	RandomSquareMatrixCND1D_double(A, n, seed, cnd);
+	if (calc_cnd)
+	{
+		RandomSquareMatrixCND1D_double(A, n, seed, cnd);
+	}
+	else
+	{
+		RandomMatrix1D_double(A, n, n, seed);
+	}
 	FillVector_double(x, n, 1);
 	dgemm_(&transA, &transx, &n, &i1, &n, &d1, A, &n, x, &n, &d0, b, &n);
 	if (cnd_readback)
