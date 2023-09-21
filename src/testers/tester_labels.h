@@ -14,14 +14,14 @@
 
 #define DUMMY								"dummy"
 
-#define IME_pFGESV_CO						"IMe-FSV-CO"
-#define IME_pDGESV_CO						"IMe-DSV-CO"
-#define IME_pDGESV_CO_FT					"IMe-DSV-CO-ft"
-#define IME_pDGESV_WO						"IMe-DSV-WO"
+#define IME_PSGESV_CO						"IMe-pSGESV-co"
+#define IME_PDGESV_CO						"IMe-pDGESV-co"
+#define IME_PDGESV_CO_FT					"IMe-pDGESV-co-ft"
+#define IME_PDGESV_WO						"IMe-pDGESV-wo"
 
-#define SPK_SV								"SPK-SV"
-#define SPK_SV_NOPIV						"SPK-SV-nopiv"
-#define SPK_SV_FT_CP						"SPK-SV-ft"
+#define SPK_PDGESV							"SPK-pDGESV"
+#define SPK_PDGESV_NOPIV					"SPK-pDGESV-nopiv"
+#define SPK_PDGESV_FT_CP					"SPK-pDGESV-ft"
 
 #define SPK_LU								"SPK-LU"
 #define SPK_LU_FAULT_0_TOLERANT_1			"SPK-LU-ft1/0"
