@@ -228,16 +228,18 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = "dummy"; // not actually callable
 
-		versionname_all[versions_all++] = IME_PSGESV_CO;
-		versionname_all[versions_all++] = IME_PSGESV_CO_FT;
 		versionname_all[versions_all++] = IME_PSGESV_WO;
-
-		versionname_all[versions_all++] = IME_PDGESV_CO;
-		versionname_all[versions_all++] = IME_PDGESV_CO_FT;
 		versionname_all[versions_all++] = IME_PDGESV_WO;
 
+		versionname_all[versions_all++] = IME_PSGESV_CO;
+		versionname_all[versions_all++] = IME_PDGESV_CO;
 
+		versionname_all[versions_all++] = IME_PSGESV_CO_FT;
+		versionname_all[versions_all++] = IME_PDGESV_CO_FT;
+
+		versionname_all[versions_all++] = SPK_PSGESV;
 		versionname_all[versions_all++] = SPK_PDGESV;
+
 		versionname_all[versions_all++] = SPK_PDGESV_NOPIV;
 		versionname_all[versions_all++] = SPK_PDGESV_FT_CP;
 

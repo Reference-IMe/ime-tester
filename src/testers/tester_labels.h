@@ -22,6 +22,7 @@
 #define IME_PSGESV_WO						"IMe-pSGESV-wo"
 
 #define SPK_PDGESV							"SPK-pDGESV"
+#define SPK_PSGESV							"SPK-pSGESV"
 #define SPK_PDGESV_NOPIV					"SPK-pDGESV-nopiv"
 #define SPK_PDGESV_FT_CP					"SPK-pDGESV-ft"
 

@@ -28,6 +28,8 @@
 #include "test_ScaLAPACK_pDGESV_ft1_cp.h"
 #include "test_ScaLAPACK_pDGESV_ftx_cp.h"
 
+#include "test_ScaLAPACK_pSGESV.h"
+
 #include "test_ScaLAPACK_pDGETRF.h"
 #include "test_ScaLAPACK_pDGETRF_ft1_cp.h"
 
@@ -59,6 +61,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_PSGESV_WO   )			== 0 )	info = test_IMe_pSGESV_WO		(check, routine_name, "PB-WO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 
 	else if	( strcmp( routine_name, SPK_PDGESV ) 				== 0 )	info = test_ScaLAPACK_pDGESV		(check, routine_name, verbosity, routine_env, routine_input);
+	else if	( strcmp( routine_name, SPK_PSGESV ) 				== 0 )	info = test_ScaLAPACK_pSGESV		(check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_PDGESV_NOPIV ) 			== 0 )	info = test_ScaLAPACK_pDGESV_nopivot(check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_PDGESV_FT_CP ) 			== 0 )	info = test_ScaLAPACK_pDGESV_ftx_cp	(check, routine_name, verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, routine_fault.scalapack_checkpoint_interval);
 

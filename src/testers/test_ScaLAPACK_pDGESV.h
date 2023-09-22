@@ -7,6 +7,7 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../constants.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
@@ -72,8 +73,10 @@ test_result test_ScaLAPACK_pDGESV(const char check, const char* tag, int verbosi
 
 		if (env.mpi_rank==0)
 		{
+			#define TYPE REAL_DOUBLE
 			#include "test_ScaLAPACK_post-check-solution.inc"
 			#include "test_ScaLAPACK_show-solution.inc"
+			#undef TYPE
 		}
 
 		NULLFREE(A);

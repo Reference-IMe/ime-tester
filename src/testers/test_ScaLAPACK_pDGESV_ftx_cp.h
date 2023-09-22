@@ -7,6 +7,7 @@
 
 #include <mpi.h>
 #include <time.h>
+#include "../constants.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
@@ -122,8 +123,10 @@ test_result test_ScaLAPACK_pDGESV_ftx_cp(const char check, const char* tag, int 
 
 		if (env.mpi_rank==0)
 		{
+			#define TYPE REAL_DOUBLE
 			#include "test_ScaLAPACK_post-check-solution.inc"
 			#include "test_ScaLAPACK_show-solution.inc"
+			#undef TYPE
 		}
 
 		NULLFREE(A);
