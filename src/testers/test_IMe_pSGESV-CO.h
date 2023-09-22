@@ -5,12 +5,12 @@
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
-#include "../pFGESV-CO.h"
+#include "../pSGESV-CO.h"
 #include "tester_structures.h"
 
 
 
-test_result test_IMe_pFGESV_CO (	const char check, const char* tag, const char* variant, int verbosity,
+test_result test_IMe_pSGESV_CO (	const char check, const char* tag, const char* variant, int verbosity,
 									parallel_env env,
 									test_input input,
 									int fault_tolerance)
@@ -91,40 +91,40 @@ test_result test_IMe_pFGESV_CO (	const char check, const char* tag, const char* 
 
 		if (i_calc)
 		{
-			xx=AllocateMatrix2D_double(input.n, input.nrhs, CONTIGUOUS);
-			bb=AllocateMatrix2D_double(input.n, input.nrhs, CONTIGUOUS);
+			xx=AllocateMatrix2D_float(input.n, input.nrhs, CONTIGUOUS);
+			bb=AllocateMatrix2D_float(input.n, input.nrhs, CONTIGUOUS);
 
 			if (env.mpi_rank==0)
 			{
-				xx_ref=AllocateMatrix1D_double(input.n, input.nrhs);
-				A2=AllocateMatrix2D_double(input.n, input.n, CONTIGUOUS);
+				xx_ref=AllocateMatrix1D_float(input.n, input.nrhs);
+				A2=AllocateMatrix2D_float(input.n, input.n, CONTIGUOUS);
 				A2_1D=&A2[0][0];
-				CopyMatrix1D_double(input.A_ref, A2_1D, input.n, input.n);
+				CopyMatrix1D_float(input.A_ref_s, A2_1D, input.n, input.n);
 
 				for (i=0;i<input.n;i++)
 				{
 					for (j=0;j<input.nrhs;j++)
 					{
-						bb[i][j] = input.b_ref[i];
-						xx_ref[i*input.nrhs+j] = input.x_ref[i];
+						bb[i][j] = input.b_ref_s[i];
+						xx_ref[i*input.nrhs+j] = input.x_ref_s[i];
 					}
 				}
 
 				if (verbosity>2)
 				{
 					printf("\n\n Matrix A:\n");
-					PrintMatrix2D_double(A2, input.n, input.n);
+					PrintMatrix2D_float(A2, input.n, input.n);
 					printf("\n Vector b:\n");
-					PrintMatrix2D_double(bb, input.n, input.nrhs);
+					PrintMatrix2D_float(bb, input.n, input.nrhs);
 				}
 			}
 			else
 			{
-				A2=AllocateMatrix2D_double(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
+				A2=AllocateMatrix2D_float(1, 1, CONTIGUOUS); // to avoid segmentation fault in mpi collectives with 2D arrays
 				xx_ref=NULL;
 			}
 
-			if ( strcmp( variant, "PB-CO-BF1") == 0) output = pDGESV_CO (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			if ( strcmp( variant, "PB-CO-BF1") == 0) output = pSGESV_CO (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");
@@ -138,12 +138,12 @@ test_result test_IMe_pFGESV_CO (	const char check, const char* tag, const char* 
 					printf("\n** Dangerous exit code.. (%d)**\n",output.exit_code);
 				}
 				// calc error
-				if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D_double(&xx[0][0], xx_ref, input.n, input.nrhs);
+				if (input.calc_nre) rank_result.norm_rel_err = NormwiseRelativeError1D_float(&xx[0][0], xx_ref, input.n, input.nrhs);
 
 				if (verbosity>1)
 				{
 					printf("\nThe %s solution is:\n",label);
-					PrintMatrix2D_double(xx, input.n, input.nrhs);
+					PrintMatrix2D_float(xx, input.n, input.nrhs);
 					printf("\n with exit code     %d\n",output.exit_code);
 					printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
 				}
@@ -151,15 +151,15 @@ test_result test_IMe_pFGESV_CO (	const char check, const char* tag, const char* 
 			//cleanup
 			if (env.mpi_rank==0)
 			{
-				DeallocateMatrix2D_double(A2, input.n, CONTIGUOUS);
+				DeallocateMatrix2D_float(A2, input.n, CONTIGUOUS);
 			}
 			else
 			{
-				DeallocateMatrix2D_double(A2, 1, CONTIGUOUS);
+				DeallocateMatrix2D_float(A2, 1, CONTIGUOUS);
 			}
-			DeallocateMatrix1D_double(xx_ref);
-			DeallocateMatrix2D_double(xx, input.n, CONTIGUOUS);
-			DeallocateMatrix2D_double(bb, input.n, CONTIGUOUS);
+			DeallocateMatrix1D_float(xx_ref);
+			DeallocateMatrix2D_float(xx, input.n, CONTIGUOUS);
+			DeallocateMatrix2D_float(bb, input.n, CONTIGUOUS);
 
 		}
 		else

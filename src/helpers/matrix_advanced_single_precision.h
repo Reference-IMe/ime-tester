@@ -132,7 +132,7 @@ float GenSystemMatrices1D_float(int n, float* A, float* x, float* b, int seed, f
 	int i1 = 1;
 	float d0 = 0.0;
 	float d1 = 1.0;
-	char transA = 'N', transx = 'N';
+	char transA = 'T', transx = 'N';
 	float read_cnd = -1;
 
 	if (calc_cnd)
