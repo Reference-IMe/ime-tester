@@ -229,6 +229,7 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = "dummy"; // not actually callable
 
 		versionname_all[versions_all++] = IME_PSGESV_CO;
+		versionname_all[versions_all++] = IME_PSGESV_CO_FT;
 		versionname_all[versions_all++] = IME_PDGESV_CO;
 		versionname_all[versions_all++] = IME_PDGESV_CO_FT;
 		versionname_all[versions_all++] = IME_PDGESV_WO;

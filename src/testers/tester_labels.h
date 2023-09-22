@@ -14,9 +14,10 @@
 
 #define DUMMY								"dummy"
 
-#define IME_PSGESV_CO						"IMe-pSGESV-co"
 #define IME_PDGESV_CO						"IMe-pDGESV-co"
+#define IME_PSGESV_CO						"IMe-pSGESV-co"
 #define IME_PDGESV_CO_FT					"IMe-pDGESV-co-ft"
+#define IME_PSGESV_CO_FT					"IMe-pSGESV-co-ft"
 #define IME_PDGESV_WO						"IMe-pDGESV-wo"
 
 #define SPK_PDGESV							"SPK-pDGESV"
