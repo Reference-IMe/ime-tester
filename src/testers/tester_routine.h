@@ -45,6 +45,7 @@
 
 #include "test_IMe_pSGESV-CO.h"
 #include "test_IMe_pSGESV-CO-FT.h"
+#include "test_IMe_pSGESV-WO.h"
 
 test_result tester_routine(const char check, const char* routine_name, int verbosity, parallel_env routine_env, test_input routine_input, fault_env routine_fault)
 {
@@ -55,6 +56,7 @@ test_result tester_routine(const char check, const char* routine_name, int verbo
 	else if	( strcmp( routine_name, IME_PDGESV_WO   )			== 0 )	info = test_IMe_pDGESV_WO		(check, routine_name, "PB-WO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 	else if	( strcmp( routine_name, IME_PSGESV_CO   )			== 0 )	info = test_IMe_pSGESV_CO		(check, routine_name, "PB-CO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 	else if	( strcmp( routine_name, IME_PSGESV_CO_FT)			== 0 )	info = test_IMe_pSGESV_CO_FT	(check, routine_name, "PB-CO-BF1-FT",    verbosity, routine_env, routine_input, routine_fault.fault_tolerance, routine_fault.faulty_procs, routine_fault.failing_rank, routine_fault.failing_level, 1);
+	else if	( strcmp( routine_name, IME_PSGESV_WO   )			== 0 )	info = test_IMe_pSGESV_WO		(check, routine_name, "PB-WO-BF1",       verbosity, routine_env, routine_input, routine_fault.fault_tolerance);
 
 	else if	( strcmp( routine_name, SPK_PDGESV ) 				== 0 )	info = test_ScaLAPACK_pDGESV		(check, routine_name, verbosity, routine_env, routine_input);
 	else if	( strcmp( routine_name, SPK_PDGESV_NOPIV ) 			== 0 )	info = test_ScaLAPACK_pDGESV_nopivot(check, routine_name, verbosity, routine_env, routine_input);
