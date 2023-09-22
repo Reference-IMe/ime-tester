@@ -25,6 +25,7 @@
 #define SPK_PSGESV							"SPK-pSGESV"
 #define SPK_PDGESV_NOPIV					"SPK-pDGESV-nopiv"
 #define SPK_PDGESV_FT_CP					"SPK-pDGESV-ft"
+#define SPK_PSGESV_FT_CP					"SPK-pSGESV-ft"
 
 #define SPK_LU								"SPK-LU"
 #define SPK_LU_FAULT_0_TOLERANT_1			"SPK-LU-ft1/0"

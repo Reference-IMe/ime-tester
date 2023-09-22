@@ -192,6 +192,8 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
+				$(TST_DIR)/ScaLAPACK/psgetrf_cp.o \
+				$(TST_DIR)/ScaLAPACK/psgetrf_cpx.o \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
 				$(TST_DIR)/ScaLAPACK/pdgetrf_cpx.o \
 				$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
@@ -208,6 +210,8 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 	$(MPICC) $(CFLAGS) -o $(BIN_DIR)/tester \
 		$(TST_DIR)/tester.c \
 		$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
+		$(TST_DIR)/ScaLAPACK/psgetrf_cp.o \
+		$(TST_DIR)/ScaLAPACK/psgetrf_cpx.o \
 		$(TST_DIR)/ScaLAPACK/pdgetrf_cs.o \
 		$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
 		$(TST_DIR)/ScaLAPACK/pdgetrf_cpx.o \

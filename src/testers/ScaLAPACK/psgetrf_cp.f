@@ -1,5 +1,5 @@
-*      SUBROUTINE PDGETRF_CP( M, N, A, IA, JA, DESCA, IPIV, INFO )
-      SUBROUTINE PDGETRF_CP(M, N,
+*      SUBROUTINE PSGETRF( M, N, A, IA, JA, DESCA, IPIV, INFO )
+      SUBROUTINE PSGETRF_CP(M, N,
      $                      A, IA, JA, DESCA,
      $                      ACP, IACP, JACP, DESCACP,
      $                      IPIV, IPIVCP, MIPIV,
@@ -17,13 +17,13 @@
 *     .. Array Arguments ..
       INTEGER          DESCA( * ), IPIV( * ),
      $                 DESCACP( * ), IPIVCP( * )
-      DOUBLE PRECISION A( * ), ACP( * )
+      REAL             A( * ), ACP( * )
 *     ..
 *
 *  Purpose
 *  =======
 *
-*  PDGETRF computes an LU factorization of a general M-by-N distributed
+*  PSGETRF computes an LU factorization of a general M-by-N distributed
 *  matrix sub( A ) = (IA:IA+M-1,JA:JA+N-1) using partial pivoting with
 *  row interchanges.
 *
@@ -102,7 +102,7 @@
 *          The number of columns to be operated on, i.e. the number of
 *          columns of the distributed submatrix sub( A ). N >= 0.
 *
-*  A       (local input/local output) DOUBLE PRECISION pointer into the
+*  A       (local input/local output) REAL pointer into the
 *          local memory to an array of dimension (LLD_A, LOCc(JA+N-1)).
 *          On entry, this array contains the local pieces of the M-by-N
 *          distributed matrix sub( A ) to be factored. On exit, this
@@ -145,8 +145,8 @@
       PARAMETER          ( BLOCK_CYCLIC_2D = 1, DLEN_ = 9, DTYPE_ = 1,
      $                     CTXT_ = 2, M_ = 3, N_ = 4, MB_ = 5, NB_ = 6,
      $                     RSRC_ = 7, CSRC_ = 8, LLD_ = 9 )
-      DOUBLE PRECISION   ONE
-      PARAMETER          ( ONE = 1.0D+0 )
+      REAL               ONE
+      PARAMETER          ( ONE = 1.0E+0 )
 *     ..
 *     .. Local Scalars ..
       CHARACTER          COLBTOP, COLCTOP, ROWBTOP
@@ -160,8 +160,8 @@
 *     ..
 *     .. External Subroutines ..
       EXTERNAL           BLACS_GRIDINFO, CHK1MAT, IGAMN2D, PCHK1MAT,
-     $                   PB_TOPGET, PB_TOPSET, PDGEMM, PDGETF2,
-     $                   PDLASWP, PDTRSM, PXERBLA,
+     $                   PB_TOPGET, PB_TOPSET, PSGEMM, PSGETF2,
+     $                   PSLASWP, PSTRSM, PXERBLA,
      $                   BLACS_PINFO, BLACS_BARRIER
 *     ..
 *     .. External Functions ..
@@ -208,7 +208,7 @@
 *              do checkpointing
                PRINT*, "## pgetrf_cp:",
      $                J,"iter, with",FAULTOCCURRED,"faults: checkpoint"
-               CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
+               CALL PSGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
                CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
      $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
@@ -239,7 +239,7 @@
                  ELSE
                    PRINT*, "## pgetrf_cp: recovering.."
                    CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                   CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
+                   CALL PSGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
                    CALL MPI_SCATTER(IPIVCP, MIPIV, MPI_INTEGER, IPIV,
      $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
@@ -287,7 +287,7 @@
       END IF
 *
       IF( INFO.NE.0 ) THEN
-         CALL PXERBLA( ICTXT, 'PDGETRF', -INFO )
+         CALL PXERBLA( ICTXT, 'PSGETRF', -INFO )
          RETURN
       END IF
 *
@@ -319,25 +319,25 @@
 *     Factor diagonal and subdiagonal blocks and test for exact
 *     singularity.
 *
-      CALL PDGETF2( M, JB, A, IA, JA, DESCA, IPIV, INFO )
+      CALL PSGETF2( M, JB, A, IA, JA, DESCA, IPIV, INFO )
 *
       IF( JB+1.LE.N ) THEN
 *
 *        Apply interchanges to columns JN+1:JA+N-1.
 *
-         CALL PDLASWP( 'Forward', 'Rows', N-JB, A, IA, JN+1, DESCA,
+         CALL PSLASWP( 'Forward', 'Rows', N-JB, A, IA, JN+1, DESCA,
      $                 IA, IN, IPIV )
 *
 *        Compute block row of U.
 *
-         CALL PDTRSM( 'Left', 'Lower', 'No transpose', 'Unit', JB,
+         CALL PSTRSM( 'Left', 'Lower', 'No transpose', 'Unit', JB,
      $                N-JB, ONE, A, IA, JA, DESCA, A, IA, JN+1, DESCA )
 *
          IF( JB+1.LE.M ) THEN
 *
 *           Update trailing submatrix.
 *
-            CALL PDGEMM( 'No transpose', 'No transpose', M-JB, N-JB, JB,
+            CALL PSGEMM( 'No transpose', 'No transpose', M-JB, N-JB, JB,
      $                   -ONE, A, IN+1, JA, DESCA, A, IA, JN+1, DESCA,
      $                   ONE, A, IN+1, JN+1, DESCA )
 *
@@ -355,26 +355,26 @@
 *        Factor diagonal and subdiagonal blocks and test for exact
 *        singularity.
 *
-         CALL PDGETF2( M-J+JA, JB, A, I, J, DESCA, IPIV, IINFO )
+         CALL PSGETF2( M-J+JA, JB, A, I, J, DESCA, IPIV, IINFO )
 *
          IF( INFO.EQ.0 .AND. IINFO.GT.0 )
      $      INFO = IINFO + J - JA
 *
 *        Apply interchanges to columns JA:J-JA.
 *
-         CALL PDLASWP( 'Forward', 'Rowwise', J-JA, A, IA, JA, DESCA,
+         CALL PSLASWP( 'Forward', 'Rowwise', J-JA, A, IA, JA, DESCA,
      $                 I, I+JB-1, IPIV )
 *
          IF( J-JA+JB+1.LE.N ) THEN
 *
 *           Apply interchanges to columns J+JB:JA+N-1.
 *
-            CALL PDLASWP( 'Forward', 'Rowwise', N-J-JB+JA, A, IA, J+JB,
+            CALL PSLASWP( 'Forward', 'Rowwise', N-J-JB+JA, A, IA, J+JB,
      $                    DESCA, I, I+JB-1, IPIV )
 *
 *           Compute block row of U.
 *
-            CALL PDTRSM( 'Left', 'Lower', 'No transpose', 'Unit', JB,
+            CALL PSTRSM( 'Left', 'Lower', 'No transpose', 'Unit', JB,
      $                   N-J-JB+JA, ONE, A, I, J, DESCA, A, I, J+JB,
      $                   DESCA )
 *
@@ -382,7 +382,7 @@
 *
 *              Update trailing submatrix.
 *
-               CALL PDGEMM( 'No transpose', 'No transpose', M-J-JB+JA,
+               CALL PSGEMM( 'No transpose', 'No transpose', M-J-JB+JA,
      $                      N-J-JB+JA, JB, -ONE, A, I+JB, J, DESCA, A,
      $                      I, J+JB, DESCA, ONE, A, I+JB, J+JB, DESCA )
 *
@@ -392,7 +392,7 @@
              IF ((FAULTOCCURRED.NE.CPAFTERFAULT).AND.(JCP.EQ.0)) THEN
                CALL BLACS_BARRIER ( ICTXTALL, 'A' )
 *              do checkpointing
-               CALL PDGEMR2D(M, N, A, IA, JA, DESCA,
+               CALL PSGEMR2D(M, N, A, IA, JA, DESCA,
      $                       ACP, IACP, JACP, DESCACP, ICTXTALL)
                CALL MPI_GATHER(IPIV, MIPIV, MPI_INTEGER, IPIVCP,
      $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
@@ -420,7 +420,7 @@
                  ELSE
 *                   PRINT*, "recovering.."
                    CALL BLACS_BARRIER ( ICTXTALL, 'A' )
-                   CALL PDGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
+                   CALL PSGEMR2D(M, N, ACP, IACP, JACP, DESCACP,
      $                               A, IA, JA, DESCA, ICTXTALL)
                    CALL MPI_SCATTER(IPIVCP, MIPIV, MPI_INTEGER, IPIV,
      $              MIPIV, MPI_INTEGER, NPROCS-1, MPI_COMM_WORLD, IERR)
@@ -459,6 +459,6 @@
 *
       RETURN
 *
-*     End of PDGETRF
+*     End of PSGETRF
 *
       END

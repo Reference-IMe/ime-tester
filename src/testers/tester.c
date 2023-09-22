@@ -240,8 +240,10 @@ int main(int argc, char **argv)
 		versionname_all[versions_all++] = SPK_PSGESV;
 		versionname_all[versions_all++] = SPK_PDGESV;
 
-		versionname_all[versions_all++] = SPK_PDGESV_NOPIV;
+		versionname_all[versions_all++] = SPK_PSGESV_FT_CP;
 		versionname_all[versions_all++] = SPK_PDGESV_FT_CP;
+
+		versionname_all[versions_all++] = SPK_PDGESV_NOPIV;
 
 		versionname_all[versions_all++] = SPK_LU;
 		versionname_all[versions_all++] = SPK_LU_FAULT_0_TOLERANT_1;
