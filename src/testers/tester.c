@@ -1117,6 +1117,8 @@ int main(int argc, char **argv)
 			printf("  -nrhs <integer number>     : r.h.s. columns\n" );
 			printf("  -seed <integer number>     : seed of the random generation\n" );
 			printf("  -cnd  <integer number>     : condition number of the input matrix\n" );
+			printf("  -type <string>             : precision type [s|d|single|double] of the input matrix\n");
+			printf("                             : (routines for different precisions cannot be mixed)\n" );
 			printf("  -no-cnd-set                : disable matrix pre-conditioning\n" );
 			printf("  -no-cnd-readback           : disable condition number checking after generation\n" );
 			printf("  -no-nre-readback           : disable normwise relative error checking\n" );
