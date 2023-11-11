@@ -961,6 +961,9 @@ int main(int argc, char **argv)
 					}
 					else
 					{
+								// init communication channels (generation uses blacs => mpi interference..)
+								test_dummy(versionname_all[0], verbose, routine_env, routine_input);
+
 								if (type==real_double) cnd_readback = round( pCheckSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 						else	if (type==real_single) cnd_readback = round( pCheckSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 					}
@@ -1316,7 +1319,7 @@ int main(int argc, char **argv)
 			}
 
 			// init communication channels if not done during matrix generation
-			if (strcmp(matrix_gen_method, "par" ) != 0) test_dummy(versionname_all[0], verbose, routine_env, routine_input);
+			if (strcmp(matrix_gen_method, "par" ) != 0 || input_from_file) test_dummy(versionname_all[0], verbose, routine_env, routine_input);
 
 			/*
 			 * main loop
