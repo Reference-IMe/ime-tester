@@ -827,7 +827,7 @@ int main(int argc, char **argv)
 			{
 				if (mpi_rank==0)
 				{
-					printf("ERR: Routine '%s' is unknown\n",versionname_selected[i]);
+					printf("ERR> Routine '%s' is unknown\n",versionname_selected[i]);
 				}
 				MPI_Finalize();
 				return ERR_ROUTINE_UNKNOWN;
@@ -865,7 +865,7 @@ int main(int argc, char **argv)
 		{
 			if (mpi_rank==0)
 			{
-				printf("ERR: Unknown or unspecified precision type\n\n");
+				printf("ERR> Unknown or unspecified precision type\n\n");
 
 				if (output_to_file || input_from_file)
 				{
@@ -904,7 +904,7 @@ int main(int argc, char **argv)
 			{
 				if ( strcmp(command, "--save" ) == 0 )
 				{
-					if (mpi_rank == 0) printf("ERR: Cannot take input matrices with '--save' command.\n");
+					if (mpi_rank == 0) printf("ERR> Cannot take input matrices with '--save' command.\n");
 					MPI_Finalize();
 					return ERR_INPUT_ARG;
 				}
@@ -916,7 +916,7 @@ int main(int argc, char **argv)
 
 						if (!get_cnd)
 						{
-							printf("WRN: Condition number will not read back from loaded matrix\n");
+							printf("WRN> Condition number will not read back from loaded matrix\n");
 						}
 					}
 					matrix_input_file_name = sdsdup(matrix_input_base_name);
@@ -953,7 +953,7 @@ int main(int argc, char **argv)
 					{
 						if (mpi_rank==0)
 						{
-							printf("ERR: To read back the condition number the process grid must be square\n\n");
+							printf("ERR> To read back the condition number the process grid must be square\n\n");
 						}
 						MAIN_CLEANUP(mpi_rank);
 						MPI_Finalize();
@@ -984,18 +984,18 @@ int main(int argc, char **argv)
 						printf("     Matrix random generation alg.: in parallel with ScaLAPACK\n");
 						if (!get_cnd)
 						{
-							printf("WRN: Condition number will not read back from generated matrix\n");
+							printf("WRN> Condition number will not read back from generated matrix\n");
 						}
 						if (!set_cnd)
 						{
-							printf("WRN: Matrix will not be pre-conditioned\n");
+							printf("WRN> Matrix will not be pre-conditioned\n");
 						}
 					}
 					if ( get_cnd && !IS_SQUARE(calc_procs) )
 					{
 						if (mpi_rank==0)
 						{
-							printf("ERR: To read back the condition number the process grid must be square\n\n");
+							printf("ERR> To read back the condition number the process grid must be square\n\n");
 						}
 						MAIN_CLEANUP(mpi_rank);
 						MPI_Finalize();
@@ -1011,7 +1011,7 @@ int main(int argc, char **argv)
 						printf("     Matrix random generation alg.: sequentially with LAPACK\n");
 						if (!get_cnd)
 						{
-							printf("WRN: Condition number will not read back from generated matrix\n");
+							printf("WRN> Condition number will not read back from generated matrix\n");
 						}
 								if (type==real_double) cnd_readback = round( GenSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, seed, cnd, set_cnd, get_cnd) );
 						else	if (type==real_single) cnd_readback = round( GenSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, seed, cnd, set_cnd, get_cnd) );
@@ -1021,7 +1021,7 @@ int main(int argc, char **argv)
 				{
 					if (mpi_rank==0)
 					{
-						printf("ERR: Unknown type of matrix generation %s\n\n",matrix_gen_method);
+						printf("ERR> Unknown type of matrix generation %s\n\n",matrix_gen_method);
 					}
 					MAIN_CLEANUP(mpi_rank);
 					MPI_Finalize();
@@ -1075,7 +1075,7 @@ int main(int argc, char **argv)
 				printf("     Matrix condition number got:   %d\n",cnd_readback);
 				if (cnd_readback!=cnd)
 				{
-					printf("WRN: Condition number (%d) differs from read back (%d)\n",cnd,cnd_readback);
+					printf("WRN> Condition number (%d) differs from read back (%d)\n",cnd,cnd_readback);
 				}
 			}
 	}
@@ -1163,7 +1163,7 @@ int main(int argc, char **argv)
 		{
 			if (mpi_rank==0)
 			{
-				printf("ERR: Please specify a base file path to save to\n\n");
+				printf("ERR> Please specify a base file path to save to\n\n");
 			}
 			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
@@ -1214,7 +1214,7 @@ int main(int argc, char **argv)
 	{
 		if (mpi_rank==0)
 		{
-			printf("ERR: Please specify command: --help|--list|--run|--save\n\n");
+			printf("ERR> Please specify command: --help|--list|--run|--save\n\n");
 		}
 		MAIN_CLEANUP(mpi_rank);
 		MPI_Finalize();
@@ -1226,7 +1226,7 @@ int main(int argc, char **argv)
 		{
 			if (mpi_rank==0)
 			{
-				printf("ERR: Please specify at least one test routine\n\n");
+				printf("ERR> Please specify at least one test routine\n\n");
 			}
 			MAIN_CLEANUP(mpi_rank);
 			MPI_Finalize();
