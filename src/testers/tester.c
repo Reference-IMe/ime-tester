@@ -513,7 +513,8 @@ int main(int argc, char **argv)
 		else
 		{
 			//TODO: delete?
-			mpi_hostnames=NULL;
+			mpi_hostnames=malloc(sizeof(char*));
+			mpi_hostnames[0]=malloc(sizeof(char));
 			energy_readings_begin=malloc(sizeof(char));
 			energy_readings_end=malloc(sizeof(char));
 		}
