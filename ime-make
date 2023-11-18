@@ -1,4 +1,3 @@
 #!/bin/bash
 
-make machine=enea mpi=open library=src $1
-
+make machine=enea mpi=open library=src "$@"
