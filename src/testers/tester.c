@@ -7,6 +7,7 @@
 
 #include <mpi.h>
 #include <omp.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,32 @@
 #define MAX_RUNS 10
 
 // TODO: rename auxiliary functions
+
+#ifdef CRESCO_POWERCAP
+/*
+#define ZONE0 "/home/marcello/rapl/z0/energy_uj"
+#define ZONE0SUB0 "/home/marcello/rapl/z0/s0/energy_uj"
+#define ZONE1 "/home/marcello/rapl/z1/energy_uj"
+#define ZONE1SUB0 "/home/marcello/rapl/z1/s0/energy_uj"
+*/
+#define ZONE0 "/sys/class/powercap/intel-rapl:0/energy_uj"
+#define ZONE0SUB0 "/sys/class/powercap/intel-rapl:0:0/energy_uj"
+#define ZONE1 "/sys/class/powercap/intel-rapl:1/energy_uj"
+#define ZONE1SUB0 "/sys/class/powercap/intel-rapl:1:0/energy_uj"
+
+unsigned long long int read_energy(char* pathname)
+{
+	//printf("** %s\n",pathname);
+	unsigned long long int value;
+	//open and get the file handle
+	FILE* fh;
+	fh = fopen(pathname, "r");
+	//read
+	if (!fscanf(fh, "%llu\n", &value)) printf("ERR> %s not read",pathname);
+	fclose(fh);
+	return(value);
+}
+#endif
 
 int versionnumber_in(int n_all, char** all, char* selected)
 {
@@ -153,6 +180,12 @@ int main(int argc, char **argv)
     sds matrix_input_file_name;
     sds test_output_file_name;
 
+#ifdef CRESCO_POWERCAP
+    char get_energy;
+    unsigned long long int energy[4];
+    unsigned long long int * energy_readings_begin;
+    unsigned long long int * energy_readings_end;
+#endif
     char get_nre;
     char set_cnd;
     char get_cnd;
@@ -212,6 +245,9 @@ int main(int argc, char **argv)
 		cnd_readback			 = -1;		// condition number read back from generated or file matrices (-1=value not read back)
 		set_cnd					 = 1;		// pre-conditioning (1) of the matrix  or not (0)
 		get_cnd					 = 1;		// read back (1) cnd from generated matrix or not (0)
+#ifdef CRESCO_POWERCAP
+		get_energy				 = 0;		// no energy reading
+#endif
 		seed					 = 1;		// seed for random generation
 		type					 = 0;		// precision type (0=unspecified)
 		get_nre					 = 1;		// calc (1) normwise relative error or not (0)
@@ -365,6 +401,12 @@ int main(int argc, char **argv)
 				get_nre = 0;
 				//i++; // no parameter value, no inc
 			}
+#ifdef CRESCO_POWERCAP
+			if( strcmp( argv[i], "-energy-reading" ) == 0 ) {
+				get_energy = 1;
+				//i++; // no parameter value, no inc
+			}
+#endif
 			if( strcmp( argv[i], "-mat-gen" ) == 0 ) {
 				matrix_gen_method = sdscpy(matrix_gen_method,argv[i+1]);
 				i++;
@@ -426,6 +468,65 @@ int main(int argc, char **argv)
 		MPI_Init_thread(&argc ,&argv, MPI_THREAD_FUNNELED, &mpi_thread_support);	// OK for OpenMP
 		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);									// get current process id
 		MPI_Comm_size(MPI_COMM_WORLD, &mpi_procs);									// get number of processes
+
+#ifdef CRESCO_POWERCAP
+		int namelen;
+	    char mpi_procname[MPI_MAX_PROCESSOR_NAME];
+	    char** mpi_hostnames;
+		MPI_Comm MPI_COMM_HOST;
+		int rank_in_host;
+		int size_in_host;
+		MPI_Comm MPI_COMM_ROOTS;
+		int rank_in_roots;
+		int size_in_roots;
+
+		int root_in_host;
+
+		MPI_Comm_split_type(MPI_COMM_WORLD, OMPI_COMM_TYPE_HOST, mpi_rank, MPI_INFO_NULL, &MPI_COMM_HOST);
+		MPI_Comm_rank(MPI_COMM_HOST, &rank_in_host);
+		MPI_Comm_size(MPI_COMM_HOST, &size_in_host);
+
+		if (rank_in_host==0)
+		{
+			root_in_host=1;
+		}
+		else
+		{
+			root_in_host=0;
+		}
+
+		MPI_Comm_split(MPI_COMM_WORLD, root_in_host, mpi_rank, &MPI_COMM_ROOTS);
+		MPI_Comm_rank(MPI_COMM_ROOTS, &rank_in_roots);
+		MPI_Comm_size(MPI_COMM_ROOTS, &size_in_roots);
+
+		if (mpi_rank==0)
+		{
+			energy_readings_begin=malloc(size_in_roots * 4 * sizeof(unsigned long long int));
+			energy_readings_end=malloc(size_in_roots * 4 * sizeof(unsigned long long int));
+			mpi_hostnames=malloc(size_in_roots * sizeof(char*));
+			mpi_hostnames[0]=malloc(size_in_roots * (MPI_MAX_PROCESSOR_NAME+1) * sizeof(char));
+			for (i=1;i<size_in_roots;i++)
+			{
+				mpi_hostnames[i]=mpi_hostnames[i-1]+(MPI_MAX_PROCESSOR_NAME+1);
+			}
+		}
+		else
+		{
+			//TODO: delete?
+			mpi_hostnames=NULL;
+			energy_readings_begin=malloc(sizeof(char));
+			energy_readings_end=malloc(sizeof(char));
+		}
+
+		if (get_energy)
+		{
+			if (rank_in_host==0)
+			{
+				MPI_Get_processor_name(mpi_procname, &namelen);
+				MPI_Gather( mpi_procname, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR, &mpi_hostnames[0][0], MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR, 0, MPI_COMM_ROOTS );
+			}
+		}
+#endif
 
 		calc_procs=mpi_procs-spare_procs;	// number of MPI processes for real calc
 
@@ -1125,6 +1226,9 @@ int main(int argc, char **argv)
 			printf("  -no-cnd-set                : disable matrix pre-conditioning\n" );
 			printf("  -no-cnd-readback           : disable condition number checking after generation\n" );
 			printf("  -no-nre-readback           : disable normwise relative error checking\n" );
+#ifdef CRESCO_POWERCAP
+			printf("  -energy-reading            : read energy counters\n" );
+#endif
 			printf("  -mat-gen <string>          : type of the random generation [par|ser] (parallel or sequential)\n" );
 			printf("  -r    <integer number>     : run repetitions\n" );
 			printf("  -o    <file path>          : output to CSV file\n" );
@@ -1325,6 +1429,29 @@ int main(int argc, char **argv)
 			 * main loop
 			 */
 
+#ifdef CRESCO_POWERCAP
+			if (rank_in_host==0)
+			{
+				energy[0]=read_energy(ZONE0);
+				energy[1]=read_energy(ZONE0SUB0);
+				energy[2]=read_energy(ZONE1);
+				energy[3]=read_energy(ZONE1SUB0);
+				//printf("Hello from root process on host %s (I'm rank %d in roots)\n", mpi_procname, rank_in_roots);
+				if (get_energy)
+				{
+					MPI_Gather( energy, 4, MPI_UNSIGNED_LONG_LONG, &energy_readings_begin[rank_in_roots*4], 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
+				}
+			}
+			/*
+			if (root_in_host==1)
+			{
+				printf("Hello from root process on host %s (I'm rank %d in roots)\n", mpi_procname, rank_in_roots);
+				MPI_Gather( energy, 4, MPI_UNSIGNED_LONG_LONG, &energy_readings_begin[rank_in_roots*4], 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
+
+			}
+			*/
+#endif
+
 			// runs are repeated
 			for (rep=0; rep<repetitions; rep++)
 			{
@@ -1372,6 +1499,27 @@ int main(int argc, char **argv)
 					}
 				}
 			}
+
+#ifdef CRESCO_POWERCAP
+				if (rank_in_host==0)
+				{
+					energy[0]=read_energy(ZONE0);
+					energy[1]=read_energy(ZONE0SUB0);
+					energy[2]=read_energy(ZONE1);
+					energy[3]=read_energy(ZONE1SUB0);
+					if (get_energy)
+					{
+						MPI_Gather( energy, 4, MPI_UNSIGNED_LONG_LONG, &energy_readings_end[rank_in_roots*4], 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
+					}
+				}
+	/*
+				if (root_in_host==1)
+				{
+					MPI_Gather( energy, 4, MPI_UNSIGNED_LONG_LONG, &energy_readings_end[rank_in_roots*4], 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
+
+				}
+	*/
+#endif
 
 			/*
 			 * print final summary to video and to file
@@ -1438,6 +1586,22 @@ int main(int argc, char **argv)
 					}
 				}
 				printf("\n");
+
+#ifdef CRESCO_POWERCAP
+				if (get_energy)
+				{
+					printf(" Energy counters:\n");
+					printf("%-32s %4s %4s %32s %32s\n","host","zone","sub","begin [uJ]","end [J]");
+					for (i=0;i<size_in_roots;i++)
+					{
+						printf("%-32s %4d    - %32llu %32llu\n",mpi_hostnames[i],0,energy_readings_begin[0],energy_readings_end[0]);
+						printf("%-32s %4d %4d %32llu %32llu\n",mpi_hostnames[i],0,0,energy_readings_begin[1],energy_readings_end[1]);
+						printf("%-32s %4d    - %32llu %32llu\n",mpi_hostnames[i],1,energy_readings_begin[2],energy_readings_end[3]);
+						printf("%-32s %4d %4d %32llu %32llu\n",mpi_hostnames[i],1,0,energy_readings_begin[3],energy_readings_end[3]);
+					}
+				}
+#endif
+
 			}
 		}
 	}
@@ -1462,7 +1626,19 @@ int main(int argc, char **argv)
 	}
 	sdsfree(test_output_file_name);
 	*/
+#ifdef CRESCO_POWERCAP
+	free(energy_readings_begin);
+	free(energy_readings_end);
+	if (mpi_rank==0)
+	{
+		free(mpi_hostnames[0]);
+		free(mpi_hostnames);
+	}
+	MPI_Comm_free(&MPI_COMM_ROOTS);
+	MPI_Comm_free(&MPI_COMM_HOST);
+#endif
 	MAIN_CLEANUP(mpi_rank);
+
 
 	// BLACS
 	// TODO: cleanup BLACS

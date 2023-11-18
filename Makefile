@@ -2,6 +2,7 @@
 MACHINETYPE = cineca|enea|ubuntu
 MPIFLAVOUR = intel|ch|open|spectrum
 LIBTYPE  = mkl|src|sys
+ENERGYREADING = cresco6
 
 PROJECT_DIR = $(CURDIR)
 BIN_DIR = $(PROJECT_DIR)/bin
@@ -27,6 +28,9 @@ CFLAGS_ubuntu_open    = -lgfortran #-Wno-unknown-pragmas
 
 
 CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
+ifeq ($(energy),cresco6)
+CFLAGS += -DCRESCO_POWERCAP
+endif
 
 FFLAGS_cineca_intel = -nofor-main
 FFLAGS_cineca_open  = 
