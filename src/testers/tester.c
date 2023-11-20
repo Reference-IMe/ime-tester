@@ -44,6 +44,7 @@
 #define ZONE0SUB0 "/sys/class/powercap/intel-rapl:0:0/energy_uj"
 #define ZONE1 "/sys/class/powercap/intel-rapl:1/energy_uj"
 #define ZONE1SUB0 "/sys/class/powercap/intel-rapl:1:0/energy_uj"
+#define POWERCAP_ENTRIES 4
 
 unsigned long long int read_energy(char* pathname)
 {
@@ -182,7 +183,7 @@ int main(int argc, char **argv)
 
 #ifdef CRESCO_POWERCAP
     char get_energy;
-    unsigned long long int energy[4];
+    unsigned long long int energy[POWERCAP_ENTRIES];
     unsigned long long int * energy_readings_begin;
     unsigned long long int * energy_readings_end;
 #endif
@@ -501,8 +502,8 @@ int main(int argc, char **argv)
 
 		if (mpi_rank==0)
 		{
-			energy_readings_begin=malloc(size_in_roots * 4 * sizeof(unsigned long long int));
-			energy_readings_end=malloc(size_in_roots * 4 * sizeof(unsigned long long int));
+			energy_readings_begin=malloc(size_in_roots * POWERCAP_ENTRIES * sizeof(unsigned long long int));
+			energy_readings_end=malloc(size_in_roots * POWERCAP_ENTRIES * sizeof(unsigned long long int));
 			mpi_hostnames=malloc(size_in_roots * sizeof(char*));
 			mpi_hostnames[0]=malloc(size_in_roots * (MPI_MAX_PROCESSOR_NAME+1) * sizeof(char));
 			for (i=1;i<size_in_roots;i++)
@@ -1440,7 +1441,7 @@ int main(int argc, char **argv)
 				//printf("Hello from root process on host %s (I'm rank %d in roots)\n", mpi_procname, rank_in_roots);
 				if (get_energy)
 				{
-					MPI_Gather( energy, 4, MPI_UNSIGNED_LONG_LONG, &energy_readings_begin[rank_in_roots*4], 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
+					MPI_Gather( energy, POWERCAP_ENTRIES, MPI_UNSIGNED_LONG_LONG, &energy_readings_begin[rank_in_roots*POWERCAP_ENTRIES], POWERCAP_ENTRIES, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
 				}
 			}
 			/*
@@ -1510,7 +1511,7 @@ int main(int argc, char **argv)
 					energy[3]=read_energy(ZONE1SUB0);
 					if (get_energy)
 					{
-						MPI_Gather( energy, 4, MPI_UNSIGNED_LONG_LONG, &energy_readings_end[rank_in_roots*4], 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
+						MPI_Gather( energy, POWERCAP_ENTRIES, MPI_UNSIGNED_LONG_LONG, &energy_readings_end[rank_in_roots*POWERCAP_ENTRIES], POWERCAP_ENTRIES, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_ROOTS );
 					}
 				}
 	/*
@@ -1592,13 +1593,13 @@ int main(int argc, char **argv)
 				if (get_energy)
 				{
 					printf(" Energy counters:\n");
-					printf("%-32s %4s %4s %32s %32s\n","host","zone","sub","begin [uJ]","end [J]");
+					printf("%-32s %4s %4s %32s %32s\n","host","zone","sub","begin [uJ]","end [uJ]");
 					for (i=0;i<size_in_roots;i++)
 					{
-						printf("%-32s %4d    - %32llu %32llu\n",mpi_hostnames[i],0,energy_readings_begin[0],energy_readings_end[0]);
-						printf("%-32s %4d %4d %32llu %32llu\n",mpi_hostnames[i],0,0,energy_readings_begin[1],energy_readings_end[1]);
-						printf("%-32s %4d    - %32llu %32llu\n",mpi_hostnames[i],1,energy_readings_begin[2],energy_readings_end[3]);
-						printf("%-32s %4d %4d %32llu %32llu\n",mpi_hostnames[i],1,0,energy_readings_begin[3],energy_readings_end[3]);
+						printf("%-32s %4d    - %32llu %32llu\n",mpi_hostnames[i],0,energy_readings_begin[i*POWERCAP_ENTRIES+0],energy_readings_end[i*POWERCAP_ENTRIES+0]);
+						printf("%-32s %4d %4d %32llu %32llu\n",mpi_hostnames[i],0,0,energy_readings_begin[i*POWERCAP_ENTRIES+1],energy_readings_end[i*POWERCAP_ENTRIES+1]);
+						printf("%-32s %4d    - %32llu %32llu\n",mpi_hostnames[i],1,energy_readings_begin[i*POWERCAP_ENTRIES+2],energy_readings_end[i*POWERCAP_ENTRIES+2]);
+						printf("%-32s %4d %4d %32llu %32llu\n",mpi_hostnames[i],1,0,energy_readings_begin[i*POWERCAP_ENTRIES+3],energy_readings_end[i*POWERCAP_ENTRIES+3]);
 					}
 				}
 #endif
