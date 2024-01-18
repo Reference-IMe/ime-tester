@@ -20,8 +20,6 @@
 #define IME_PSGESV_CO_FT					"IMe-pSGESV-co-ft"
 #define IME_PDGESV_WO						"IMe-pDGESV-wo"
 #define IME_PSGESV_WO						"IMe-pSGESV-wo"
-#define IME_PDGESV_WO_FT					"IMe-pDGESV-wo-ft"
-#define IME_PSGESV_WO_FT					"IMe-pSGESV-wo-ft"
 
 #define SPK_PDGESV							"SPK-pDGESV"
 #define SPK_PSGESV							"SPK-pSGESV"
