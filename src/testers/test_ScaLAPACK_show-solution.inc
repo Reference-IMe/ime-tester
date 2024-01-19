@@ -16,7 +16,7 @@
 
 			if (verbosity>1)
 			{
-				printf("\nThe %s solution is:\n",label);
+				printf("\nThe %s solution is:\n",tag);
 				FUNCNAME(PrintMatrix1D_, PRECISION)(bb, input.n, input.nrhs);
 				printf("\n with exit code     %d\n",output.exit_code);
 				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);

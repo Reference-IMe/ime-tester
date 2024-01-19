@@ -12,6 +12,7 @@
 #define ERR_ROUTINE_UNKNOWN					3
 #define ERR_ROUTINE_MISCONFIG				4
 
+#define TEST_INIT							"test-init"
 #define DUMMY								"dummy"
 
 #define IME_PDGESV_CO						"IMe-pDGESV-co"

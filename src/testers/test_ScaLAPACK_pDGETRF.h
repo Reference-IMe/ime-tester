@@ -13,11 +13,18 @@
 #include "ScaLAPACK/ScaLAPACK_pDGETRF.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGETRF(const char check, const char* label, int verbosity, parallel_env env, test_input input)
+test_result test_ScaLAPACK_pDGETRF (	const char check,
+										const char* tag,
+										int verbosity,
+										parallel_env env,
+										test_input input	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i;
 
@@ -66,5 +73,6 @@ test_result test_ScaLAPACK_pDGETRF(const char check, const char* label, int verb
 		NULLFREE(A);
 		NULLFREE(bb);
 	}
+	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

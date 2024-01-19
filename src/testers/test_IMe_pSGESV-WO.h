@@ -9,11 +9,20 @@
 
 
 
-test_result test_IMe_pSGESV_WO ( const char check, const char* label, const char* variant, int verbosity, parallel_env env, test_input input, int fault_tolerance)
+test_result test_IMe_pSGESV_WO (	const char check,
+									const char* tag,
+									const char* variant,
+									int verbosity,
+									parallel_env env,
+									test_input input,
+									int fault_tolerance	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i,j;
 
@@ -135,7 +144,7 @@ test_result test_IMe_pSGESV_WO ( const char check, const char* label, const char
 
 				if (verbosity>1)
 				{
-					printf("\nThe %s solution is:\n",label);
+					printf("\nThe %s solution is:\n",tag);
 					PrintMatrix2D_float(xx, input.n, input.nrhs);
 					printf("\n with exit code     %d\n",output.exit_code);
 					printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
@@ -172,5 +181,6 @@ test_result test_IMe_pSGESV_WO ( const char check, const char* label, const char
 			}
 		}
 	}
+	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

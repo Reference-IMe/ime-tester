@@ -3,7 +3,11 @@
 #include "../helpers/matrix_basic.h"
 #include "LAPACK/LAPACK_DGESV.h"
 
-double test_Lapack_DGESV(const char* label, int verbosity, int rows, int cols, int nrhs)
+double test_Lapack_DGESV (	const char* tag,
+							int verbosity,
+							int rows,
+							int cols,
+							int nrhs	)
 {
 	clock_t start, stop;
 	double* A;
@@ -32,7 +36,7 @@ double test_Lapack_DGESV(const char* label, int verbosity, int rows, int cols, i
 
 	if (verbosity>1)
 	{
-		printf("\nThe %s solution is:\n",label);
+		printf("\nThe %s solution is:\n",tag);
 		PrintMatrix1D_double(bb, nrhs, rows);	// result is transposed
 		//TODO: transpose the result inside the timed section
 	}

@@ -15,20 +15,24 @@
 #include "tester_structures.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV.h"
 
-test_result test_ScaLAPACK_pDGESV(const char check, const char* tag, int verbosity, parallel_env env, test_input input)
+test_result test_ScaLAPACK_pDGESV (	const char check,
+									const char* tag,
+									int verbosity,
+									parallel_env env,
+									test_input input	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i,j;
 
 	double* A;
 	double* bb;
 	double* xx_ref;
-
-	sds label=sdsempty();
-	TAG2LABEL(tag,label);
 
 	if (check)
 	{

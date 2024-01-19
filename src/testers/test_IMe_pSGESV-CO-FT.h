@@ -9,18 +9,24 @@
 
 #include "../pSGESV-CO-FT.h"
 
-test_result test_IMe_pSGESV_CO_FT (	const char check, const char* tag, const char* variant, int verbosity,
+test_result test_IMe_pSGESV_CO_FT (	const char check,
+									const char* tag,
+									const char* variant,
+									int verbosity,
 									parallel_env env,
 									test_input input,
 									int fault_tolerance,
 									int faulty_procs,
 									int failing_rank,
 									int failing_level,
-									int recovery)
+									int recovery		)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i,j;
 
@@ -29,9 +35,6 @@ test_result test_IMe_pSGESV_CO_FT (	const char check, const char* tag, const cha
 	float** bb;
 	float** xx;
 	float*  xx_ref;
-
-	sds label=sdsempty();
-	TAG2LABEL(tag,label);
 
 	int sqrt_calc_procs;
 	sqrt_calc_procs=sqrt(env.calc_procs);
@@ -215,7 +218,7 @@ test_result test_IMe_pSGESV_CO_FT (	const char check, const char* tag, const cha
 
 			if (verbosity>1)
 			{
-				printf("\nThe %s solution is:\n",label);
+				printf("\nThe %s solution is:\n",tag);
 				PrintMatrix2D_float(xx, input.n, input.nrhs);
 				printf("\n with exit code     %d\n",output.exit_code);
 				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);

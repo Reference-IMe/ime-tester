@@ -13,11 +13,18 @@
 #include "tester_structures.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV_nopivot.h"
 
-test_result test_ScaLAPACK_pDGESV_nopivot(const char check, const char* label, int verbosity, parallel_env env, test_input input)
+test_result test_ScaLAPACK_pDGESV_nopivot (	const char check,
+											const char* tag,
+											int verbosity,
+											parallel_env env,
+											test_input input	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i,j;
 
@@ -78,5 +85,6 @@ test_result test_ScaLAPACK_pDGESV_nopivot(const char check, const char* label, i
 		NULLFREE(bb);
 		NULLFREE(xx_ref);
 	}
+	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

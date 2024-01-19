@@ -14,27 +14,29 @@
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ftx_cp.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGESV_ftx_cp(const char check, const char* tag, int verbosity,
+test_result test_ScaLAPACK_pDGESV_ftx_cp (	const char check,
+											const char* tag,
+											int verbosity,
 											parallel_env env,
 											test_input input,
 											int fault_tolerance,
 											int faulty_procs,
 											int failing_rank,
 											int failing_level,
-											int checkpoint_freq)
+											int checkpoint_freq	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i,j;
 
 	double* A;
 	double* bb;
 	double* xx_ref;
-
-	sds label=sdsempty();
-	TAG2LABEL(tag,label);
 
 	int sqrt_calc_procs;
 	sqrt_calc_procs=sqrt(env.calc_procs);

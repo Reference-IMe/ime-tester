@@ -3,9 +3,14 @@
 #include "../DGESV-WO.h"
 #include "../helpers/matrix_basic.h"
 
-double test_IMe_DGESV(const char* label, int verbosity, int rows, int cols, int nrhs)
+double test_IMe_DGESV (	const char* tag,
+						int verbosity,
+						int rows,
+						int cols,
+						int nrhs		)
 {
 	clock_t start, stop;
+
 	double** A;
 	double** bb;
 	double** xx;
@@ -32,7 +37,7 @@ double test_IMe_DGESV(const char* label, int verbosity, int rows, int cols, int 
 
 	if (verbosity>1)
 	{
-		printf("\nThe %s solution is:\n",label);
+		printf("\nThe %s solution is:\n",tag);
 		PrintMatrix2D_double(xx, rows, nrhs);
 	}
 

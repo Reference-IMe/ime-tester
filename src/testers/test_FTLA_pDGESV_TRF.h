@@ -12,11 +12,19 @@
 #include "tester_structures.h"
 #include "FTLA/FTLA_pDGESV_TRF.h"
 
-test_result test_FTLA_pDGESV_TRF(const char check, const char* label, int verbosity, parallel_env env, test_input input, int faults)
+test_result test_FTLA_pDGESV_TRF (	const char check,
+									const char* tag,
+									int verbosity,
+									parallel_env env,
+									test_input input,
+									int faults			)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	double* A;
 	double* bb;
@@ -112,7 +120,7 @@ test_result test_FTLA_pDGESV_TRF(const char check, const char* label, int verbos
 
 			if (verbosity>1)
 			{
-				printf("\nThe %s solution is:\n",label);
+				printf("\nThe %s solution is:\n",tag);
 				PrintMatrix1D_double(bb, input.n, input.nrhs);
 				printf("\n with exit code     %d\n",output.exit_code);
 				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
@@ -122,5 +130,6 @@ test_result test_FTLA_pDGESV_TRF(const char check, const char* label, int verbos
 		NULLFREE(A);
 		NULLFREE(bb);
 	}
+	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

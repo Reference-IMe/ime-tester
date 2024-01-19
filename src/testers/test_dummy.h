@@ -1,83 +1,83 @@
 #include <mpi.h>
 #include <time.h>
+#include <unistd.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
+#include "../helpers/simple_dynamic_strings/sds.h"
 #include "tester_structures.h"
 
-
-void test_dummy(const char* label, int verbosity, parallel_env env, test_input input)
+test_result test_dummy (	const char check,
+							const char* tag,
+							int verbosity,
+							parallel_env env,
+							test_input input,
+							int fault_tolerance	)
 {
-	double** xx;
-	double x;
+	test_result rank_result = TEST_NOT_RUN;
+	test_result team_result = TEST_NOT_RUN;
+	test_output output      = EMPTY_OUTPUT;
 
-
-	if (env.mpi_rank==0)
-	{
-		if (verbosity>1)
-		{
-			printf("     Opening MPI communication channels..\n");
-		}
-	}
-
-	xx=AllocateMatrix2D_double(1, env.calc_procs+env.spare_procs, CONTIGUOUS);
-	xx[0][0]=0;
-	MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, env.mpi_comm);
-	DeallocateMatrix2D_double(xx, 1, CONTIGUOUS);
-	if (env.mpi_rank==0)
-	{
-		if (verbosity>1)
-		{
-			printf("     ..comm_world\n");
-		}
-	}
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	MPI_Comm comm_calc;
+
 	int i_calc; // participating in ime calc = 1, checksumming = 0
 
-	if (env.mpi_rank >= env.calc_procs)
+	if (check)
 	{
-		i_calc=0;
-		MPI_Comm_split(env.mpi_comm, MPI_UNDEFINED, MPI_UNDEFINED, &comm_calc); // checksumming procs don't belong to calc communicator
+		if (env.mpi_rank==0)
+		{
+			if (verbosity>0) DISPLAY_MSG(label,"OK");
+		}
+		output.exit_code = 0;
 	}
 	else
 	{
-		i_calc=1;
-		MPI_Comm_split(env.mpi_comm, i_calc, env.mpi_rank, &comm_calc); // calc procs belong to calc communicator
-	}
-
-	if (i_calc)
-	{
-		xx=AllocateMatrix2D_double(input.n, input.nrhs, CONTIGUOUS);
-		MPI_Scatter (&xx[0][0], 1, MPI_DOUBLE, &x, 1, MPI_DOUBLE, 0, comm_calc);
-		DeallocateMatrix2D_double(xx, input.n, CONTIGUOUS);
-		if (env.mpi_rank==0)
+		if (env.mpi_rank >= env.calc_procs)
 		{
-			if (verbosity>1)
+			i_calc=0;
+			MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, MPI_UNDEFINED, &comm_calc); // checksumming procs don't belong to calc communicator
+		}
+		else
+		{
+			i_calc=1;
+			MPI_Comm_split(MPI_COMM_WORLD, i_calc, env.mpi_rank, &comm_calc); // calc procs belong to calc communicator
+		}
+
+		if (i_calc)
+		{
+			output.exit_code=0;
+
+			if (env.mpi_rank==0)
 			{
-				printf("     ..comm_calc\n");
+				// calc error
+				if (input.calc_nre) rank_result.norm_rel_err = 0;
+
+				if (verbosity>1)
+				{
+					printf("\nThe %s solution is void\n",tag);
+					printf("\n with exit code     %d\n",output.exit_code);
+					printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
+				}
+			}
+
+		}
+		else
+		{
+			rank_result.total_time=0;
+			rank_result.core_time=0;
+		}
+
+		if (env.spare_procs>0)
+		{
+			if (comm_calc != MPI_COMM_NULL)
+			{
+				MPI_Comm_free(&comm_calc);
 			}
 		}
 	}
-	else
-	{
-		xx=NULL;
-	}
-
-	if (env.spare_procs>0)
-	{
-		if (comm_calc != MPI_COMM_NULL)
-		{
-			MPI_Comm_free(&comm_calc);
-		}
-	}
-
-	if (env.mpi_rank==0)
-	{
-		if (verbosity>1)
-		{
-			printf("     ..done\n");
-		}
-	}
-
+	sdsfree(label);
+	TEST_END(output, rank_result, team_result);
 }

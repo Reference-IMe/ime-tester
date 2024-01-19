@@ -12,11 +12,22 @@
 #include "ScaLAPACK/ScaLAPACK_pDGEQRF_ft1.h"
 #include "tester_structures.h"
 
-test_result test_ScaLAPACK_pDGEQRF_ft1(const char check, const char* label, int verbosity, parallel_env env, test_input input, int fault_tolerance, int faulty_procs, int failing_level, int checkpoint_freq)
+test_result test_ScaLAPACK_pDGEQRF_ft1 (	const char check,
+											const char* tag,
+											int verbosity,
+											parallel_env env,
+											test_input input,
+											int fault_tolerance,
+											int faulty_procs,
+											int failing_level,
+											int checkpoint_freq		)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
 	test_output output      = EMPTY_OUTPUT;
+
+	sds label=sdsempty();
+	TAG2LABEL(tag,label);
 
 	int i;
 
@@ -70,5 +81,6 @@ test_result test_ScaLAPACK_pDGEQRF_ft1(const char check, const char* label, int 
 		NULLFREE(A);
 		NULLFREE(bb);
 	}
+	sdsfree(label);
 	TEST_END(output, rank_result, team_result);
 }

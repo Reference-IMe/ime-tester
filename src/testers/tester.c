@@ -26,7 +26,7 @@
 #include "tester_labels.h"
 #include "tester_routine.h"
 #include "tester_structures.h"
-#include "test_dummy.h"
+#include "test_init.h"
 
 #define MAX_VERSIONS 50
 #define MAX_RUNS 10
@@ -263,7 +263,8 @@ int main(int argc, char **argv)
 		// TODO: add a description for every routine
 
 		versions_all = 0;
-		versionname_all[versions_all++] = "dummy"; // not actually callable
+		versionname_all[versions_all++] = TEST_INIT; // not actually callable, used as a workaround to init mpi/blacs
+		versionname_all[versions_all++] = DUMMY;     // no actual test (empty routine), but actually callable
 
 		versionname_all[versions_all++] = IME_PSGESV_WO;
 		versionname_all[versions_all++] = IME_PDGESV_WO;
@@ -1065,7 +1066,7 @@ int main(int argc, char **argv)
 					else
 					{
 								// init communication channels (generation uses blacs => mpi interference..)
-								test_dummy(versionname_all[0], verbose, routine_env, routine_input);
+								test_init(versionname_all[0], verbose, routine_env, routine_input);
 
 								if (type==real_double) cnd_readback = round( pCheckSystemMatrices1D_double(nmat, A_ref_d, x_ref_d, b_ref_d, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
 						else	if (type==real_single) cnd_readback = round( pCheckSystemMatrices1D_float (nmat, A_ref_s, x_ref_s, b_ref_s, scalapack_nb, mpi_rank, calc_procs, blacs_nprow, blacs_npcol, blacs_row, blacs_col, blacs_ctxt, blacs_ctxt_root) );
@@ -1080,7 +1081,7 @@ int main(int argc, char **argv)
 				if (strcmp(matrix_gen_method, "par" ) == 0)
 				{
 					// init communication channels (generation uses blacs => mpi interference..)
-					test_dummy(versionname_all[0], verbose, routine_env, routine_input);
+					test_init(versionname_all[0], verbose, routine_env, routine_input);
 
 					if (mpi_rank==0 && verbose>0)
 					{
@@ -1425,7 +1426,7 @@ int main(int argc, char **argv)
 			}
 
 			// init communication channels if not done during matrix generation
-			if (strcmp(matrix_gen_method, "par" ) != 0 || input_from_file) test_dummy(versionname_all[0], verbose, routine_env, routine_input);
+			if (strcmp(matrix_gen_method, "par" ) != 0 || input_from_file) test_init(versionname_all[0], verbose, routine_env, routine_input);
 
 			/*
 			 * main loop
