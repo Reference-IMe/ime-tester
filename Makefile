@@ -1,3 +1,6 @@
+ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+
+$(info $(ROOT_DIR))
 
 MACHINETYPE = cineca|enea|ubuntu
 MPIFLAVOUR = intel|ch|open|spectrum
@@ -8,7 +11,12 @@ PROJECT_DIR = $(CURDIR)
 BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
-LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/lapack-3.9.0
+
+LAPACK_VERSION    =	3.9.0
+LAPACK_REPO       = https://github.com/Reference-LAPACK/lapack-pre-github-historical-releases.git
+LAPACK_TAG        = lapack-$(LAPACK_VERSION)
+LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/lapack-$(LAPACK_VERSION)
+
 SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-2.1.0.mod
 FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
 SDS_LIB_DIR       = $(SRC_DIR)/helpers/simple_dynamic_strings
@@ -147,12 +155,30 @@ all: $(LAPACK_LIB_DIR)/librefblas.a \
 		$(SDS_LIB_DIR)/sds.o \
 		$(EXE) \
 		| $(BIN_DIR)
-.PHONY: all
+
+.PHONY: all clean clean_ftla clean_scalapack clean_all 
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-$(LAPACK_LIB_DIR)/librefblas.a:
+.PHONY: clean_lapack clone_lapack remove_lapack
+
+$(LAPACK_LIB_DIR):
+	mkdir -p $(LAPACK_LIB_DIR)
+
+remove_lapack:
+	rm -rf $(LAPACK_LIB_DIR)
+
+# https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
+clone_lapack: $(LAPACK_LIB_DIR)
+	cd $(LAPACK_LIB_DIR) && git checkout $(LAPACK_TAG); \
+	CLONED=$$?; \
+	if [ $$CLONED -ne 0 ]; then \
+		git clone --depth 1 --branch $(LAPACK_TAG) $(LAPACK_REPO) $(LAPACK_LIB_DIR) ; \
+	fi
+	cp $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc
+
+$(LAPACK_LIB_DIR)/librefblas.a: clone_lapack
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" blaslib
 
 $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
