@@ -13,12 +13,18 @@ SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
 
 LAPACK_VERSION    =	3.9.0
-LAPACK_REPO       = https://github.com/Reference-LAPACK/lapack-pre-github-historical-releases.git
 LAPACK_TAG        = lapack-$(LAPACK_VERSION)
-LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/lapack-$(LAPACK_VERSION)
+LAPACK_REPO       = https://github.com/Reference-LAPACK/lapack-pre-github-historical-releases.git
+LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/$(LAPACK_TAG)
 
 SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-2.1.0.mod
-FTLA_LIB_DIR      = $(TST_DIR)/FTLA/ftla-rSC13.mod
+
+FTLA_VERSION      = rSC13
+FTLA_TAG          = ftla-$(FTLA_VERSION)
+FTLA_ARCHIVE      = $(FTLA_TAG).tgz
+FTLA_REPO         = https://icl.utk.edu/projectsfiles/ft-la/software/$(FTLA_ARCHIVE)
+FTLA_LIB_DIR      = $(TST_DIR)/FTLA/$(FTLA_TAG)
+
 SDS_LIB_DIR       = $(SRC_DIR)/helpers/simple_dynamic_strings
 
 OPTIMIZATION = -O3
@@ -156,7 +162,7 @@ all: $(LAPACK_LIB_DIR)/librefblas.a \
 		$(EXE) \
 		| $(BIN_DIR)
 
-.PHONY: all clean clean_ftla clean_scalapack clean_all 
+.PHONY: all clean clean_scalapack clean_all 
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
@@ -176,7 +182,7 @@ clone_lapack: $(LAPACK_LIB_DIR)
 	if [ $$CLONED -ne 0 ]; then \
 		git clone --depth 1 --branch $(LAPACK_TAG) $(LAPACK_REPO) $(LAPACK_LIB_DIR) ; \
 	fi
-	cp $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc
+	cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc
 
 $(LAPACK_LIB_DIR)/librefblas.a: clone_lapack
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" blaslib
@@ -184,13 +190,44 @@ $(LAPACK_LIB_DIR)/librefblas.a: clone_lapack
 $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" lapacklib
 
+lapack: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
+
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept a variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
+
+.PHONY: clean_ftla clone_ftla remove_ftla
+
+$(FTLA_LIB_DIR):
+	mkdir -p $(FTLA_LIB_DIR)
+
+remove_ftla:
+	rm -rf $(FTLA_LIB_DIR)
+
+clone_ftla: $(FTLA_LIB_DIR)
+	cd $(FTLA_LIB_DIR); \
+	if [ ! -f $(FTLA_ARCHIVE) ]; then \
+		 wget -v $(FTLA_REPO); \
+	fi; \
+	tar zxvf $(FTLA_ARCHIVE) --strip-components=1
+	for file in pdgeqrf pdlarfb pdgetrf pdgetf2 ; do \
+		cp -v $(SCALAPACK_LIB_DIR)/SRC/$$file.f $(FTLA_LIB_DIR)/"$$file".f; \
+	done
+	cp -v $(SCALAPACK_LIB_DIR)/TESTING/LIN/pdgetrrv.f $(FTLA_LIB_DIR)/pdgetrrv.f
+	cp -v $(SCALAPACK_LIB_DIR)/TOOLS/pdlaprnt.f $(FTLA_LIB_DIR)/pdlaprnt.f
+	for file in ftdqr_main.c ftdtr_main.c ftla_dcsum.c ftla_ftwork.c ; do \
+		mv -v $(FTLA_LIB_DIR)/$$file $(FTLA_LIB_DIR)/"$$file".orig; \
+		cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
+	done
+	for mf in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
+		cp -v $$mf $(FTLA_LIB_DIR)/$$(basename $$mf .copy); \
+	done
 	
-$(FTLA_LIB_DIR)/libftla.a:$(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a $(SCALAPACK_LIB_DIR)/libscalapack.a
+$(FTLA_LIB_DIR)/libftla.a: clone_ftla $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a $(SCALAPACK_LIB_DIR)/libscalapack.a
 	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
+
+ftla: $(FTLA_LIB_DIR)/libftla.a
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 #	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
