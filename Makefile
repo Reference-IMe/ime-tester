@@ -1,6 +1,5 @@
-ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-
-$(info $(ROOT_DIR))
+#ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+#$(info $(ROOT_DIR))
 
 MACHINETYPE = cineca|enea|ubuntu
 MPIFLAVOUR = intel|ch|open|spectrum
@@ -189,20 +188,25 @@ $(LAPACK_LIB_DIR):
 remove_lapack:
 	rm -rf $(LAPACK_LIB_DIR)
 
-
 clone_lapack: $(LAPACK_LIB_DIR)
-	cd $(LAPACK_LIB_DIR) && git checkout $(LAPACK_TAG); \
-	CLONED=$$?; \
-	if [ $$CLONED -ne 0 ]; then \
-		git clone --depth 1 --branch $(LAPACK_TAG) $(LAPACK_REPO) $(LAPACK_LIB_DIR) ; \
+	@if [ ! -f $(LAPACK_LIB_DIR)/make.inc ]; then \
+		cd $(LAPACK_LIB_DIR) && git checkout $(LAPACK_TAG); \
+		CLONED=$$?; \
+		if [ $$CLONED -ne 0 ]; then \
+			git clone --depth 1 --branch $(LAPACK_TAG) $(LAPACK_REPO) $(LAPACK_LIB_DIR) ; \
+		fi; \
+		cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc; \
 	fi
-	cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc
+#	if [ ! -f $(LAPACK_LIB_DIR)/make.inc ]; then cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc; fi
+
+$(LAPACK_LIB_DIR)/make.inc: clone_lapack
 
 # build
-$(LAPACK_LIB_DIR)/librefblas.a: clone_lapack
+$(LAPACK_LIB_DIR)/librefblas.a: $(LAPACK_LIB_DIR)/make.inc
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" blaslib
 
-$(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
+$(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/make.inc
+#$(LAPACK_LIB_DIR)/librefblas.a
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" lapacklib
 
 lapack: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
@@ -221,26 +225,30 @@ remove_scalapack:
 	rm -rf $(SCALAPACK_LIB_DIR)
 
 clone_scalapack: $(SCALAPACK_LIB_DIR)
-	cd $(SCALAPACK_LIB_DIR) && git checkout $(SCALAPACK_TAG); \
-	CLONED=$$?; \
-	if [ $$CLONED -ne 0 ]; then \
-		git clone --depth 1 --branch $(SCALAPACK_TAG) $(SCALAPACK_REPO) $(SCALAPACK_LIB_DIR) ; \
+	@if [ ! -f $(SCALAPACK_LIB_DIR)/SLmake.inc ]; then \
+		cd $(SCALAPACK_LIB_DIR) && git checkout $(SCALAPACK_TAG); \
+		CLONED=$$?; \
+		if [ $$CLONED -ne 0 ]; then \
+			git clone --depth 1 --branch $(SCALAPACK_TAG) $(SCALAPACK_REPO) $(SCALAPACK_LIB_DIR) ; \
+		fi; \
+		cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc; \
 	fi
-	cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc
+#	if [ ! -f $(SCALAPACK_LIB_DIR)/SLmake.inc ]; then cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc; fi
+
+$(SCALAPACK_LIB_DIR)/SLmake.inc: clone_scalapack
 
 # build
 #
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept a variable for pointing to the local LAPACK lib in this repository
-$(SCALAPACK_LIB_DIR)/libscalapack.a: clone_scalapack $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
+$(SCALAPACK_LIB_DIR)/libscalapack.a: $(SCALAPACK_LIB_DIR)/SLmake.inc $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
+
+scalapack: $(SCALAPACK_LIB_DIR)/libscalapack.a
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 #	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
 	$(MPIFC) $(FFLAGS) -c $< -o $@ #$(PAR_MACHINEFLAGS)
-
-scalapack: $(SCALAPACK_LIB_DIR)/libscalapack.a $(TST_DIR)/ScaLAPACK/%.o
-
 
 ## FTLA
 
@@ -255,27 +263,38 @@ remove_ftla:
 	rm -rf $(FTLA_LIB_DIR)
 
 clone_ftla: $(FTLA_LIB_DIR)
-	cd $(FTLA_LIB_DIR); \
-	if [ ! -f $(FTLA_ARCHIVE) ]; then \
-		 wget -v $(FTLA_REPO); \
-	fi; \
-	tar zxvf $(FTLA_ARCHIVE) --strip-components=1
-	for file in pdgeqrf pdlarfb pdgetrf pdgetf2 ; do \
-		cp -v $(SCALAPACK_LIB_DIR)/SRC/$$file.f $(FTLA_LIB_DIR)/"$$file".f; \
-	done
-	cp -v $(SCALAPACK_LIB_DIR)/TESTING/LIN/pdgetrrv.f $(FTLA_LIB_DIR)/pdgetrrv.f
-	cp -v $(SCALAPACK_LIB_DIR)/TOOLS/pdlaprnt.f $(FTLA_LIB_DIR)/pdlaprnt.f
-	for file in ftdqr_main.c ftdtr_main.c ftla_dcsum.c ftla_ftwork.c ; do \
-		mv -v $(FTLA_LIB_DIR)/$$file $(FTLA_LIB_DIR)/"$$file".orig; \
-		cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
-	done
-	for mf in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
-		cp -v $$mf $(FTLA_LIB_DIR)/$$(basename $$mf .copy); \
-	done
+	@if [ ! -f $(FTLA_LIB_DIR)/slp.h ]; then \
+		cd $(FTLA_LIB_DIR); \
+		if [ ! -f $(FTLA_ARCHIVE) ]; then \
+			 wget -v $(FTLA_REPO); \
+		fi; \
+		tar zxvf $(FTLA_ARCHIVE) --strip-components=1 --skip-old-files; \
+		for file in pdgeqrf pdlarfb pdgetrf pdgetf2 ; do \
+			if [ ! -f $(FTLA_LIB_DIR)/"$$file".f ]; then \
+				cp -v $(SCALAPACK_LIB_DIR)/SRC/$$file.f $(FTLA_LIB_DIR)/"$$file".f; \
+			fi; \
+		done; \
+		if [ ! -f $(FTLA_LIB_DIR)/pdgetrrv.f ]; then cp -v $(SCALAPACK_LIB_DIR)/TESTING/LIN/pdgetrrv.f $(FTLA_LIB_DIR)/pdgetrrv.f; fi; \
+		if [ ! -f $(FTLA_LIB_DIR)/pdlaprnt.f ]; then cp -v $(SCALAPACK_LIB_DIR)/TOOLS/pdlaprnt.f $(FTLA_LIB_DIR)/pdlaprnt.f; fi; \
+		for file in ftdqr_main.c ftdtr_main.c ftla_dcsum.c ftla_ftwork.c slp.h ; do \
+			if [ ! -f $(FTLA_LIB_DIR)/"$$file".orig ]; then \
+				mv -v $(FTLA_LIB_DIR)/$$file $(FTLA_LIB_DIR)/"$$file".orig; \
+				cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
+			fi; \
+		done; \
+		for file in $$(ls $(FTLA_LIB_DIR)/../Makefile*.copy); do \
+			mf=$$(basename $$file .copy); \
+			if [ ! -f $(FTLA_LIB_DIR)/$$mf ]; then \
+				cp -v $$mf.copy $(FTLA_LIB_DIR)/$$mf; \
+			fi; \
+		done; \
+	fi
+
+$(FTLA_LIB_DIR)/slp.h: clone_ftla
 
 # build
 	
-$(FTLA_LIB_DIR)/libftla.a: clone_ftla $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a $(SCALAPACK_LIB_DIR)/libscalapack.a
+$(FTLA_LIB_DIR)/libftla.a: $(FTLA_LIB_DIR)/slp.h $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a $(SCALAPACK_LIB_DIR)/libscalapack.a
 	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
 
 ftla: $(FTLA_LIB_DIR)/libftla.a
@@ -326,7 +345,7 @@ sds: $(SDS_LIB_DIR)/sds.o
 
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/tester*.h \
-				$(SRC_DIR)/*.h \
+				$(TST_DIR)/IMe/*.h \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \
