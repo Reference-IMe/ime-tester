@@ -28,6 +28,9 @@ FTLA_ARCHIVE      = $(FTLA_TAG).tgz
 FTLA_REPO         = https://icl.utk.edu/projectsfiles/ft-la/software/$(FTLA_ARCHIVE)
 FTLA_LIB_DIR      = $(TST_DIR)/FTLA/$(FTLA_TAG)
 
+SDS_VERSION       = 2.0.0
+SDS_TAG           = $(SDS_VERSION)
+SDS_REPO          = https://github.com/antirez/sds.git
 SDS_LIB_DIR       = $(SRC_DIR)/helpers/simple_dynamic_strings
 
 OPTIMIZATION = -O3
@@ -170,7 +173,15 @@ all: $(LAPACK_LIB_DIR)/librefblas.a \
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
+### Modules
+#
+# https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
+
+## LAPACK
+
 .PHONY: clean_lapack clone_lapack remove_lapack
+
+# prereq.
 
 $(LAPACK_LIB_DIR):
 	mkdir -p $(LAPACK_LIB_DIR)
@@ -178,7 +189,7 @@ $(LAPACK_LIB_DIR):
 remove_lapack:
 	rm -rf $(LAPACK_LIB_DIR)
 
-# https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
+
 clone_lapack: $(LAPACK_LIB_DIR)
 	cd $(LAPACK_LIB_DIR) && git checkout $(LAPACK_TAG); \
 	CLONED=$$?; \
@@ -187,6 +198,7 @@ clone_lapack: $(LAPACK_LIB_DIR)
 	fi
 	cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc
 
+# build
 $(LAPACK_LIB_DIR)/librefblas.a: clone_lapack
 	cd $(LAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" blaslib
 
@@ -195,7 +207,12 @@ $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 
 lapack: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 
+
+## ScaLAPACK
+
 .PHONY: clean_scalapack clone_scalapack remove_scalapack
+
+# prereq.
 
 $(SCALAPACK_LIB_DIR):
 	mkdir -p $(SCALAPACK_LIB_DIR)
@@ -203,7 +220,6 @@ $(SCALAPACK_LIB_DIR):
 remove_scalapack:
 	rm -rf $(SCALAPACK_LIB_DIR)
 
-# https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
 clone_scalapack: $(SCALAPACK_LIB_DIR)
 	cd $(SCALAPACK_LIB_DIR) && git checkout $(SCALAPACK_TAG); \
 	CLONED=$$?; \
@@ -212,12 +228,25 @@ clone_scalapack: $(SCALAPACK_LIB_DIR)
 	fi
 	cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc
 
+# build
+#
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept a variable for pointing to the local LAPACK lib in this repository
 $(SCALAPACK_LIB_DIR)/libscalapack.a: clone_scalapack $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 
+$(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
+#	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
+	$(MPIFC) $(FFLAGS) -c $< -o $@ #$(PAR_MACHINEFLAGS)
+
+scalapack: $(SCALAPACK_LIB_DIR)/libscalapack.a $(TST_DIR)/ScaLAPACK/%.o
+
+
+## FTLA
+
 .PHONY: clean_ftla clone_ftla remove_ftla
+
+# prereq.
 
 $(FTLA_LIB_DIR):
 	mkdir -p $(FTLA_LIB_DIR)
@@ -243,18 +272,40 @@ clone_ftla: $(FTLA_LIB_DIR)
 	for mf in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
 		cp -v $$mf $(FTLA_LIB_DIR)/$$(basename $$mf .copy); \
 	done
+
+# build
 	
 $(FTLA_LIB_DIR)/libftla.a: clone_ftla $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a $(SCALAPACK_LIB_DIR)/libscalapack.a
 	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
 
 ftla: $(FTLA_LIB_DIR)/libftla.a
 
-$(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
-#	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
-	$(MPIFC) $(FFLAGS) -c $< -o $@ #$(PAR_MACHINEFLAGS)
+## SDS
 
-$(SDS_LIB_DIR)/sds.o: $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
+.PHONY: clean_sds clone_sds remove_sds
+
+# prereq.
+
+$(SDS_LIB_DIR):
+	mkdir -p $(SDS_LIB_DIR)
+
+remove_sds:
+	rm -rf $(SDS_LIB_DIR)
+
+clone_sds: $(SCALAPACK_LIB_DIR)
+	cd $(SDS_LIB_DIR) && git checkout $(SDS_TAG); \
+	CLONED=$$?; \
+	if [ $$CLONED -ne 0 ]; then \
+		git clone --depth 1 --branch $(SDS_TAG) $(SDS_REPO) $(SDS_LIB_DIR) ; \
+	fi
+
+# build
+
+$(SDS_LIB_DIR)/sds.o: clone_sds $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
 	cd $(SDS_LIB_DIR) && $(CC) $(CFLAGS) -std=c99 -pedantic -c sds.c
+
+sds: $(SDS_LIB_DIR)/sds.o
+
 
 # static linking experiment
 #
