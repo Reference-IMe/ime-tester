@@ -1,7 +1,7 @@
 #include <time.h>
 
-#include "../DGESV-WO.h"
 #include "../helpers/matrix_basic.h"
+#include "IMe/DGESV-WO.h"
 
 double test_IMe_DGESV (	const char* tag,
 						int verbosity,

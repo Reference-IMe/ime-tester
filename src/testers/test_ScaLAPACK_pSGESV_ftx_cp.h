@@ -7,7 +7,7 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../constants.h"
+#include "IMe/constants.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"

@@ -1,6 +1,6 @@
 #include "_GEZR.h"
-#include "DGEIT-W_.h"
 #include "helpers/matrix_basic.h"
+#include "DGEIT-W_.h"
 
 /*
  *	solve (SV) system with general (GE) matrix A of doubles (D)

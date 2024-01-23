@@ -5,12 +5,12 @@
 #include "_GEZR.h"
 #include "helpers/macros.h"
 #include "helpers/vector.h"
-#include "testers/tester_structures.h"
+#include "helpers/tester_structures.h"
 #include "helpers/matrix_basic.h"
-#include "pDGEIT-C_.h"
+#include "pSGEIT-C_.h"
 
 
-test_output pDGESV_WO_vec ( int nb, int n, double** A, int m, double** bb, double** xx, MPI_Comm comm)
+test_output pSGESV_WO ( int nb, int n, float** A, int m, float** bb, float** xx, MPI_Comm comm)
 {
 	/*
 	 * nb	NOT USED: blocking factor: number of adjacent column (block width)
@@ -18,7 +18,7 @@ test_output pDGESV_WO_vec ( int nb, int n, double** A, int m, double** bb, doubl
 	 * m	number of rigth-hand-sides (number of columns) in bb
 	 *
 	 */
-	#define TYPE REAL_DOUBLE
-	#include "p_GESV-WO-vec.inc"
+	#define TYPE REAL_SINGLE
+	#include "p_GESV-WO.inc"
 	#undef TYPE
 }

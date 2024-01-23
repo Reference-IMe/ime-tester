@@ -7,9 +7,9 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../constants.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix_basic.h"
+#include "IMe/constants.h"
 #include "ScaLAPACK/ScaLAPACK_pDGESV_ft1_cp.h"
 #include "tester_structures.h"
 

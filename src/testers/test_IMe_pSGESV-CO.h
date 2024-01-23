@@ -5,7 +5,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
-#include "../pSGESV-CO.h"
+#include "IMe/pSGESV-CO.h"
 #include "tester_structures.h"
 
 

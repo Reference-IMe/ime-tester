@@ -2,16 +2,15 @@
 #include <omp.h>
 #include <time.h>
 
-#include "constants.h"
 #include "_GEZR.h"
 #include "helpers/macros.h"
 #include "helpers/vector.h"
-#include "testers/tester_structures.h"
+#include "helpers/tester_structures.h"
 #include "helpers/matrix_basic.h"
 #include "pDGEIT-C_.h"
 
 
-test_output pDGESV_CO ( int nb, int n, double** A, int m, double** bb, double** xx, MPI_Comm comm)
+test_output pDGESV_WO_vec ( int nb, int n, double** A, int m, double** bb, double** xx, MPI_Comm comm)
 {
 	/*
 	 * nb	NOT USED: blocking factor: number of adjacent column (block width)
@@ -20,6 +19,6 @@ test_output pDGESV_CO ( int nb, int n, double** A, int m, double** bb, double** 
 	 *
 	 */
 	#define TYPE REAL_DOUBLE
-	#include "p_GESV-CO.inc"
+	#include "p_GESV-WO-vec.inc"
 	#undef TYPE
 }

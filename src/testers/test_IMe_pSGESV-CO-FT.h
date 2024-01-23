@@ -7,7 +7,7 @@
 #include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
 
-#include "../pSGESV-CO-FT.h"
+#include "IMe/pSGESV-CO-FT.h"
 
 test_result test_IMe_pSGESV_CO_FT (	const char check,
 									const char* tag,

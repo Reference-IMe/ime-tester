@@ -5,7 +5,7 @@
 #include "_GEZR.h"
 #include "helpers/macros.h"
 #include "helpers/vector.h"
-#include "testers/tester_structures.h"
+#include "helpers/tester_structures.h"
 #include "helpers/matrix_basic.h"
 #include "pSGEIT-C_-FT.h"
 #include "pSGEUB-CO.h"
