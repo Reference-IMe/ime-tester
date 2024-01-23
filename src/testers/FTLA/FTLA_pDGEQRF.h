@@ -18,11 +18,11 @@
 #include "../tester_structures.h"
 #include "commons.h"
 #include "create_matrix.h"
-#include "ftla-rSC13.mod/ftla_cof.h"
-#include "ftla-rSC13.mod/ftla_driver.h"
-#include "ftla-rSC13.mod/ftla_ftwork.h"
-#include "ftla-rSC13.mod/util_inject.h"
-#include "ftla-rSC13.mod/util_matrix.h"
+#include "ftla-rSC13/ftla_cof.h"
+#include "ftla-rSC13/ftla_driver.h"
+#include "ftla-rSC13/ftla_ftwork.h"
+#include "ftla-rSC13/util_inject.h"
+#include "ftla-rSC13/util_matrix.h"
 
 extern int *errors;
 
