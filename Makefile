@@ -11,6 +11,9 @@ BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
 
+IME_REPO          = https://gitlab.com/marcello.artioli/ime-lib.git
+IME_LIB_DIR       = $(TST_DIR)/IMe
+
 LAPACK_VERSION    = 3.9.0
 LAPACK_TAG        = lapack-$(LAPACK_VERSION)
 LAPACK_REPO       = https://github.com/Reference-LAPACK/lapack-pre-github-historical-releases.git
@@ -176,6 +179,33 @@ $(BIN_DIR):
 #
 # https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
 
+## IMe
+
+.PHONY: clean_ime clone_ime remove_ime
+
+# prereq.
+
+$(IME_LIB_DIR):
+	mkdir -p $(IME_LIB_DIR)
+
+remove_ime:
+	rm -rf $(IME_LIB_DIR)
+
+clone_ime: $(IME_LIB_DIR)
+	@if [ ! -d $(IME_LIB_DIR)/src ]; then \
+		git clone --depth 1 --branch master $(IME_REPO) $(IME_LIB_DIR) ; \
+	fi
+#	@if [ ! -f $(IME_LIB_DIR)/README.md ]; then \
+		cd $(IME_LIB_DIR) && git checkout master; \
+		CLONED=$$?; \
+		if [ $$CLONED -ne 0 ]; then \
+			git clone --depth 1 --branch master $(IME_REPO) $(IME_LIB_DIR) ; \
+		fi; \
+	fi
+
+$(IME_LIB_DIR)/src: clone_ime
+
+
 ## LAPACK
 
 .PHONY: clean_lapack clone_lapack remove_lapack
@@ -266,6 +296,27 @@ clone_ftla: $(FTLA_LIB_DIR)
 	@if [ ! -f $(FTLA_LIB_DIR)/slp.h ]; then \
 		cd $(FTLA_LIB_DIR); \
 		if [ ! -f $(FTLA_ARCHIVE) ]; then \
+			wget -v $(FTLA_REPO); \
+		fi; \
+		tar zxvf $(FTLA_ARCHIVE) --strip-components=1; \
+		for file in pdgeqrf pdlarfb pdgetrf pdgetf2 ; do \
+			cp -v $(SCALAPACK_LIB_DIR)/SRC/$$file.f $(FTLA_LIB_DIR)/"$$file".f; \
+		done; \
+		cp -v $(SCALAPACK_LIB_DIR)/TESTING/LIN/pdgetrrv.f $(FTLA_LIB_DIR)/pdgetrrv.f; \
+		cp -v $(SCALAPACK_LIB_DIR)/TOOLS/pdlaprnt.f $(FTLA_LIB_DIR)/pdlaprnt.f; \
+		for file in ftdqr_main.c ftdtr_main.c ftla_dcsum.c ftla_ftwork.c ; do \
+			mv -v $(FTLA_LIB_DIR)/$$file $(FTLA_LIB_DIR)/"$$file".orig; \
+			cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
+		done; \
+		for mf in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
+			cp -v $$mf $(FTLA_LIB_DIR)/$$(basename $$mf .copy); \
+		done; \
+	fi
+
+#clone_ftla: $(FTLA_LIB_DIR)
+#	@if [ ! -f $(FTLA_LIB_DIR)/slp.h ]; then \
+		cd $(FTLA_LIB_DIR); \
+		if [ ! -f $(FTLA_ARCHIVE) ]; then \
 			 wget -v $(FTLA_REPO); \
 		fi; \
 		tar zxvf $(FTLA_ARCHIVE) --strip-components=1 --skip-old-files; \
@@ -282,10 +333,10 @@ clone_ftla: $(FTLA_LIB_DIR)
 				cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
 			fi; \
 		done; \
-		for file in $$(ls $(FTLA_LIB_DIR)/../Makefile*.copy); do \
+		for file in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
 			mf=$$(basename $$file .copy); \
 			if [ ! -f $(FTLA_LIB_DIR)/$$mf ]; then \
-				cp -v $$mf.copy $(FTLA_LIB_DIR)/$$mf; \
+				cp -v $(FTLA_LIB_DIR)/../$$mf.copy $(FTLA_LIB_DIR)/$$mf; \
 			fi; \
 		done; \
 	fi
@@ -312,15 +363,19 @@ remove_sds:
 	rm -rf $(SDS_LIB_DIR)
 
 clone_sds: $(SCALAPACK_LIB_DIR)
-	cd $(SDS_LIB_DIR) && git checkout $(SDS_TAG); \
-	CLONED=$$?; \
-	if [ $$CLONED -ne 0 ]; then \
-		git clone --depth 1 --branch $(SDS_TAG) $(SDS_REPO) $(SDS_LIB_DIR) ; \
+	@if [ ! -f $(SDS_LIB_DIR)/sds.h ]; then \
+		cd $(SDS_LIB_DIR) && git checkout $(SDS_TAG); \
+		CLONED=$$?; \
+		if [ $$CLONED -ne 0 ]; then \
+			git clone --depth 1 --branch $(SDS_TAG) $(SDS_REPO) $(SDS_LIB_DIR) ; \
+		fi; \
 	fi
+
+$(SDS_LIB_DIR)/sds.h: clone_sds
 
 # build
 
-$(SDS_LIB_DIR)/sds.o: clone_sds $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
+$(SDS_LIB_DIR)/sds.o: $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
 	cd $(SDS_LIB_DIR) && $(CC) $(CFLAGS) -std=c99 -pedantic -c sds.c
 
 sds: $(SDS_LIB_DIR)/sds.o
@@ -345,7 +400,7 @@ sds: $(SDS_LIB_DIR)/sds.o
 
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/tester*.h \
-				$(TST_DIR)/IMe/*.h \
+				$(TST_DIR)/IMe/src \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \

@@ -7,7 +7,7 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "IMe/constants.h"
+#include "../helpers/constants.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
