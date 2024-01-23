@@ -12,12 +12,15 @@ BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
 
-LAPACK_VERSION    =	3.9.0
+LAPACK_VERSION    = 3.9.0
 LAPACK_TAG        = lapack-$(LAPACK_VERSION)
 LAPACK_REPO       = https://github.com/Reference-LAPACK/lapack-pre-github-historical-releases.git
 LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/$(LAPACK_TAG)
 
-SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-2.1.0.mod
+SCALAPACK_VERSION = 2.1.0
+SCALAPACK_TAG     = v$(SCALAPACK_VERSION)
+SCALAPACK_REPO    = https://github.com/Reference-ScaLAPACK/scalapack.git
+SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-$(SCALAPACK_VERSION)
 
 FTLA_VERSION      = rSC13
 FTLA_TAG          = ftla-$(FTLA_VERSION)
@@ -162,7 +165,7 @@ all: $(LAPACK_LIB_DIR)/librefblas.a \
 		$(EXE) \
 		| $(BIN_DIR)
 
-.PHONY: all clean clean_scalapack clean_all 
+.PHONY: all clean clean_all 
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
@@ -192,9 +195,26 @@ $(LAPACK_LIB_DIR)/liblapack.a: $(LAPACK_LIB_DIR)/librefblas.a
 
 lapack: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 
+.PHONY: clean_scalapack clone_scalapack remove_scalapack
+
+$(SCALAPACK_LIB_DIR):
+	mkdir -p $(SCALAPACK_LIB_DIR)
+
+remove_scalapack:
+	rm -rf $(SCALAPACK_LIB_DIR)
+
+# https://stackoverflow.com/questions/16315089/how-to-get-exit-status-of-a-shell-command-used-in-gnu-makefile
+clone_scalapack: $(SCALAPACK_LIB_DIR)
+	cd $(SCALAPACK_LIB_DIR) && git checkout $(SCALAPACK_TAG); \
+	CLONED=$$?; \
+	if [ $$CLONED -ne 0 ]; then \
+		git clone --depth 1 --branch $(SCALAPACK_TAG) $(SCALAPACK_REPO) $(SCALAPACK_LIB_DIR) ; \
+	fi
+	cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc
+
 # do not use "-j" flag: compilation inconsistency!
 # ScaLAPACK's makefile has been modified to accept a variable for pointing to the local LAPACK lib in this repository
-$(SCALAPACK_LIB_DIR)/libscalapack.a: $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
+$(SCALAPACK_LIB_DIR)/libscalapack.a: clone_scalapack $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 
 .PHONY: clean_ftla clone_ftla remove_ftla
