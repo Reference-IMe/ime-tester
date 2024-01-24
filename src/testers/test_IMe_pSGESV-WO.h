@@ -4,7 +4,7 @@
 #include "../helpers/macros.h"
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
-#include "IMe/src/pSGESV-WO.h"
+#include "IMe/latest/src/psgesv-wo.h"
 #include "tester_structures.h"
 
 

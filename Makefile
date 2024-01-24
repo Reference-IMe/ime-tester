@@ -11,8 +11,10 @@ BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
 
+IME_VERSION       = latest
 IME_REPO          = https://gitlab.com/marcello.artioli/ime-lib.git
-IME_LIB_DIR       = $(TST_DIR)/IMe
+IME_TAG           = $(IME_VERSION)
+IME_LIB_DIR       = $(TST_DIR)/IMe/$(IME_TAG)
 
 LAPACK_VERSION    = 3.9.0
 LAPACK_TAG        = lapack-$(LAPACK_VERSION)
@@ -203,7 +205,7 @@ clone_ime: $(IME_LIB_DIR)
 		fi; \
 	fi
 
-$(IME_LIB_DIR)/src: clone_ime
+$(IME_LIB_DIR)/src/*: clone_ime
 
 
 ## LAPACK
@@ -371,7 +373,7 @@ clone_sds: $(SCALAPACK_LIB_DIR)
 		fi; \
 	fi
 
-$(SDS_LIB_DIR)/sds.h: clone_sds
+$(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h: clone_sds
 
 # build
 
@@ -400,7 +402,7 @@ sds: $(SDS_LIB_DIR)/sds.o
 
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/tester*.h \
-				$(TST_DIR)/IMe/src \
+				$(TST_DIR)/IMe/latest/src/* \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \

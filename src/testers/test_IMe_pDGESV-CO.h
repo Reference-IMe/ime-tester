@@ -5,7 +5,7 @@
 #include "../helpers/matrix_advanced.h"
 #include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
-#include "IMe/src/pDGESV-CO.h"
+#include "IMe/latest/src/pdgesv-co.h"
 #include "tester_structures.h"
 
 test_result test_IMe_pDGESV_CO (	const char check,
