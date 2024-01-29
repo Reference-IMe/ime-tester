@@ -8,14 +8,14 @@
 #include <mpi.h>
 #include <time.h>
 #include "../../helpers/macros.h"
-#include "../../helpers/vector.h"
+#include "../IMe/lib/src/helpers/vector_basic.h"
 #include "../../helpers/Cblacs.h"
-#include "../../helpers/matrix_basic.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
 
-test_output ScaLAPACK_pDGESV_ftx_cp(int n, double* A_global, int m, double* B_global, int nb,
+exit_status ScaLAPACK_pDGESV_ftx_cp(int n, double* A_global, int m, double* B_global, int nb,
 									int mpi_rank, int cprocs, int sprocs,
 									int checkpoint_freq,
 									int num_of_failing_ranks,
@@ -25,7 +25,7 @@ test_output ScaLAPACK_pDGESV_ftx_cp(int n, double* A_global, int m, double* B_gl
 									int nprow, int npcol, int myrow, int mycol,
 									int context, int context_global, int context_all, int* context_cp)
 {
-	test_output result = EMPTY_OUTPUT;
+	exit_status result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

@@ -4,17 +4,18 @@
  *  Created on: 12 Mar 2020
  *      Author: Marcello
  */
-#include "vector.h"
+
+#ifndef __MATRIX_ADVANCED_H__
+#define __MATRIX_ADVANCED_H__
+
 #include "Cblacs.h"
 #include "lapack.h"
-#include "matrix_basic.h"
 #include "scalapack.h"
 #include "types.h"
-
-#ifndef SRC_HELPERS_MATRIX_ADVANCED_H_
-#define SRC_HELPERS_MATRIX_ADVANCED_H_
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/vector_basic.h"
 
 #include "matrix_advanced_single_precision.h"
 #include "matrix_advanced_double_precision.h"
 
-#endif /* SRC_HELPERS_MATRIX_ADVANCED_H_ */
+#endif

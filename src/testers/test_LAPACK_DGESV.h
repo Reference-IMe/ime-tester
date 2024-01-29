@@ -1,6 +1,6 @@
 #include <time.h>
 
-#include "../helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
 #include "LAPACK/LAPACK_DGESV.h"
 
 double test_Lapack_DGESV (	const char* tag,

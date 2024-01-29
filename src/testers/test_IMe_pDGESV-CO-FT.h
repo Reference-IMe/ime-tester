@@ -4,10 +4,10 @@
 #include "tester_structures.h"
 #include "../helpers/macros.h"
 #include "../helpers/matrix_advanced.h"
-#include "../helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
 
-#include "IMe/latest/src/pdgesv-co-ft.h"
+#include "IMe/lib/src/pdgesv-co-ft.h"
 
 test_result test_IMe_pDGESV_CO_FT (	const char check,
 									const char* tag,
@@ -23,7 +23,7 @@ test_result test_IMe_pDGESV_CO_FT (	const char check,
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output      = EMPTY_OUTPUT;
+	exit_status output      = EMPTY_OUTPUT;
 
 	sds label=sdsempty();
 	TAG2LABEL(tag,label);
@@ -193,12 +193,12 @@ test_result test_IMe_pDGESV_CO_FT (	const char check,
 			if (fault_tolerance < 1)
 			{
 				// if fault tolerance is disabled, force disable recovery
-				output = pDGESV_CO_FT (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, 0);
+				output = pdgesv_co_ft (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, 0);
 			}
 			else
 			{
 				// if fault tolerance is enabled, pass recovery option as set by user
-				output = pDGESV_CO_FT (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, recovery);
+				output = pdgesv_co_ft (A2, bb, xx, input, env, faulty_procs, failing_rank_list, failing_level, recovery);
 			}
 		}
 		else

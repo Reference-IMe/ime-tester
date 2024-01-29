@@ -8,7 +8,7 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
 #include "tester_structures.h"
 #include "FTLA/FTLA_pDGESV_TRF.h"
 
@@ -21,7 +21,7 @@ test_result test_FTLA_pDGESV_TRF (	const char check,
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output      = EMPTY_OUTPUT;
+	exit_status output      = EMPTY_OUTPUT;
 
 	sds label=sdsempty();
 	TAG2LABEL(tag,label);

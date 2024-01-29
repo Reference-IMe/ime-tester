@@ -3,9 +3,9 @@
 #include <unistd.h>
 #include "../helpers/macros.h"
 #include "../helpers/matrix_advanced.h"
-#include "../helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
-#include "IMe/latest/src/pdgesv-co.h"
+#include "IMe/lib/src/pdgesv-co.h"
 #include "tester_structures.h"
 
 test_result test_IMe_pDGESV_CO (	const char check,
@@ -18,7 +18,7 @@ test_result test_IMe_pDGESV_CO (	const char check,
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output      = EMPTY_OUTPUT;
+	exit_status output      = EMPTY_OUTPUT;
 
 	sds label=sdsempty();
 	TAG2LABEL(tag,label);
@@ -125,7 +125,7 @@ test_result test_IMe_pDGESV_CO (	const char check,
 				xx_ref=NULL;
 			}
 
-			if ( strcmp( variant, "PB-CO-BF1") == 0) output = pDGESV_CO (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
+			if ( strcmp( variant, "PB-CO-BF1") == 0) output = pdgesv_co (input.ime_bf, input.n, A2, input.nrhs, bb, xx, comm_calc);
 			else
 			{
 				DISPLAY_ERR(label,"not yet implemented! UNDEFINED BEHAVIOUR!");

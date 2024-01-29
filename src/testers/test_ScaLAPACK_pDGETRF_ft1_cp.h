@@ -8,7 +8,7 @@
 #include <mpi.h>
 #include <time.h>
 #include "../helpers/macros.h"
-#include "../helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
 #include "ScaLAPACK/ScaLAPACK_pDGETRF_ft1.h"
 #include "tester_structures.h"
 
@@ -24,7 +24,7 @@ test_result test_ScaLAPACK_pDGETRF_ft1 (	const char check,
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
-	test_output output      = EMPTY_OUTPUT;
+	exit_status output      = EMPTY_OUTPUT;
 
 	sds label=sdsempty();
 	TAG2LABEL(tag,label);

@@ -15,13 +15,13 @@
 #include <math.h>
 
 #include "../helpers/macros.h"
-#include "../helpers/matrix_advanced.h"
-#include "../helpers/vector.h"
 #include "../helpers/lapack.h"
 #include "../helpers/scalapack.h"
 #include "../helpers/Cblacs.h"
-#include "../helpers/matrix_basic.h"
 #include "../helpers/simple_dynamic_strings/sds.h"
+#include "../helpers/matrix_advanced.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
+#include "../testers/IMe/lib/src/helpers/vector_basic.h"
 
 #include "tester_labels.h"
 #include "tester_routine.h"

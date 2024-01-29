@@ -1,4 +1,4 @@
-#include "../../helpers/matrix_basic.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
 
 /* DGESV prototype
  * extern void dgesv_( int* n, int* nrhs, double* a, int* lda, int* ipiv, double* b, int* ldb, int* info );

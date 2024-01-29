@@ -13,6 +13,8 @@
 #ifndef __TESTER_STRUCTURES_H__
 #define __TESTER_STRUCTURES_H__
 
+#include "IMe/lib/src/helpers/types.h"
+
 typedef struct parallel_env
 {
 	int calc_procs;
@@ -54,7 +56,8 @@ typedef struct test_input
 	char calc_nre;
 } test_input;
 
-typedef struct test_output
+/*
+typedef struct exit_status
 {
 	time_t total_start_time;
 	time_t total_end_time;
@@ -62,7 +65,8 @@ typedef struct test_output
 	time_t core_end_time;
 	char   exit_code;
 	//double norm_rel_err;
-} test_output;
+} exit_status;
+*/
 
 typedef struct test_result
 {
@@ -75,6 +79,6 @@ typedef struct test_result
 // as array/struct in #define are not allowed in assignment, a constant has to be defined
 const test_result TEST_NOT_IMPLEMENTED	= { -99, -99, -99, -99 };
 const test_result TEST_NOT_RUN			= { -1,  -1,  -1,  -1  };
-const test_output EMPTY_OUTPUT			= { -1,  -1,  -1,  -1,  -1};
+const exit_status EMPTY_OUTPUT			= { -1,  -1,  -1,  -1,  -1};
 
 #endif

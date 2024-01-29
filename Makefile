@@ -12,25 +12,29 @@ SRC_DIR = $(PROJECT_DIR)/src
 TST_DIR = $(SRC_DIR)/testers
 
 IME_VERSION       = latest
-IME_REPO          = https://gitlab.com/marcello.artioli/ime-lib.git
 IME_TAG           = $(IME_VERSION)
-IME_LIB_DIR       = $(TST_DIR)/IMe/$(IME_TAG)
+IME_REPO          = https://gitlab.com/marcello.artioli/ime-lib.git
+IME_REPO_DIR      = lib
+IME_LIB_DIR       = $(TST_DIR)/IMe/$(IME_REPO_DIR)
 
 LAPACK_VERSION    = 3.9.0
 LAPACK_TAG        = lapack-$(LAPACK_VERSION)
 LAPACK_REPO       = https://github.com/Reference-LAPACK/lapack-pre-github-historical-releases.git
-LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/$(LAPACK_TAG)
+LAPACK_REPO_DIR   = lib
+LAPACK_LIB_DIR    = $(TST_DIR)/LAPACK/$(LAPACK_REPO_DIR)
 
 SCALAPACK_VERSION = 2.1.0
 SCALAPACK_TAG     = v$(SCALAPACK_VERSION)
 SCALAPACK_REPO    = https://github.com/Reference-ScaLAPACK/scalapack.git
-SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/scalapack-$(SCALAPACK_VERSION)
+SCALAPACK_REPO_DIR = lib
+SCALAPACK_LIB_DIR = $(TST_DIR)/ScaLAPACK/$(SCALAPACK_REPO_DIR)
 
 FTLA_VERSION      = rSC13
 FTLA_TAG          = ftla-$(FTLA_VERSION)
 FTLA_ARCHIVE      = $(FTLA_TAG).tgz
 FTLA_REPO         = https://icl.utk.edu/projectsfiles/ft-la/software/$(FTLA_ARCHIVE)
-FTLA_LIB_DIR      = $(TST_DIR)/FTLA/$(FTLA_TAG)
+FTLA_REPO_DIR     = lib
+FTLA_LIB_DIR      = $(TST_DIR)/FTLA/$(FTLA_REPO_DIR)
 
 SDS_VERSION       = 2.0.0
 SDS_TAG           = $(SDS_VERSION)
@@ -402,7 +406,7 @@ sds: $(SDS_LIB_DIR)/sds.o
 
 $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 				$(TST_DIR)/tester*.h \
-				$(TST_DIR)/IMe/latest/src/* \
+				$(IME_LIB_DIR)/src/* \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 				$(TST_DIR)/ScaLAPACK/*.h \

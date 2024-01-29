@@ -1,7 +1,7 @@
 #include <time.h>
 
-#include "../helpers/matrix_basic.h"
-#include "IMe/latest/src/dgesv-wo.h"
+#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
+#include "IMe/lib/src/dgesv-wo.h"
 
 double test_IMe_DGESV (	const char* tag,
 						int verbosity,
@@ -31,7 +31,7 @@ double test_IMe_DGESV (	const char* tag,
 
 	start = time(NULL);
 
-	DGESV_WO(rows, A, nrhs, bb, xx);
+	dgesv_wo(rows, A, nrhs, bb, xx);
 
 	stop = time(NULL);
 

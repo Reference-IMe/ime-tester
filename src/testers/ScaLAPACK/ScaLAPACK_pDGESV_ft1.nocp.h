@@ -8,9 +8,9 @@
 #include <mpi.h>
 #include <time.h>
 #include "../../helpers/macros.h"
-#include "../../helpers/vector.h"
+#include "../IMe/lib/src/helpers/vector_basic.h"
 #include "../../helpers/Cblacs.h"
-#include "../../helpers/matrix_basic.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
 #include "../tester_structures.h"
 
@@ -18,9 +18,9 @@
 // to prepare for a checkpointing version
 // checkpointing NOT implemented => old, unmaintained version
 
-test_output ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
+exit_status ScaLAPACK_pDGESV_ft1(int n, double* A_global, int m, double* B_global, int nb, int mpi_rank, int cprocs, int sprocs, int failing_level, int checkpoint_freq)
 {
-	test_output result = EMPTY_OUTPUT;
+	exit_status result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

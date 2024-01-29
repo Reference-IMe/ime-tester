@@ -17,22 +17,22 @@
 #include "../tester_structures.h"
 #include "commons.h"
 #include "create_matrix.h"
-#include "ftla-rSC13/ftla_cof.h"
-#include "ftla-rSC13/ftla_driver.h"
-#include "ftla-rSC13/ftla_ftwork.h"
-#include "ftla-rSC13/util_inject.h"
-#include "ftla-rSC13/util_matrix.h"
+#include "lib/ftla_cof.h"
+#include "lib/ftla_driver.h"
+#include "lib/ftla_ftwork.h"
+#include "lib/util_inject.h"
+#include "lib/util_matrix.h"
 
 extern int *errors;
 
 extern MPI_Comm ftla_current_comm;
 
-test_output FTLA_ftdtr_sv(int n, double* A_global, double* B_global, int nb,
+exit_status FTLA_ftdtr_sv(int n, double* A_global, double* B_global, int nb,
 						int mpi_rank, int cprocs, int sprocs,
 						int nprow, int npcol, int myrow, int mycol,
 						int ctxt, int ctxt_root)
 {
-	test_output result = EMPTY_OUTPUT;
+	exit_status result = EMPTY_OUTPUT;
 
 	result.total_start_time = time(NULL);
 

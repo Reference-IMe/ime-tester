@@ -1,6 +1,6 @@
 #include <mpi.h>
 
-#include "../../helpers/matrix_basic.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <math.h>
