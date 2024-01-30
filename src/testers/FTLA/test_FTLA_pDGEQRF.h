@@ -1,18 +1,18 @@
 /*
- * test_FTLA_pDGESV_TRF.h
+ * test_FTLA_pDGEQRF.h
  *
- *  Created on: Aug 9, 2021
+ *  Created on: Dec 28, 2019
  *      Author: marcello
  */
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "tester_structures.h"
-#include "FTLA/FTLA_pDGESV_TRF.h"
+#include "../../helpers/macros.h"
+#include "../../tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "FTLA_pDGEQRF.h"
 
-test_result test_FTLA_pDGESV_TRF (	const char check,
+test_result test_FTLA_pDGEQRF (		const char check,
 									const char* tag,
 									int verbosity,
 									parallel_env env,
@@ -93,8 +93,6 @@ test_result test_FTLA_pDGESV_TRF (	const char check,
 			{
 				printf("\n\n Matrix A:\n");
 				PrintMatrix1D_double(A, input.n, input.n);
-				printf("\n Vector b:\n");
-				PrintMatrix1D_double(bb, input.n, input.nrhs);
 			}
 		}
 		else
@@ -103,7 +101,7 @@ test_result test_FTLA_pDGESV_TRF (	const char check,
 			bb = NULL;
 		}
 
-		output = FTLA_ftdtr_sv(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
+		output = FTLA_ftdqr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 								faults,
 								env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 								env.blacs_ctxt_grid, env.blacs_ctxt_root);
@@ -120,8 +118,8 @@ test_result test_FTLA_pDGESV_TRF (	const char check,
 
 			if (verbosity>1)
 			{
-				printf("\nThe %s solution is:\n",tag);
-				PrintMatrix1D_double(bb, input.n, input.nrhs);
+				printf("\nThe %s factorization is:\n",tag);
+				PrintMatrix1D_double(A, input.n, input.n);
 				printf("\n with exit code     %d\n",output.exit_code);
 				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
 			}

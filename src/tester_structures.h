@@ -13,7 +13,7 @@
 #ifndef __TESTER_STRUCTURES_H__
 #define __TESTER_STRUCTURES_H__
 
-#include "IMe/lib/src/helpers/types.h"
+#include "testers/IMe/lib/src/helpers/types.h"
 
 typedef struct parallel_env
 {

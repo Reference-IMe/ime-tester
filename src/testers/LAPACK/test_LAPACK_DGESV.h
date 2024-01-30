@@ -1,7 +1,8 @@
 #include <time.h>
 
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "LAPACK/LAPACK_DGESV.h"
+#include "LAPACK_DGESV.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+
 
 double test_Lapack_DGESV (	const char* tag,
 							int verbosity,

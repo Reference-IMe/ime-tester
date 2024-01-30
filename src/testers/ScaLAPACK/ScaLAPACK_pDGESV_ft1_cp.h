@@ -12,7 +12,7 @@
 #include "../../helpers/Cblacs.h"
 #include "../IMe/lib/src/helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
-#include "../tester_structures.h"
+#include "../../tester_structures.h"
 
 
 exit_status ScaLAPACK_pDGESV_ft1_cp(int n, double* A_global, int m, double* B_global, int nb,

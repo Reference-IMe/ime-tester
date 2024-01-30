@@ -13,42 +13,35 @@
 #include <time.h>
 #include <math.h>
 
-#include "../helpers/macros.h"
-#include "../helpers/lapack.h"
-#include "../helpers/scalapack.h"
-#include "../helpers/matrix_advanced.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "../testers/IMe/lib/src/helpers/vector_basic.h"
-
-#include "test_dummy.h"
+#include "helpers/macros.h"
+#include "helpers/lapack.h"
+#include "helpers/scalapack.h"
+#include "helpers/matrix_advanced.h"
 #include "tester_labels.h"
+#include "testers/dummy/test_dummy.h"
+#include "testers/FTLA/test_FTLA_pDGEQRF.h"
+#include "testers/FTLA/test_FTLA_pDGESV_QRF.h"
+#include "testers/FTLA/test_FTLA_pDGESV_TRF.h"
+#include "testers/FTLA/test_FTLA_pDGETRF.h"
+#include "testers/IMe/lib/src/helpers/matrix_basic.h"
+#include "testers/IMe/lib/src/helpers/vector_basic.h"
+#include "testers/IMe/test_IMe_pDGESV-CO.h"
+#include "testers/IMe/test_IMe_pDGESV-CO-FT.h"
+#include "testers/IMe/test_IMe_pDGESV-WO.h"
+#include "testers/IMe/test_IMe_pSGESV-CO.h"
+#include "testers/IMe/test_IMe_pSGESV-CO-FT.h"
+#include "testers/IMe/test_IMe_pSGESV-WO.h"
 
-#include "test_ScaLAPACK_pDGESV.h"
-#include "test_ScaLAPACK_pDGESV_nopivot.h"
-//#include "test_ScaLAPACK_pDGESV_ft1_cp.h"
-#include "test_ScaLAPACK_pDGESV_ftx_cp.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGEQRF.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGEQRF_ft1_cp.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGESV.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGESV_ftx_cp.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGESV_nopivot.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGETRF.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pDGETRF_ft1_cp.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pSGESV.h"
+#include "testers/ScaLAPACK/test_ScaLAPACK_pSGESV_ftx_cp.h"
 
-#include "test_ScaLAPACK_pSGESV.h"
-#include "test_ScaLAPACK_pSGESV_ftx_cp.h"
-
-#include "test_ScaLAPACK_pDGETRF.h"
-#include "test_ScaLAPACK_pDGETRF_ft1_cp.h"
-
-#include "test_ScaLAPACK_pDGEQRF.h"
-#include "test_ScaLAPACK_pDGEQRF_ft1_cp.h"
-
-#include "test_FTLA_pDGETRF.h"
-#include "test_FTLA_pDGESV_TRF.h"
-#include "test_FTLA_pDGEQRF.h"
-#include "test_FTLA_pDGESV_QRF.h"
-
-#include "test_IMe_pDGESV-CO.h"
-#include "test_IMe_pDGESV-CO-FT.h"
-#include "test_IMe_pDGESV-WO.h"
-
-#include "test_IMe_pSGESV-CO.h"
-#include "test_IMe_pSGESV-CO-FT.h"
-#include "test_IMe_pSGESV-WO.h"
 
 test_result tester_routine(const char check, const char* routine_name, int verbosity, parallel_env routine_env, test_input routine_input, fault_env routine_fault)
 {

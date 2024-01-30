@@ -12,7 +12,7 @@
 #include "../../helpers/Cblacs.h"
 #include "../IMe/lib/src/helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
-#include "../tester_structures.h"
+#include "../../tester_structures.h"
 
 // solve with separate calls to factorization and solution
 // to prepare for a checkpointing version

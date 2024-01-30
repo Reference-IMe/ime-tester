@@ -12,7 +12,7 @@
 #include "../../helpers/Cblacs.h"
 #include "../IMe/lib/src/helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
-#include "../tester_structures.h"
+#include "../../tester_structures.h"
 
 /*
  * QR decomposition by ScaLAPACK

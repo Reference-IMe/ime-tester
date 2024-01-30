@@ -1,11 +1,11 @@
 #include <mpi.h>
 #include <time.h>
 #include <unistd.h>
-#include "../helpers/macros.h"
-#include "../helpers/matrix_advanced.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "../helpers/simple_dynamic_strings/sds.h"
-#include "tester_structures.h"
+#include "../../tester_structures.h"
+#include "../../helpers/macros.h"
+#include "../../helpers/matrix_advanced.h"
+#include "../../helpers/simple_dynamic_strings/sds.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
 
 test_result test_dummy (	const char check,
 							const char* tag,

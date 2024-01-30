@@ -14,19 +14,19 @@
 #include <time.h>
 #include <math.h>
 
-#include "../helpers/macros.h"
-#include "../helpers/lapack.h"
-#include "../helpers/scalapack.h"
-#include "../helpers/Cblacs.h"
-#include "../helpers/simple_dynamic_strings/sds.h"
-#include "../helpers/matrix_advanced.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "../testers/IMe/lib/src/helpers/vector_basic.h"
-
+#include "helpers/macros.h"
+#include "helpers/lapack.h"
+#include "helpers/scalapack.h"
+#include "helpers/Cblacs.h"
+#include "helpers/simple_dynamic_strings/sds.h"
+#include "helpers/matrix_advanced.h"
 #include "tester_labels.h"
 #include "tester_routine.h"
 #include "tester_structures.h"
-#include "test_init.h"
+#include "testers/dummy/test_init.h"
+#include "testers/IMe/lib/src/helpers/matrix_basic.h"
+#include "testers/IMe/lib/src/helpers/vector_basic.h"
+
 
 #define MAX_VERSIONS 50
 #define MAX_RUNS 10

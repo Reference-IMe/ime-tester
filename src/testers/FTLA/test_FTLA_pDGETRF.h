@@ -1,5 +1,5 @@
 /*
- * test_FTLA_pDGEQRF.h
+ * test_FTLA_pDGETRF.h
  *
  *  Created on: Dec 28, 2019
  *      Author: marcello
@@ -7,17 +7,17 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "tester_structures.h"
-#include "FTLA/FTLA_pDGEQRF.h"
+#include "../../helpers/macros.h"
+#include "../../tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "FTLA_pDGETRF.h"
 
-test_result test_FTLA_pDGEQRF (		const char check,
-									const char* tag,
-									int verbosity,
-									parallel_env env,
-									test_input input,
-									int faults			)
+test_result test_FTLA_pDGETRF (	const char check,
+								const char* tag,
+								int verbosity,
+								parallel_env env,
+								test_input input,
+								int faults			)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -101,7 +101,7 @@ test_result test_FTLA_pDGEQRF (		const char check,
 			bb = NULL;
 		}
 
-		output = FTLA_ftdqr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
+		output = FTLA_ftdtr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 								faults,
 								env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 								env.blacs_ctxt_grid, env.blacs_ctxt_root);

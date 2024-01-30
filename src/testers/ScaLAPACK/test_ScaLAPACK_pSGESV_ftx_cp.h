@@ -7,12 +7,12 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/constants.h"
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "../helpers/simple_dynamic_strings/sds.h"
-#include "ScaLAPACK/ScaLAPACK_pDGESV_ftx_cp.h"
-#include "tester_structures.h"
+#include "../../helpers/constants.h"
+#include "../../helpers/macros.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "../../helpers/simple_dynamic_strings/sds.h"
+#include "../../tester_structures.h"
+#include "ScaLAPACK_pDGESV_ftx_cp.h"
 
 test_result test_ScaLAPACK_pDGESV_ftx_cp (	const char check,
 											const char* tag,

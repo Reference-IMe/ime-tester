@@ -1,23 +1,23 @@
 /*
- * test_FTLA_pDGETRF.h
+ * test_FTLA_pDGESV_QRF.h
  *
- *  Created on: Dec 28, 2019
+ *  Created on: Aug 9, 2021
  *      Author: marcello
  */
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "tester_structures.h"
-#include "FTLA/FTLA_pDGETRF.h"
+#include "../../helpers/macros.h"
+#include "../../tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "FTLA_pDGESV_QRF.h"
 
-test_result test_FTLA_pDGETRF (	const char check,
-								const char* tag,
-								int verbosity,
-								parallel_env env,
-								test_input input,
-								int faults			)
+test_result test_FTLA_pDGESV_QRF (	const char check,
+									const char* tag,
+									int verbosity,
+									parallel_env env,
+									test_input input,
+									int faults			)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -93,6 +93,8 @@ test_result test_FTLA_pDGETRF (	const char check,
 			{
 				printf("\n\n Matrix A:\n");
 				PrintMatrix1D_double(A, input.n, input.n);
+				printf("\n Vector b:\n");
+				PrintMatrix1D_double(bb, input.n, input.nrhs);
 			}
 		}
 		else
@@ -101,7 +103,7 @@ test_result test_FTLA_pDGETRF (	const char check,
 			bb = NULL;
 		}
 
-		output = FTLA_ftdtr(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
+		output = FTLA_ftdqr_sv(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 								faults,
 								env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 								env.blacs_ctxt_grid, env.blacs_ctxt_root);
@@ -118,8 +120,8 @@ test_result test_FTLA_pDGETRF (	const char check,
 
 			if (verbosity>1)
 			{
-				printf("\nThe %s factorization is:\n",tag);
-				PrintMatrix1D_double(A, input.n, input.n);
+				printf("\nThe %s solution is:\n",tag);
+				PrintMatrix1D_double(bb, input.n, input.nrhs);
 				printf("\n with exit code     %d\n",output.exit_code);
 				printf("      norm.rel.err. %.17f\n",rank_result.norm_rel_err);
 			}

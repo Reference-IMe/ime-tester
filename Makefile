@@ -165,7 +165,7 @@ SEQ_EXE = # compare_solve
 PAR_EXE = tester
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
-PAR_STD_DEP = $(TST_DIR)/test_*.h $(SRC_DIR)/helpers/*.h
+PAR_STD_DEP = $(TST_DIR)/*/test_*.h $(SRC_DIR)/helpers/*.h
 SEQ_STD_DEP = $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
 
 all: $(LAPACK_LIB_DIR)/librefblas.a \
@@ -231,9 +231,9 @@ clone_lapack: $(LAPACK_LIB_DIR)
 		if [ $$CLONED -ne 0 ]; then \
 			git clone --depth 1 --branch $(LAPACK_TAG) $(LAPACK_REPO) $(LAPACK_LIB_DIR) ; \
 		fi; \
-		cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc; \
+		cp -v $(LAPACK_LIB_DIR)/../mods/make.inc.copy $(LAPACK_LIB_DIR)/make.inc; \
 	fi
-#	if [ ! -f $(LAPACK_LIB_DIR)/make.inc ]; then cp -v $(LAPACK_LIB_DIR)/../make.inc.copy $(LAPACK_LIB_DIR)/make.inc; fi
+
 
 $(LAPACK_LIB_DIR)/make.inc: clone_lapack
 
@@ -267,7 +267,7 @@ clone_scalapack: $(SCALAPACK_LIB_DIR)
 		if [ $$CLONED -ne 0 ]; then \
 			git clone --depth 1 --branch $(SCALAPACK_TAG) $(SCALAPACK_REPO) $(SCALAPACK_LIB_DIR) ; \
 		fi; \
-		cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc; \
+		cp -v $(SCALAPACK_LIB_DIR)/../mods/SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc; \
 	fi
 #	if [ ! -f $(SCALAPACK_LIB_DIR)/SLmake.inc ]; then cp -v $(SCALAPACK_LIB_DIR)/../SLmake.inc.copy $(SCALAPACK_LIB_DIR)/SLmake.inc; fi
 
@@ -312,9 +312,9 @@ clone_ftla: $(FTLA_LIB_DIR)
 		cp -v $(SCALAPACK_LIB_DIR)/TOOLS/pdlaprnt.f $(FTLA_LIB_DIR)/pdlaprnt.f; \
 		for file in ftdqr_main.c ftdtr_main.c ftla_dcsum.c ftla_ftwork.c ; do \
 			mv -v $(FTLA_LIB_DIR)/$$file $(FTLA_LIB_DIR)/"$$file".orig; \
-			cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
+			cp -v $(FTLA_LIB_DIR)/../mods/"$$file".copy $(FTLA_LIB_DIR)/$$file; \
 		done; \
-		for mf in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
+		for mf in $$(ls $(FTLA_LIB_DIR)/../mods/*.copy); do \
 			cp -v $$mf $(FTLA_LIB_DIR)/$$(basename $$mf .copy); \
 		done; \
 	fi
@@ -404,8 +404,8 @@ sds: $(SDS_LIB_DIR)/sds.o
 # => static linking: ueseless on cresco6 and galileo
 
 
-$(BIN_DIR)/tester: $(TST_DIR)/tester.c \
-				$(TST_DIR)/tester*.h \
+$(BIN_DIR)/tester: $(SRC_DIR)/tester.c \
+				$(SRC_DIR)/tester*.h \
 				$(IME_LIB_DIR)/src/* \
 				$(PAR_STD_DEP) \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
@@ -426,7 +426,7 @@ $(BIN_DIR)/tester: $(TST_DIR)/tester.c \
 #	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 #	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cs.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
 	$(MPICC) $(CFLAGS) -o $(BIN_DIR)/tester \
-		$(TST_DIR)/tester.c \
+		$(SRC_DIR)/tester.c \
 		$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
 		$(TST_DIR)/ScaLAPACK/psgetrf_cp.o \
 		$(TST_DIR)/ScaLAPACK/psgetrf_cpx.o \

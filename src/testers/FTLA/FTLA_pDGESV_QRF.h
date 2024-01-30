@@ -14,7 +14,7 @@
 #include "../../helpers/macros.h"
 #include "../../helpers/Cblacs.h"
 #include "../../helpers/scalapack.h"
-#include "../tester_structures.h"
+#include "../../tester_structures.h"
 #include "commons.h"
 #include "create_matrix.h"
 #include "lib/ftla_cof.h"

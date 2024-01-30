@@ -12,7 +12,7 @@
 #include "../../helpers/Cblacs.h"
 #include "../IMe/lib/src/helpers/matrix_basic.h"
 #include "../../helpers/scalapack.h"
-#include "../tester_structures.h"
+#include "../../tester_structures.h"
 
 #define SHOWTIME(step) printf("%d(%d):%f\n",mpi_rank,step,MPI_Wtime()-result.total_start_time);
 

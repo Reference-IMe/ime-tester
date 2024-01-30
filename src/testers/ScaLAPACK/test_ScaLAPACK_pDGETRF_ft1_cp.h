@@ -1,18 +1,18 @@
 /*
- * test_ScaLAPACK_pDGEQRF_ft1.h
+ * test_ScaLAPACK_pDGESV_ft1.h
  *
- *  Created on: Jan 8, 2020
+ *  Created on: Dec 5, 2019
  *      Author: marcello
  */
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "ScaLAPACK/ScaLAPACK_pDGEQRF_ft1.h"
-#include "tester_structures.h"
+#include "../../helpers/macros.h"
+#include "../../tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "ScaLAPACK_pDGETRF_ft1.h"
 
-test_result test_ScaLAPACK_pDGEQRF_ft1 (	const char check,
+test_result test_ScaLAPACK_pDGETRF_ft1 (	const char check,
 											const char* tag,
 											int verbosity,
 											parallel_env env,
@@ -20,7 +20,7 @@ test_result test_ScaLAPACK_pDGEQRF_ft1 (	const char check,
 											int fault_tolerance,
 											int faulty_procs,
 											int failing_level,
-											int checkpoint_freq		)
+											int checkpoint_freq	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -67,7 +67,7 @@ test_result test_ScaLAPACK_pDGEQRF_ft1 (	const char check,
 			bb = NULL;
 		}
 
-		output = ScaLAPACK_pDGEQRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs, env.spare_procs,
+		output = ScaLAPACK_pDGETRF_ft1(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs, env.spare_procs,
 										failing_level, checkpoint_freq,
 										env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 										env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare[0]);

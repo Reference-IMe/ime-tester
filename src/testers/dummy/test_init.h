@@ -1,9 +1,9 @@
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../helpers/matrix_advanced.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "../../helpers/matrix_advanced.h"
+#include "../../helpers/macros.h"
+#include "../../tester_structures.h"
 
 
 void test_init(const char* label, int verbosity, parallel_env env, test_input input)

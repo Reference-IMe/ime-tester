@@ -15,10 +15,10 @@ local.properties
 **/.ptp-sync-folder
 
 # sort of modules
-/src/testers/IMe/latest
-/src/testers/LAPACK/lapack-3.9.0
-/src/testers/ScaLAPACK/scalapack-2.1.0
-/src/testers/FTLA/ftla-rSC13
+/src/testers/IMe/lib
+/src/testers/LAPACK/lib
+/src/testers/ScaLAPACK/lib
+/src/testers/FTLA/lib
 /src/helpers/simple_dynamic_strings
 
 # External tool builders

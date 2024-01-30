@@ -1,27 +1,25 @@
 /*
- * test_ScaLAPACK_pDGESV_ft1.h
+ * test_ScaLAPACK_pDGESV.h
  *
- *  Created on: Dec 5, 2019
+ *  Created on: Dec 27, 2019
  *      Author: marcello
  */
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "../helpers/constants.h"
-#include "ScaLAPACK/ScaLAPACK_pDGESV_ft1_cp.h"
-#include "tester_structures.h"
+#include "../../helpers/macros.h"
+#include "../../helpers/matrix_advanced.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "../../helpers/simple_dynamic_strings/sds.h"
+#include "../../helpers/constants.h"
+#include "../../tester_structures.h"
+#include "ScaLAPACK_pDGESV.h"
 
-test_result test_ScaLAPACK_pDGESV_ft1_cp (	const char check,
-											const char* label,
-											int verbosity,
-											parallel_env env,
-											test_input input,
-											int fault_tolerance,
-											int faulty_procs,
-											int failing_level,
-											int checkpoint_freq	)
+test_result test_ScaLAPACK_pDGESV (	const char check,
+									const char* tag,
+									int verbosity,
+									parallel_env env,
+									test_input input	)
 {
 	test_result rank_result = TEST_NOT_RUN;
 	test_result team_result = TEST_NOT_RUN;
@@ -36,13 +34,9 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp (	const char check,
 	double* bb;
 	double* xx_ref;
 
-	int rank_calc_procs;
-
-	rank_calc_procs=sqrt(env.calc_procs);
-
 	if (check)
 	{
-		#include "test_ScaLAPACK_pre-check_ft.inc"
+		#include "test_ScaLAPACK_pre-check.inc"
 	}
 	else
 	{
@@ -77,10 +71,9 @@ test_result test_ScaLAPACK_pDGESV_ft1_cp (	const char check,
 			xx_ref = NULL;
 		}
 
-		output = ScaLAPACK_pDGESV_ft1_cp(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs, env.spare_procs,
-										failing_level, checkpoint_freq,
-										env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
-										env.blacs_ctxt_grid, env.blacs_ctxt_root, env.blacs_ctxt_onerow, env.blacs_ctxt_spare[0]);
+		output = ScaLAPACK_pDGESV(input.n, A, input.nrhs, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
+									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
+									env.blacs_ctxt_grid, env.blacs_ctxt_root);
 
 		if (env.mpi_rank==0)
 		{

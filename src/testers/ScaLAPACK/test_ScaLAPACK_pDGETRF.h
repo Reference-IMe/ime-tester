@@ -1,18 +1,19 @@
 /*
- * test_ScaLAPACK_pDGEQRF.h
+ * test_ScaLAPACK_pDGESV.h
  *
- *  Created on: Dec 5, 2019
+ *  Created on: Dec 27, 2019
  *      Author: marcello
  */
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "ScaLAPACK/ScaLAPACK_pDGEQRF.h"
-#include "tester_structures.h"
+#include "../../helpers/macros.h"
+#include "../../helpers/matrix_advanced.h"
+#include "../../tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "ScaLAPACK_pDGETRF.h"
 
-test_result test_ScaLAPACK_pDGEQRF (	const char check,
+test_result test_ScaLAPACK_pDGETRF (	const char check,
 										const char* tag,
 										int verbosity,
 										parallel_env env,
@@ -59,7 +60,7 @@ test_result test_ScaLAPACK_pDGEQRF (	const char check,
 			bb = NULL;
 		}
 
-		output = ScaLAPACK_pDGEQRF(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
+		output = ScaLAPACK_pDGETRF(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 									env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 									env.blacs_ctxt_grid, env.blacs_ctxt_root);
 

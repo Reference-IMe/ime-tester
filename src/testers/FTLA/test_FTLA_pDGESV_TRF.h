@@ -1,5 +1,5 @@
 /*
- * test_FTLA_pDGESV_QRF.h
+ * test_FTLA_pDGESV_TRF.h
  *
  *  Created on: Aug 9, 2021
  *      Author: marcello
@@ -7,12 +7,12 @@
 
 #include <mpi.h>
 #include <time.h>
-#include "../helpers/macros.h"
-#include "../testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "tester_structures.h"
-#include "FTLA/FTLA_pDGESV_QRF.h"
+#include "../../helpers/macros.h"
+#include "../../tester_structures.h"
+#include "../IMe/lib/src/helpers/matrix_basic.h"
+#include "FTLA_pDGESV_TRF.h"
 
-test_result test_FTLA_pDGESV_QRF (	const char check,
+test_result test_FTLA_pDGESV_TRF (	const char check,
 									const char* tag,
 									int verbosity,
 									parallel_env env,
@@ -103,7 +103,7 @@ test_result test_FTLA_pDGESV_QRF (	const char check,
 			bb = NULL;
 		}
 
-		output = FTLA_ftdqr_sv(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
+		output = FTLA_ftdtr_sv(input.n, A, bb, input.scalapack_bf, env.mpi_rank, env.calc_procs,
 								faults,
 								env.blacs_nprow, env.blacs_npcol, env.blacs_row, env.blacs_col,
 								env.blacs_ctxt_grid, env.blacs_ctxt_root);
