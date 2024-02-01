@@ -20,12 +20,12 @@
 #include "helpers/Cblacs.h"
 #include "helpers/simple_dynamic_strings/sds.h"
 #include "helpers/matrix_advanced.h"
+#include "routines/dummy/test_init.h"
+#include "routines/IMe/lib/src/helpers/matrix_basic.h"
+#include "routines/IMe/lib/src/helpers/vector_basic.h"
 #include "tester_labels.h"
 #include "tester_routine.h"
 #include "tester_structures.h"
-#include "testers/dummy/test_init.h"
-#include "testers/IMe/lib/src/helpers/matrix_basic.h"
-#include "testers/IMe/lib/src/helpers/vector_basic.h"
 
 
 #define MAX_VERSIONS 50

@@ -15,6 +15,10 @@ local.properties
 **/.ptp-sync-folder
 
 # sort of modules
+/src/routines/IMe/lib
+/src/routines/LAPACK/lib
+/src/routines/ScaLAPACK/lib
+/src/routines/FTLA/lib
 /src/testers/IMe/lib
 /src/testers/LAPACK/lib
 /src/testers/ScaLAPACK/lib
