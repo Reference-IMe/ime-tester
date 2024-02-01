@@ -1,3 +1,0 @@
-#!/bin/bash
-
-make machine=enea mpi=open library=src "$@"
