@@ -9,7 +9,7 @@ ENERGYREADING = cresco6
 PROJECT_DIR = $(CURDIR)
 BIN_DIR = $(PROJECT_DIR)/bin
 SRC_DIR = $(PROJECT_DIR)/src
-TST_DIR = $(SRC_DIR)/testers
+TST_DIR = $(SRC_DIR)/routines
 
 IME_VERSION       = latest
 IME_TAG           = $(IME_VERSION)
