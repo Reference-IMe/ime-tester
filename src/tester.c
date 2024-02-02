@@ -265,6 +265,7 @@ int main(int argc, char **argv)
 		versions_all = 0;
 		versionname_all[versions_all++] = TEST_INIT; // not actually callable, used as a workaround to init mpi/blacs
 		versionname_all[versions_all++] = DUMMY;     // no actual test (empty routine), but actually callable
+		versionname_all[versions_all++] = DUMMY_IME_PDGESV;
 
 		versionname_all[versions_all++] = IME_PSGESV_WO;
 		versionname_all[versions_all++] = IME_PDGESV_WO;

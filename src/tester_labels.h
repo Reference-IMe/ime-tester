@@ -14,6 +14,7 @@
 
 #define TEST_INIT							"test-init"
 #define DUMMY								"dummy"
+#define DUMMY_IME_PDGESV					"dummy-ime-pdgesv"
 
 #define IME_PDGESV_CO						"IMe-pDGESV-co"
 #define IME_PSGESV_CO						"IMe-pSGESV-co"
