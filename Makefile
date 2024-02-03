@@ -302,7 +302,7 @@ clone_ftla: $(FTLA_LIB_DIR)
 	@if [ ! -f $(FTLA_LIB_DIR)/slp.h ]; then \
 		cd $(FTLA_LIB_DIR); \
 		if [ ! -f $(FTLA_ARCHIVE) ]; then \
-			wget -v $(FTLA_REPO); \
+			wget -v --no-check-certificate $(FTLA_REPO); \
 		fi; \
 		tar zxvf $(FTLA_ARCHIVE) --strip-components=1; \
 		for file in pdgeqrf pdlarfb pdgetrf pdgetf2 ; do \
