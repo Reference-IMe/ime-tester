@@ -17,10 +17,10 @@ SCALAPACKLIB  = $(SCALAPACK_DIR)/libscalapack.a
 
 CFLAGS += 
 BLACSLIB =  $(SCALAPACKLIB) $(LAPACKLIB) $(BLASLIB) -lm
-CC = xlc_r
-FC = xlf_r
+CC = mpicc
+FC = mpif77
 
-all: libftla.a helpersftla.a testing_ftdtr.x testing_ftdqr.x 
+all: libftla.a helpersftla.a # testing_ftdtr.x testing_ftdqr.x 
 
 .SECONDEXPANSION:
 HELPERS = psmatgen.o pdmatgen.o pcmatgen.o pzmatgen.o pmatgeninc.o 
@@ -36,8 +36,8 @@ libftla.a: libftla.a($(SFTLA) $(DFTLA) $(CFTLA) $(ZFTLA) ftla_cof.o ftla_ftwork.
 
 helpersftla.a: helpersftla.a( $(HELPERS) $(dqr_ORIG) $(dtr_ORIG) )
 
-testing_ft%.x: $$($$*_ORIG) ft%_main.o libftla.a helpersftla.a
-	$(FC) $(CFLAGS) -qextname -o $@ $^  $(BLACSLIB)  
+#testing_ft%.x: $$($$*_ORIG) ft%_main.o libftla.a helpersftla.a
+#	$(FC) $(CFLAGS) -o $@ $^  $(BLACSLIB)  
 
 
 clean:

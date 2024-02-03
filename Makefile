@@ -1,9 +1,3 @@
-#ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-#$(info $(ROOT_DIR))
-
-MACHINETYPE = cineca|enea|ubuntu
-MPIFLAVOUR = intel|ch|open|spectrum
-LIBTYPE  = mkl|src|sys
 ENERGYREADING = cresco6
 
 PROJECT_DIR = $(CURDIR)
@@ -35,6 +29,7 @@ FTLA_ARCHIVE      = $(FTLA_TAG).tgz
 FTLA_REPO         = https://icl.utk.edu/projectsfiles/ft-la/software/$(FTLA_ARCHIVE)
 FTLA_REPO_DIR     = lib
 FTLA_LIB_DIR      = $(TST_DIR)/FTLA/$(FTLA_REPO_DIR)
+FTLA_MAKEFILE     = Makefile.mod
 
 SDS_VERSION       = 2.0.0
 SDS_TAG           = $(SDS_VERSION)
@@ -43,130 +38,31 @@ SDS_LIB_DIR       = $(SRC_DIR)/helpers/simple_dynamic_strings
 
 OPTIMIZATION = -O3
 DEBUG = -g
-NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable
+NO_WARN_UNUSED = -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unknown-pragmas
 
-CFLAGS_cineca_intel = -lifcore -w3 -wd1418 -wd2259
-CFLAGS_cineca_open  = -lgfortran
-CFLAGS_cineca_spectrum = -I$(MPI_ROOT)/include
+CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall -lgfortran #$(NO_WARN_UNUSED)
 
-CFLAGS_enea_intel   = -lifcore -w3 -wd1418 -wd2259
-CFLAGS_enea_open    = -lgfortran #-Wno-unknown-pragmas
-
-CFLAGS_ubuntu_open    = -lgfortran #-Wno-unknown-pragmas
-
-
-CFLAGS = $(OPTIMIZATION) $(DEBUG) -DINJECT -Wall $(CFLAGS_$(machine)_$(mpi))
 ifeq ($(energy),cresco6)
 CFLAGS += -DCRESCO_POWERCAP
 endif
 
-FFLAGS_cineca_intel = -nofor-main
-FFLAGS_cineca_open  = 
-FFLAGS_cineca_spectrum  = -I$(MPI_ROOT)/include -qextname
+FFLAGS = $(OPTIMIZATION) $(DEBUG) -fallow-argument-mismatch
 
-FFLAGS_enea_intel = 
-FFLAGS_enea_open = 
-
-FFLAGS_ubuntu_open = -fallow-argument-mismatch
-
-FFLAGS = $(OPTIMIZATION) $(DEBUG) $(FFLAGS_$(machine)_$(mpi))
-
-## check machine/platform, library type and mpi flavour
-ifeq ($(machine),)
-  $(error Unspecified machine, please specify 'machine = $(MACHINETYPE)')
-else
-  ifneq ($(machine),$(filter $(machine),$(subst |, ,$(MACHINETYPE))))
-    $(error Unknown machine '$(machine)', please specify 'machine = $(MACHINETYPE)')
-  endif
-endif
-
-ifeq ($(library),)
-  $(error Unspecified library type, please specify 'library = $(LIBTYPE)')
-else
-  ifneq ($(library),$(filter $(library),$(subst |, ,$(LIBTYPE))))
-    $(error Unknown machine '$(library)', please specify 'library = $(LIBTYPE)')
-  endif
-endif
-
-ifeq ($(mpi),)
-  $(error Unspecified mpi flavour, please specify 'mpi = $(MPIFLAVOUR)')
-else
-  ifneq ($(mpi),$(filter $(mpi),$(subst |, ,$(MPIFLAVOUR))))
-    $(error Unknown mpi flavour '$(mpi)', please specify 'mpi = $(MPIFLAVOUR)')
-  endif
-endif
-
-
-## set compilers, depending on MPI flavour
-ifeq ($(mpi),intel)
-  MPICC = mpiicc
-  MPIFC = mpiifort
-endif
-ifeq ($(mpi),open)
-  MPICC = mpicc
-  MPIFC = mpif77
-endif
-ifeq ($(mpi),ch)
-  MPICC = mpicc
-  MPIFC = mpif77
-endif
-ifeq ($(mpi),spectrum)
-  MPICC = mpicc
-  MPIFC = mpif77
-endif
+MPICC = mpicc
+MPIFC = mpif77
 
 ## machine/platform flags
-##
-## how to make a smart switch: https://stackoverflow.com/questions/200205/good-way-to-do-a-switch-in-a-makefile
-
-# marconi|galileo -> cineca
-SEQ_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lm
-PAR_MFLAGS_cineca_intel_mkl = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_gf_lp64 -lmkl_core -lmkl_sequential -lm
-
-SEQ_MFLAGS_cineca_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
-PAR_MFLAGS_cineca_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
-
-SEQ_MFLAGS_cineca_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm -ldl
-PAR_MFLAGS_cineca_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lm -ldl
-
-SEQ_MFLAGS_cineca_spectrum_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm -ldl
-PAR_MFLAGS_cineca_spectrum_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -L/m100/prod/opt/compilers/xl/16.1.1/binary/xlf/16.1.1/lib -lxlf90_r -lxlfmath -lmpi_ibm_mpifh -lm -ldl
-
-PAR_MFLAGS_cineca_ch_mkl    = -I$(MKL_INC) -L$(MKL_LIB) -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_blacs_intelmpi_lp64 -lmkl_core -lmkl_sequential -lm
-PAR_MFLAGS_cineca_open_sys  = -L$(SCALAPACK_LIB) -lscalapack -L$(LAPACK_LIB) -llapack -L$(BLAS_LIB) -lblas -lifcore -lm
-
-FTLAMAKEFILE_cineca_intel = Makefile.cineca.intel.mk
-FTLAMAKEFILE_cineca_open  = Makefile.cineca.open.mk
-FTLAMAKEFILE_cineca_spectrum  = Makefile.cineca.spectrum.mk
-
-# cresco6/cresco4 -> enea
-SEQ_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -ldl -lm
-PAR_MFLAGS_enea_intel_mkl = -I$(MKLROOT)/include -L$(MKLROOT)/lib -mkl -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 -ldl -lm
-
-SEQ_MFLAGS_enea_intel_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lm
-PAR_MFLAGS_enea_intel_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a
-FTLAMAKEFILE_enea_intel = Makefile.enea.intel.mk
-
-SEQ_MFLAGS_enea_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -ldl -lm
-PAR_MFLAGS_enea_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lm -ldl
-FTLAMAKEFILE_enea_open = Makefile.enea.open.mk
-
 # ubuntu
-SEQ_MFLAGS_ubuntu_open_src = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -ldl -lm
-PAR_MFLAGS_ubuntu_open_src = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lgfortran -lm -ldl
-FTLAMAKEFILE_ubuntu_open = Makefile.ubuntu.open.mk
-
-PAR_MACHINEFLAGS = $(PAR_MFLAGS_$(machine)_$(mpi)_$(library))
-SEQ_MACHINEFLAGS = $(SEQ_MFLAGS_$(machine)_$(mpi)_$(library))
-FTLAMAKEFILE     = $(FTLAMAKEFILE_$(machine)_$(mpi))
+SEQ_FLAGS   = $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -ldl -lm
+PAR_FLAGS   = $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/liblapack.a $(LAPACK_LIB_DIR)/librefblas.a -lmpi_mpifh -lmpi -lgfortran -lm -ldl
 
 ## set targets
 SEQ_EXE = # compare_solve
 PAR_EXE = tester
 EXE = $(addprefix $(BIN_DIR)/, $(SEQ_EXE) $(PAR_EXE) )
 
-PAR_STD_DEP = $(TST_DIR)/*/test_*.h $(SRC_DIR)/helpers/*.h
-SEQ_STD_DEP = $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
+#PAR_STD_DEP = $(TST_DIR)/*/test_*.h $(SRC_DIR)/helpers/*.h
+#SEQ_STD_DEP = $(TST_DIR)/tester_head.c $(TST_DIR)/tester_shoulder.c $(TST_DIR)/tester_tail.c $(SRC_DIR)/helpers/*.h
 
 all: $(LAPACK_LIB_DIR)/librefblas.a \
 		$(LAPACK_LIB_DIR)/liblapack.a \
@@ -319,42 +215,15 @@ clone_ftla: $(FTLA_LIB_DIR)
 		done; \
 	fi
 
-#clone_ftla: $(FTLA_LIB_DIR)
-#	@if [ ! -f $(FTLA_LIB_DIR)/slp.h ]; then \
-		cd $(FTLA_LIB_DIR); \
-		if [ ! -f $(FTLA_ARCHIVE) ]; then \
-			 wget -v $(FTLA_REPO); \
-		fi; \
-		tar zxvf $(FTLA_ARCHIVE) --strip-components=1 --skip-old-files; \
-		for file in pdgeqrf pdlarfb pdgetrf pdgetf2 ; do \
-			if [ ! -f $(FTLA_LIB_DIR)/"$$file".f ]; then \
-				cp -v $(SCALAPACK_LIB_DIR)/SRC/$$file.f $(FTLA_LIB_DIR)/"$$file".f; \
-			fi; \
-		done; \
-		if [ ! -f $(FTLA_LIB_DIR)/pdgetrrv.f ]; then cp -v $(SCALAPACK_LIB_DIR)/TESTING/LIN/pdgetrrv.f $(FTLA_LIB_DIR)/pdgetrrv.f; fi; \
-		if [ ! -f $(FTLA_LIB_DIR)/pdlaprnt.f ]; then cp -v $(SCALAPACK_LIB_DIR)/TOOLS/pdlaprnt.f $(FTLA_LIB_DIR)/pdlaprnt.f; fi; \
-		for file in ftdqr_main.c ftdtr_main.c ftla_dcsum.c ftla_ftwork.c slp.h ; do \
-			if [ ! -f $(FTLA_LIB_DIR)/"$$file".orig ]; then \
-				mv -v $(FTLA_LIB_DIR)/$$file $(FTLA_LIB_DIR)/"$$file".orig; \
-				cp -v $(FTLA_LIB_DIR)/../"$$file".copy $(FTLA_LIB_DIR)/$$file; \
-			fi; \
-		done; \
-		for file in $$(ls $(FTLA_LIB_DIR)/../*.copy); do \
-			mf=$$(basename $$file .copy); \
-			if [ ! -f $(FTLA_LIB_DIR)/$$mf ]; then \
-				cp -v $(FTLA_LIB_DIR)/../$$mf.copy $(FTLA_LIB_DIR)/$$mf; \
-			fi; \
-		done; \
-	fi
-
 $(FTLA_LIB_DIR)/slp.h: clone_ftla
 
 # build
 	
 $(FTLA_LIB_DIR)/libftla.a: $(FTLA_LIB_DIR)/slp.h $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a $(SCALAPACK_LIB_DIR)/libscalapack.a
-	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLAMAKEFILE)
+	cd $(FTLA_LIB_DIR) && $(MAKE) FC=$(MPIFC) CC=$(MPICC) CFLAGS="$(CFLAGS)" FFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) SCALAPACK_DIR=$(SCALAPACK_LIB_DIR) -f $(FTLA_MAKEFILE) all
 
 ftla: $(FTLA_LIB_DIR)/libftla.a
+
 
 ## SDS
 
@@ -387,44 +256,23 @@ $(SDS_LIB_DIR)/sds.o: $(SDS_LIB_DIR)/sds.c $(SDS_LIB_DIR)/sds.h
 sds: $(SDS_LIB_DIR)/sds.o
 
 
-# static linking experiment
-#
-#$(BIN_DIR)/run_SPK-SV_mkl_stat: $(TST_DIR)/run_SPK-SV.c \
-				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
-				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
-				| $(BIN_DIR)
-#	$(MPICC) $(CFLAGS)  -DMKL_ILP64 -I${MKLROOT}/include -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl_stat $(TST_DIR)/run_SPK-SV.c $(PAR_MFLAGS_$(machine)_$(mpi)_mkl) ${MKLROOT}/lib/intel64/libmkl_scalapack_ilp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_blacs_intelmpi_ilp64.a -Wl,--end-group -lpthread -lm -ldl
-
-#$(BIN_DIR)/run_SPK-SV_mkl_stat: $(TST_DIR)/run_SPK-SV.c \
-				$(TST_DIR)/test_ScaLAPACK_pDGESV.h \
-				$(TST_DIR)/ScaLAPACK/ScaLAPACK_pDGESV.h \
-				| $(BIN_DIR)
-#	$(MPICC) $(CFLAGS) -lifcore -o $(BIN_DIR)/run_SPK-SV_mkl_stat $(TST_DIR)/run_SPK-SV.c -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.a ${MKLROOT}/lib/intel64/libmkl_blacs_intelmpi_lp64.a ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -static_mpi -Wl,--end-group -lpthread -lm
-#
-# => static linking: ueseless on cresco6 and galileo
-
-
-$(BIN_DIR)/tester: $(SRC_DIR)/tester.c \
-				$(SRC_DIR)/tester*.h \
-				$(IME_LIB_DIR)/src/* \
-				$(PAR_STD_DEP) \
+$(BIN_DIR)/tester: $(SRC_DIR)/tester.c $(SRC_DIR)/tester_*.h \
+				$(SRC_DIR)/helpers/*.h \
 				$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
-				$(TST_DIR)/ScaLAPACK/*.h \
-				$(TST_DIR)/ScaLAPACK/psgetrf_cp.o \
-				$(TST_DIR)/ScaLAPACK/psgetrf_cpx.o \
-				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
-				$(TST_DIR)/ScaLAPACK/pdgetrf_cpx.o \
-				$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
-				$(TST_DIR)/ScaLAPACK/pdgetrf_cs.o \
-				$(TST_DIR)/ScaLAPACK/pdgesv_nopivot.o \
-				$(TST_DIR)/ScaLAPACK/pdgetf2_nopivot.o \
-				$(TST_DIR)/ScaLAPACK/pdgetrf_nopivot.o \
+				$(IME_LIB_DIR)/src/* \
+				$(IME_LIB_DIR)/src/helpers/* \
+				$(LAPACK_LIB_DIR)/librefblas.a \
+				$(LAPACK_LIB_DIR)/liblapack.a \
+				$(FTLA_LIB_DIR)/libftla.a \
+				$(FTLA_LIB_DIR)/helpersftla.a \
+				$(SCALAPACK_LIB_DIR)/libscalapack.a \
+				$(TST_DIR)/dummy/*.h \
 				$(TST_DIR)/FTLA/*.h \
-				| $(FTLA_LIB_DIR)/libftla.a \
+				$(TST_DIR)/IMe/*.h \
+				$(TST_DIR)/ScaLAPACK/*.h \
+				$(TST_DIR)/ScaLAPACK/*.o \
 				$(BIN_DIR)
-#	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
-#	$(MPICC) $(CFLAGS) $< -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
-#	$(MPICC) $(CFLAGS) $(TST_DIR)/tester.c -o $(BIN_DIR)/tester $(SRC_DIR)/helpers/simple_dynamic_strings/sds.o $(TST_DIR)/ScaLAPACK/pdgetrf_cs.o $(TST_DIR)/ScaLAPACK/pdgetrf_cp.o $(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o $(FTLA_LIB_DIR)/libftla.a $(FTLA_LIB_DIR)/helpersftla.a $(SCALAPACK_LIB_DIR)/libscalapack.a $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a -L$(TST_DIR)/ScaLAPACK $(PAR_MACHINEFLAGS)
+
 	$(MPICC) $(CFLAGS) -o $(BIN_DIR)/tester \
 		$(SRC_DIR)/tester.c \
 		$(SRC_DIR)/helpers/simple_dynamic_strings/sds.o \
@@ -443,7 +291,7 @@ $(BIN_DIR)/tester: $(SRC_DIR)/tester.c \
 		$(LAPACK_LIB_DIR)/librefblas.a \
 		$(LAPACK_LIB_DIR)/liblapack.a \
 		-L$(TST_DIR)/ScaLAPACK \
-		$(PAR_MACHINEFLAGS)
+		$(PAR_FLAGS)
 
 
 # cleanup
