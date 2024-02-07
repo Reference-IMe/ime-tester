@@ -7,7 +7,7 @@ TST_DIR = $(SRC_DIR)/routines
 
 IME_VERSION       = latest
 IME_TAG           = $(IME_VERSION)
-IME_REPO          = https://gitlab.com/marcello.artioli/ime-lib.git
+IME_REPO          = https://github.com/Reference-IMe/ime-lib.git
 IME_REPO_DIR      = lib
 IME_LIB_DIR       = $(TST_DIR)/IMe/$(IME_REPO_DIR)
 
@@ -105,7 +105,7 @@ clone_ime: $(IME_LIB_DIR)
 		fi; \
 	fi
 
-$(IME_LIB_DIR)/src/*: clone_ime
+$(IME_LIB_DIR)/src/* $(IME_LIB_DIR)/src/helpers/*: clone_ime
 
 
 ## LAPACK
