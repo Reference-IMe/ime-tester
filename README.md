@@ -1,6 +1,9 @@
 # IMe tester
 Test suite for the [Inhibition Method Library](https://github.com/Reference-IMe/ime-lib)
 
+If you use this work, please cite:
+> D. Loreti, M. Artioli and A. Ciampolini, "Solving Linear Systems on High Performance Hardware with Resilience to Multiple Hard Faults," 2020 International Symposium on Reliable Distributed Systems (SRDS), Shanghai, China, 2020, pp. 266-275, [doi: 10.1109/SRDS51746.2020.00034](https://dx.doi.org/10.1109/SRDS51746.2020.00034)
+
 ## The suite
 It's a tool for comparing the performance of IMe with some other linear solvers.
 Type:
