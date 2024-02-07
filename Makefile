@@ -176,7 +176,7 @@ $(SCALAPACK_LIB_DIR)/SLmake.inc: clone_scalapack
 $(SCALAPACK_LIB_DIR)/libscalapack.a: $(SCALAPACK_LIB_DIR)/SLmake.inc $(LAPACK_LIB_DIR)/librefblas.a $(LAPACK_LIB_DIR)/liblapack.a
 	cd $(SCALAPACK_LIB_DIR) && $(MAKE) CC=$(MPICC) FC=$(MPIFC) CCFLAGS="$(CFLAGS)" FCFLAGS="$(FFLAGS)" LAPACK_DIR=$(LAPACK_LIB_DIR) lib
 
-scalapack: $(SCALAPACK_LIB_DIR)/libscalapack.a
+scalapack: $(SCALAPACK_LIB_DIR)/libscalapack.a $(TST_DIR)/ScaLAPACK/*.o
 
 $(TST_DIR)/ScaLAPACK/%.o: $(TST_DIR)/ScaLAPACK/%.f
 #	$(MPIFC) $(FFLAGS) $< -o $@ $(PAR_MACHINEFLAGS)
@@ -270,7 +270,15 @@ $(BIN_DIR)/tester: $(SRC_DIR)/tester.c $(SRC_DIR)/tester_*.h \
 				$(TST_DIR)/FTLA/*.h \
 				$(TST_DIR)/IMe/*.h \
 				$(TST_DIR)/ScaLAPACK/*.h \
-				$(TST_DIR)/ScaLAPACK/*.o \
+				$(TST_DIR)/ScaLAPACK/psgetrf_cp.o \
+				$(TST_DIR)/ScaLAPACK/psgetrf_cpx.o \
+				$(TST_DIR)/ScaLAPACK/pdgetrf_cp.o \
+				$(TST_DIR)/ScaLAPACK/pdgetrf_cpx.o \
+				$(TST_DIR)/ScaLAPACK/pdgeqrf_cp.o \
+				$(TST_DIR)/ScaLAPACK/pdgetrf_cs.o \
+				$(TST_DIR)/ScaLAPACK/pdgesv_nopivot.o \
+				$(TST_DIR)/ScaLAPACK/pdgetf2_nopivot.o \
+				$(TST_DIR)/ScaLAPACK/pdgetrf_nopivot.o \
 				$(BIN_DIR)
 
 	$(MPICC) $(CFLAGS) -o $(BIN_DIR)/tester \
